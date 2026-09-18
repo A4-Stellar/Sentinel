@@ -1,27 +1,27 @@
-# Trident Quickstart: Zero to Decoded Event in 10 Minutes
+# Sentinel Quickstart: Zero to Decoded Event in 10 Minutes
 
-Welcome to Trident! This guide takes you from getting your first API key to querying events and subscribing to a live stream in **under ten minutes**.
+Welcome to Sentinel! This guide takes you from getting your first API key to querying events and subscribing to a live stream in **under ten minutes**.
 
 Prerequisites:
-- A Trident API key (e.g., `tdk_live_demo12345`)
+- A Sentinel API key (e.g., `tdk_live_demo12345`)
 - An active network (`testnet`)
 
 ---
 
 ## 1. Get a Key & Make Your First Call
 
-Trident provides official SDKs across five languages. Pick your language of choice below.
+Sentinel provides official SDKs across five languages. Pick your language of choice below.
 
 ### TypeScript / Node.js
 ```bash
-npm install @trident-indexer/sdk
+npm install @sentinel-indexer/sdk
 ```
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
 async function main() {
-  const client = new TridentClient({
-    apiUrl: "https://api.testnet.trident.dev",
+  const client = new SentinelClient({
+    apiUrl: "https://api.testnet.sentinel.dev",
     apiKey: "tdk_live_demo12345",
     network: "testnet",
   });
@@ -37,14 +37,14 @@ main();
 ```
 
 ### Rust
-Add `trident-sdk` (or use `sdk/rust`) to your `Cargo.toml` and run:
+Add `sentinel-sdk` (or use `sdk/rust`) to your `Cargo.toml` and run:
 ```rust
-use trident_sdk::{TridentClient, QueryEventsParams};
+use sentinel_sdk::{SentinelClient, QueryEventsParams};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = TridentClient::new(
-        "https://api.testnet.trident.dev",
+    let client = SentinelClient::new(
+        "https://api.testnet.sentinel.dev",
         "tdk_live_demo12345",
         "testnet",
     )?;
@@ -68,14 +68,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/trident-indexer/sdk/go"
+	"github.com/sentinel-indexer/sdk/go"
 )
 
 func main() {
-	client := trident.NewClient("https://api.testnet.trident.dev", "tdk_live_demo12345", "testnet")
+	client := sentinel.NewClient("https://api.testnet.sentinel.dev", "tdk_live_demo12345", "testnet")
 	ctx := context.Background()
 
-	page, err := client.QueryEvents(ctx, trident.QueryEventsParams{
+	page, err := client.QueryEvents(ctx, sentinel.QueryEventsParams{
 		ContractID: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
 		Topic0:     "transfer",
 		Limit:      5,
@@ -89,13 +89,13 @@ func main() {
 
 ### Python
 ```bash
-pip install trident-indexer
+pip install sentinel-indexer
 ```
 ```python
-from trident_indexer import TridentClient
+from sentinel_indexer import SentinelClient
 
-client = TridentClient(
-    api_url="https://api.testnet.trident.dev",
+client = SentinelClient(
+    api_url="https://api.testnet.sentinel.dev",
     api_key="tdk_live_demo12345",
     network="testnet"
 )
@@ -111,7 +111,7 @@ print(f"Fetched events: {len(page.events)}")
 ### React
 ```tsx
 import React from "";
-import { TridentProvider, useContractEvents } from "@trident-indexer/sdk/react";
+import { SentinelProvider, useContractEvents } from "@sentinel-indexer/sdk/react";
 
 function EventList() {
   const { events, isLoading, error } = useContractEvents({
@@ -133,9 +133,9 @@ function EventList() {
 
 export default function App() {
   return (
-    <TridentProvider config={{ apiUrl: "https://api.testnet.trident.dev", apiKey: "tdk_live_demo12345", network: "testnet" }}>
+    <SentinelProvider config={{ apiUrl: "https://api.testnet.sentinel.dev", apiKey: "tdk_live_demo12345", network: "testnet" }}>
       <EventList />
-    </TridentProvider>
+    </SentinelProvider>
   );
 }
 ```
@@ -167,7 +167,7 @@ If you run into issues during your first 10 minutes, check these three common fa
 
 1. **Bad API Key / Unauthorized (401 / 403)**:
    - *Symptom*: Requests return HTTP 401 or `Unauthorized`.
-   - *Fix*: Verify your `X-API-Key` header or `apiKey` config matches your active key issued in the Trident dashboard (`tdk_live_...`).
+   - *Fix*: Verify your `X-API-Key` header or `apiKey` config matches your active key issued in the Sentinel dashboard (`tdk_live_...`).
 
 2. **Wrong Network (Mainnet vs. Testnet)**:
    - *Symptom*: Zero events returned or `NOT_FOUND` on valid contract IDs.

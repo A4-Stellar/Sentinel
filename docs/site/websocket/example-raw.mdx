@@ -1,15 +1,15 @@
 ---
 title: "WebSocket — Raw Client Example"
-description: "Connect to the Trident WebSocket API from non-TypeScript clients using the raw protocol."
+description: "Connect to the Sentinel WebSocket API from non-TypeScript clients using the raw protocol."
 ---
 
-This page shows how to use the Trident WebSocket API without the TypeScript SDK — useful for Python, Go, Rust, or browser-native clients.
+This page shows how to use the Sentinel WebSocket API without the TypeScript SDK — useful for Python, Go, Rust, or browser-native clients.
 
 ---
 
 ## Protocol overview
 
-1. Open a WebSocket connection to `wss://api.trident.telocel.com/ws?api_key=<key>`
+1. Open a WebSocket connection to `wss://api.sentinel.a4stellar.com/ws?api_key=<key>`
 2. Send a `subscribe` frame (JSON)
 3. Receive `event` messages (JSON) for every matching contract event
 4. Respond to `ping` messages with `pong` to keep the connection alive
@@ -26,7 +26,7 @@ const apiKey = "tdk_live_xxx";
 const contractId = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM";
 
 const ws = new WebSocket(
-  `wss://api.trident.telocel.com/ws?api_key=${apiKey}`
+  `wss://api.sentinel.a4stellar.com/ws?api_key=${apiKey}`
 );
 
 ws.addEventListener("open", () => {
@@ -68,7 +68,7 @@ API_KEY = "tdk_live_xxx"
 CONTRACT_ID = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
 
 async def main() -> None:
-    url = f"wss://api.trident.telocel.com/ws?api_key={API_KEY}"
+    url = f"wss://api.sentinel.a4stellar.com/ws?api_key={API_KEY}"
     async with websockets.connect(url) as ws:
         await ws.send(json.dumps({
             "type": "subscribe",
@@ -126,7 +126,7 @@ func main() {
     apiKey := "tdk_live_xxx"
     u := url.URL{
         Scheme:   "wss",
-        Host:     "api.trident.telocel.com",
+        Host:     "api.sentinel.a4stellar.com",
         Path:     "/ws",
         RawQuery: "api_key=" + apiKey,
     }
@@ -183,7 +183,7 @@ use tokio_tungstenite::{connect_async, tungstenite::Message};
 async fn main() {
     let api_key = "tdk_live_xxx";
     let url = format!(
-        "wss://api.trident.telocel.com/ws?api_key={api_key}"
+        "wss://api.sentinel.a4stellar.com/ws?api_key={api_key}"
     );
 
     let (mut ws, _) = connect_async(&url).await.expect("Failed to connect");

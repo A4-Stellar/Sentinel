@@ -1,21 +1,21 @@
 /**
- * Trident Testnet Event Monitor Example Application
+ * Sentinel Testnet Event Monitor Example Application
  *
  * Demonstrates:
- * 1. Initializing the official Trident TypeScript SDK for Stellar Testnet
+ * 1. Initializing the official Sentinel TypeScript SDK for Stellar Testnet
  * 2. Querying historical paginated contract events via REST
  * 3. Subscribing to live real-time contract events via WebSocket
  */
 
-import { TridentClient, iterEvents, SorobanEvent } from "@trident/sdk";
+import { SentinelClient, iterEvents, SorobanEvent } from "@sentinel/sdk";
 import WebSocket from "ws";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 // Configuration
-const TRIDENT_API_URL = process.env.TRIDENT_API_URL || "https://api.testnet.trident.telocel.com";
-const TRIDENT_API_KEY = process.env.TRIDENT_API_KEY || "trident_demo_key";
+const SENTINEL_API_URL = process.env.SENTINEL_API_URL || "https://api.testnet.sentinel.a4stellar.com";
+const SENTINEL_API_KEY = process.env.SENTINEL_API_KEY || "sentinel_demo_key";
 const CONTRACT_ID =
   process.env.CONTRACT_ID || "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
@@ -23,17 +23,17 @@ const isDryRun = process.argv.includes("--dry-run");
 
 async function main() {
   console.log("=================================================");
-  console.log("🔱 Trident Testnet Event Monitor");
+  console.log("🔱 Sentinel Testnet Event Monitor");
   console.log("=================================================");
   console.log(`🌐 Network:     Testnet`);
-  console.log(`🔗 Endpoint:    ${TRIDENT_API_URL}`);
+  console.log(`🔗 Endpoint:    ${SENTINEL_API_URL}`);
   console.log(`📜 Contract:    ${CONTRACT_ID}`);
   console.log("-------------------------------------------------");
 
-  // 1. Initialize Trident Client
-  const client = new TridentClient({
-    apiUrl: TRIDENT_API_URL,
-    apiKey: TRIDENT_API_KEY,
+  // 1. Initialize Sentinel Client
+  const client = new SentinelClient({
+    apiUrl: SENTINEL_API_URL,
+    apiKey: SENTINEL_API_KEY,
     network: "testnet",
     webSocketImpl: WebSocket,
   });
@@ -76,7 +76,7 @@ async function main() {
       process.exit(0);
     });
   } catch (err: any) {
-    console.error("⚠️ Error querying Trident API:", err.message);
+    console.error("⚠️ Error querying Sentinel API:", err.message);
     // Don't crash dry-run or mock environments
     if (!isDryRun) {
       process.exit(1);

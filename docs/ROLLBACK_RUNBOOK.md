@@ -33,11 +33,11 @@ old shape in a later, separate release once nothing depends on it.
 
 1. Identify the previous known-good image tag and Helm chart revision:
    ```bash
-   helm history trident -n <namespace>
+   helm history sentinel -n <namespace>
    ```
 2. Roll back the release:
    ```bash
-   helm rollback trident <PREVIOUS_REVISION> -n <namespace>
+   helm rollback sentinel <PREVIOUS_REVISION> -n <namespace>
    ```
 3. Verify the rolled-back pods are serving:
    ```bash

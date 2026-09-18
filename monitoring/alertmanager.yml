@@ -1,9 +1,9 @@
-# Alertmanager routing configuration for Trident (issue #526).
+# Alertmanager routing configuration for Sentinel (issue #526).
 #
 # Prometheus's alerts.yml already fires correctly on indexer silence, not
-# just lag: TridentIndexerHeartbeatStale (the poll loop hasn't advanced),
-# TridentIndexerMetricsMissing (absent() — the /metrics endpoint isn't even
-# scrapeable), and TridentIndexerProcessDown (up{job="trident-indexer"}==0)
+# just lag: SentinelIndexerHeartbeatStale (the poll loop hasn't advanced),
+# SentinelIndexerMetricsMissing (absent() — the /metrics endpoint isn't even
+# scrapeable), and SentinelIndexerProcessDown (up{job="sentinel-indexer"}==0)
 # together mean killing the indexer outright pages just as reliably as it
 # falling behind. What was missing until this file: nothing actually routed
 # any of those alerts anywhere. Prometheus can evaluate every rule in
@@ -17,7 +17,7 @@
 # config exists in any form before this file). Naming a real person/team and
 # their paging identity is a decision only the project's operators can make,
 # not something to invent here. `on-call-critical` below is the receiver
-# every critical Trident alert already routes to; wire its `pagerduty_configs`
+# every critical Sentinel alert already routes to; wire its `pagerduty_configs`
 # / `webhook_configs` / `slack_configs` to the actual on-call tool once #445
 # names one, using this receiver name and route so no alerts.yml or routing
 # change is needed at that point — only this receiver's delivery config.
@@ -92,7 +92,7 @@ receivers:
   - name: on-call-warning
     slack_configs:
       - api_url: "${SLACK_WEBHOOK_URL}"
-        channel: "#trident-alerts"
+        channel: "#sentinel-alerts"
         title: '{{ .CommonAnnotations.summary }}'
         text: >-
           {{ .CommonAnnotations.description }}

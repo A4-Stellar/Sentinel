@@ -14,7 +14,7 @@
 
 use serde_json::Value;
 use sqlx::PgPool;
-use trident_common::{SorobanEvent, TridentError};
+use sentinel_common::{SorobanEvent, SentinelError};
 use uuid::Uuid;
 
 /// An unpublished outbox row ready to be relayed to Redis.
@@ -30,9 +30,9 @@ pub struct OutboxRecord {
 
 impl OutboxRecord {
     /// Decode the stored payload back into a `SorobanEvent`.
-    pub fn event(&self) -> Result<SorobanEvent, TridentError> {
+    pub fn event(&self) -> Result<SorobanEvent, SentinelError> {
         serde_json::from_value(self.payload.clone()).map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("outbox payload decode"))
+            SentinelError::storage(anyhow::Error::new(e).context("outbox payload decode"))
         })
     }
 }
@@ -44,7 +44,7 @@ impl OutboxRecord {
 pub async fn fetch_unpublished(
     pool: &PgPool,
     limit: i64,
-) -> Result<Vec<OutboxRecord>, TridentError> {
+) -> Result<Vec<OutboxRecord>, SentinelError> {
     let rows: Vec<(i64, Uuid, Value)> = sqlx::query_as(
         r#"
         SELECT seq, event_id, payload
@@ -57,7 +57,7 @@ pub async fn fetch_unpublished(
     .bind(limit)
     .fetch_all(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("fetch_unpublished")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("fetch_unpublished")))?;
 
     Ok(rows
         .into_iter()
@@ -74,7 +74,7 @@ pub async fn fetch_unpublished(
 /// Called only after a successful `XADD`. A crash between the publish and this
 /// update re-delivers those events on the next relay pass, which is safe
 /// because consumers dedupe by event id.
-pub async fn mark_published(pool: &PgPool, seqs: &[i64]) -> Result<(), TridentError> {
+pub async fn mark_published(pool: &PgPool, seqs: &[i64]) -> Result<(), SentinelError> {
     if seqs.is_empty() {
         return Ok(());
     }
@@ -89,18 +89,18 @@ pub async fn mark_published(pool: &PgPool, seqs: &[i64]) -> Result<(), TridentEr
     .bind(seqs)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("mark_published")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("mark_published")))?;
 
     Ok(())
 }
 
 /// Number of rows still awaiting publication. Exposed as a gauge so an
 /// unbounded backlog (a stuck relay, a down Redis) is alertable.
-pub async fn backlog(pool: &PgPool) -> Result<i64, TridentError> {
+pub async fn backlog(pool: &PgPool) -> Result<i64, SentinelError> {
     let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM event_outbox WHERE published = FALSE")
         .fetch_one(pool)
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("outbox backlog")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("outbox backlog")))?;
 
     Ok(row.0)
 }
@@ -109,7 +109,7 @@ pub async fn backlog(pool: &PgPool) -> Result<i64, TridentError> {
 mod tests {
     use super::*;
     use serde_json::json;
-    use trident_common::EventType;
+    use sentinel_common::EventType;
 
     fn sample_event() -> SorobanEvent {
         SorobanEvent {

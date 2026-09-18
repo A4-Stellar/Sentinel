@@ -1,5 +1,5 @@
 use std::time::Duration;
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 #[derive(Debug)]
 pub struct Config {
@@ -108,7 +108,7 @@ pub struct Config {
 const DEFAULT_DB_POOL_SIZE: u32 = 3;
 
 impl Config {
-    pub fn from_env() -> Result<Self, TridentError> {
+    pub fn from_env() -> Result<Self, SentinelError> {
         let mut errors: Vec<String> = Vec::new();
 
         // ── Required env vars ───────────────────────────────────────────────
@@ -139,12 +139,12 @@ impl Config {
         ) {
             Ok(urls) => {
                 if urls.is_empty() {
-                    errors.push("[trident-indexer] STELLAR_RPC_URL (or STELLAR_RPC_URLS): at least one RPC endpoint is required, e.g. https://soroban-testnet.stellar.org".into());
+                    errors.push("[sentinel-indexer] STELLAR_RPC_URL (or STELLAR_RPC_URLS): at least one RPC endpoint is required, e.g. https://soroban-testnet.stellar.org".into());
                 }
                 urls
             }
             Err(e) => {
-                errors.push(format!("[trident-indexer] STELLAR_RPC_URL(S): {e}"));
+                errors.push(format!("[sentinel-indexer] STELLAR_RPC_URL(S): {e}"));
                 Vec::new()
             }
         };
@@ -376,8 +376,8 @@ impl Config {
 
         // ── Bail if any errors were collected ────────────────────────────────
         if !errors.is_empty() {
-            return Err(TridentError::config(anyhow::anyhow!(
-                "[trident-indexer] configuration errors (fix all and restart):\n{}",
+            return Err(SentinelError::config(anyhow::anyhow!(
+                "[sentinel-indexer] configuration errors (fix all and restart):\n{}",
                 errors.join("\n")
             )));
         }
@@ -543,7 +543,7 @@ fn normalize_network(network: &str) -> Result<String, String> {
         "mainnet" | "pubnet" => Ok("mainnet".to_string()),
         "testnet" => Ok("testnet".to_string()),
         other => Err(format!(
-            "[trident-indexer] NETWORK={other:?} is not a recognised network; expected one of: mainnet, testnet, pubnet"
+            "[sentinel-indexer] NETWORK={other:?} is not a recognised network; expected one of: mainnet, testnet, pubnet"
         )),
     }
 }
@@ -551,11 +551,11 @@ fn normalize_network(network: &str) -> Result<String, String> {
 /// Well-known Stellar network passphrases (issue #262). Any network name
 /// other than these two must set `NETWORK_PASSPHRASE` explicitly — guessing
 /// would silently derive wrong SAC contract ids.
-fn default_network_passphrase(network: &str) -> Result<String, TridentError> {
+fn default_network_passphrase(network: &str) -> Result<String, SentinelError> {
     match network {
         "testnet" => Ok("Test SDF Network ; September 2015".to_string()),
         "mainnet" | "pubnet" => Ok("Public Global Stellar Network ; September 2015".to_string()),
-        other => Err(TridentError::config(anyhow::anyhow!(
+        other => Err(SentinelError::config(anyhow::anyhow!(
             "[indexer] NETWORK={other:?} has no well-known passphrase; set NETWORK_PASSPHRASE explicitly"
         ))),
     }
@@ -565,7 +565,7 @@ fn default_network_passphrase(network: &str) -> Result<String, TridentError> {
 /// pairs, or the bare literal `native` for XLM (issue #262).
 fn parse_tracked_sac_assets(
     spec: &str,
-) -> Result<Vec<crate::parser::sac::TrackedAsset>, TridentError> {
+) -> Result<Vec<crate::parser::sac::TrackedAsset>, SentinelError> {
     let mut assets = Vec::new();
     for part in spec.split(',') {
         let part = part.trim();
@@ -580,12 +580,12 @@ fn parse_tracked_sac_assets(
             continue;
         }
         let (code, issuer) = part.split_once(':').ok_or_else(|| {
-            TridentError::config(anyhow::anyhow!(
+            SentinelError::config(anyhow::anyhow!(
                 "[indexer] TRACKED_SAC_ASSETS entry {part:?} must be CODE:ISSUER or 'native'"
             ))
         })?;
         if code.is_empty() || issuer.is_empty() {
-            return Err(TridentError::config(anyhow::anyhow!(
+            return Err(SentinelError::config(anyhow::anyhow!(
                 "[indexer] TRACKED_SAC_ASSETS entry {part:?} must be CODE:ISSUER or 'native'"
             )));
         }
@@ -635,7 +635,7 @@ fn collect_required(key: &str, errors: &mut Vec<String>) -> Option<String> {
 fn parse_endpoint_list(
     list: Option<String>,
     single: Option<String>,
-) -> Result<Vec<String>, TridentError> {
+) -> Result<Vec<String>, SentinelError> {
     let raw = match list.filter(|s| !s.trim().is_empty()) {
         Some(s) => s,
         None => single.unwrap_or_default(),
@@ -648,7 +648,7 @@ fn parse_endpoint_list(
             continue;
         }
         if !url.starts_with("http://") && !url.starts_with("https://") {
-            return Err(TridentError::config(anyhow::anyhow!(
+            return Err(SentinelError::config(anyhow::anyhow!(
                 "[indexer] Stellar RPC endpoint {url:?} must start with http:// or https://"
             )));
         }
@@ -661,17 +661,17 @@ fn parse_endpoint_list(
 }
 
 /// Parse an env var as u64 with a default and inclusive [min, max] bounds.
-fn parse_bounded_u64(key: &str, default: u64, min: u64, max: u64) -> Result<u64, TridentError> {
+fn parse_bounded_u64(key: &str, default: u64, min: u64, max: u64) -> Result<u64, SentinelError> {
     match std::env::var(key) {
         Err(_) => Ok(default),
         Ok(raw) => {
             let v: u64 = raw.parse().map_err(|_| {
-                TridentError::config(anyhow::anyhow!(
+                SentinelError::config(anyhow::anyhow!(
                     "[indexer] {key} must be a positive integer, got {raw:?}"
                 ))
             })?;
             if v < min || v > max {
-                return Err(TridentError::config(anyhow::anyhow!(
+                return Err(SentinelError::config(anyhow::anyhow!(
                     "[indexer] {key} must be between {min} and {max}, got {v}"
                 )));
             }
@@ -683,11 +683,11 @@ fn parse_bounded_u64(key: &str, default: u64, min: u64, max: u64) -> Result<u64,
 /// Parse an optional positive pool-size env var, falling back to `default`.
 /// A present-but-invalid value (non-numeric or zero) is a hard configuration
 /// error rather than a silent fallback.
-fn parse_pool_size(key: &str, default: u32) -> Result<u32, TridentError> {
+fn parse_pool_size(key: &str, default: u32) -> Result<u32, SentinelError> {
     match std::env::var(key) {
         Err(_) => Ok(default),
         Ok(raw) => raw.parse::<u32>().ok().filter(|&n| n > 0).ok_or_else(|| {
-            TridentError::config(anyhow::anyhow!("{key} must be a positive integer"))
+            SentinelError::config(anyhow::anyhow!("{key} must be a positive integer"))
         }),
     }
 }
@@ -1350,8 +1350,8 @@ mod tests {
     #[test]
     fn redact_url_strips_credentials() {
         assert_eq!(
-            redact_url("postgres://user:secret@localhost:5432/trident"),
-            "postgres://***@localhost:5432/trident"
+            redact_url("postgres://user:secret@localhost:5432/sentinel"),
+            "postgres://***@localhost:5432/sentinel"
         );
     }
 
@@ -1372,8 +1372,8 @@ mod tests {
     /// Splitting on the first '@' leaked the password's tail in plaintext.
     #[test]
     fn redact_url_handles_at_sign_inside_password() {
-        let redacted = redact_url("postgres://user:p@ssw0rd@localhost:5432/trident");
-        assert_eq!(redacted, "postgres://***@localhost:5432/trident");
+        let redacted = redact_url("postgres://user:p@ssw0rd@localhost:5432/sentinel");
+        assert_eq!(redacted, "postgres://***@localhost:5432/sentinel");
         assert!(
             !redacted.contains("ssw0rd"),
             "password tail must not survive redaction: {redacted}"

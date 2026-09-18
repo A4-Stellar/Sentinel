@@ -6,11 +6,11 @@ description: "Install the TypeScript SDK, get an API key, and make your first So
 ## 1. Install the SDK
 
 ```bash
-npm install @trident-indexer/sdk
+npm install @sentinel-indexer/sdk
 # or
-yarn add @trident-indexer/sdk
+yarn add @sentinel-indexer/sdk
 # or
-pnpm add @trident-indexer/sdk
+pnpm add @sentinel-indexer/sdk
 ```
 
 The package ships pre-built CJS + ESM bundles and a `dist/index.d.ts` declaration for full autocomplete.
@@ -19,7 +19,7 @@ The package ships pre-built CJS + ESM bundles and a `dist/index.d.ts` declaratio
 
 ## 2. Get an API key
 
-Sign up at [trident.telocel.com](https://trident.telocel.com/signup) to get a free API key. The free tier gives you **10 requests/second** against the hosted testnet API.
+Sign up at [sentinel.a4stellar.com](https://sentinel.a4stellar.com/signup) to get a free API key. The free tier gives you **10 requests/second** against the hosted testnet API.
 
 Your key looks like:
 
@@ -33,14 +33,14 @@ Keep it secret — it is sent as a plain HTTP header on every request.
 
 ## 3. Make your first query
 
-The hosted testnet API is available at `https://api.trident.telocel.com`.
+The hosted testnet API is available at `https://api.sentinel.a4stellar.com`.
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!, // set in your environment
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!, // set in your environment
   network: "testnet",
 });
 
@@ -69,12 +69,12 @@ Found 10 events
 ## 4. Filter by contract and topic
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -104,12 +104,12 @@ if (page.hasMore && page.cursor) {
 For large backlogs, use `iterEvents` instead of managing cursors manually:
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -163,6 +163,6 @@ for await (const event of client.iterEvents(
     Subscribe to live events as they land on-chain.
   </Card>
   <Card title="Self-Hosting" icon="docker" href="/quickstart-self-hosted">
-    Run your own Trident stack with Docker Compose.
+    Run your own Sentinel stack with Docker Compose.
   </Card>
 </CardGroup>

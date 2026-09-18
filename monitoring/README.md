@@ -1,4 +1,4 @@
-# Trident monitoring
+# Sentinel monitoring
 
 `alerts.yml` is a standard Prometheus rule file. Load it via `rule_files:` in
 your Prometheus config:
@@ -9,15 +9,15 @@ rule_files:
   - "monitoring/alerts.yml"
 
 scrape_configs:
-  - job_name: trident-indexer
+  - job_name: sentinel-indexer
     static_configs:
       - targets: ["indexer:9090"] # crates/indexer/src/metrics.rs, METRICS_PORT
-  - job_name: trident-api
+  - job_name: sentinel-api
     static_configs:
       - targets: ["api:3000"] # GET /metrics, services/api
 ```
 
-The `job=` labels above (`trident-indexer`, `trident-api`) must match what
+The `job=` labels above (`sentinel-indexer`, `sentinel-api`) must match what
 `alerts.yml`'s `up{job="..."}` rules expect — rename both sides together if
 you use different job names.
 
@@ -47,7 +47,7 @@ amtool check-config monitoring/alertmanager.yml
 
 The `on-call-critical`/`on-call-warning` receivers are wired into the
 routing tree but have no delivery target configured yet — see the comments
-in `alertmanager.yml` and [issue #445](https://github.com/Telocel-Labs/Trident/issues/445)
+in `alertmanager.yml` and [issue #445](https://github.com/A4-Stellar/Sentinel/issues/445)
 (naming an actual on-call owner and escalation path is a decision for the
 project's operators, not something this file can invent).
 
@@ -55,8 +55,8 @@ project's operators, not something this file can invent).
 
 `../scripts/verify-indexer-silence-alerts.sh` runs a real Prometheus against
 the real `alerts.yml`, kills a synthetic indexer target, and confirms one of
-the silence-based alerts (`TridentIndexerHeartbeatStale`,
-`TridentIndexerMetricsMissing`, `TridentIndexerProcessDown`) reaches
+the silence-based alerts (`SentinelIndexerHeartbeatStale`,
+`SentinelIndexerMetricsMissing`, `SentinelIndexerProcessDown`) reaches
 `state=firing` — the concrete proof behind issue #526's "killing the indexer
 fires the alert" requirement. It can also point at a real staging
 Prometheus (`SKIP_LOCAL_PROMETHEUS=1 PROMETHEUS_URL=...`) to verify the same
@@ -65,7 +65,7 @@ thing against a real deployment instead of the local synthetic target.
 ## Metrics catalog and runbook
 
 - The full metrics catalog (every metric `alerts.yml` references, plus
-  everything else Trident exports) lives in
+  everything else Sentinel exports) lives in
   [`docs/metrics-catalog.md`](../docs/metrics-catalog.md).
 - Per-alert runbooks (why the threshold, first steps when it fires) live in
   [`docs/runbooks/alerts.md`](../docs/runbooks/alerts.md).

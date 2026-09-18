@@ -27,9 +27,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'sdk/typescript/package-lock.json'
 
-      # The examples import @trident-indexer/sdk via a file: dependency, which
+      # The examples import @sentinel-indexer/sdk via a file: dependency, which
       # resolves to the SDK's built dist/ — and dist/ is gitignored, so without
-      # this step tsc fails with "Cannot find module '@trident-indexer/sdk'".
+      # this step tsc fails with "Cannot find module '@sentinel-indexer/sdk'".
       # Same reason the sdk-react job in ci.yml builds the TypeScript SDK
       # before installing.
       - name: Build the TypeScript SDK
@@ -39,7 +39,7 @@ jobs:
       - name: Validate TypeScript Code Examples
         run: |
           cd docs/site
-          npm install --no-save typescript @trident-indexer/sdk@file:../../sdk/typescript
+          npm install --no-save typescript @sentinel-indexer/sdk@file:../../sdk/typescript
           npx tsc --noEmit
 
       # Only the .mdx files are checked. The previous 'docs/site/**/*.json' glob

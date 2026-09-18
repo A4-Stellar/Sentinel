@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 )
 
 func TestPrometheusHTTP_RecordsRequestCountAndLatency(t *testing.T) {
@@ -38,10 +38,10 @@ func TestPrometheusHTTP_RecordsRequestCountAndLatency(t *testing.T) {
 	if strings.Contains(body, "abc-123") {
 		t.Errorf("raw path value must not appear in metrics output, got:\n%s", body)
 	}
-	if !strings.Contains(body, `trident_api_http_requests_total{method="GET",route="GET /v1/widgets/{id}",status="200"} 1`) {
+	if !strings.Contains(body, `sentinel_api_http_requests_total{method="GET",route="GET /v1/widgets/{id}",status="200"} 1`) {
 		t.Errorf("expected a request_total sample of 1, got:\n%s", body)
 	}
-	if !strings.Contains(body, "trident_api_http_request_duration_seconds_bucket") {
+	if !strings.Contains(body, "sentinel_api_http_request_duration_seconds_bucket") {
 		t.Errorf("expected latency histogram buckets, got:\n%s", body)
 	}
 }

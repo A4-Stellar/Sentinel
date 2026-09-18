@@ -1,9 +1,9 @@
 ---
 title: "Pagination"
-description: "How cursor-based pagination works in Trident — the opaque cursor, the after parameter, hasMore, and iterating all pages."
+description: "How cursor-based pagination works in Sentinel — the opaque cursor, the after parameter, hasMore, and iterating all pages."
 ---
 
-All Trident list endpoints use **cursor-based pagination**. Each response includes an opaque `cursor` string that you pass as `after` to fetch the next page.
+All Sentinel list endpoints use **cursor-based pagination**. Each response includes an opaque `cursor` string that you pass as `after` to fetch the next page.
 
 ---
 
@@ -56,21 +56,21 @@ Pass the `cursor` from the previous response as the `after` query parameter:
 
 ```bash
 # Page 1
-curl "https://api.trident.telocel.com/v1/events?limit=50" \
-  -H "X-API-Key: $TRIDENT_API_KEY"
+curl "https://api.sentinel.a4stellar.com/v1/events?limit=50" \
+  -H "X-API-Key: $SENTINEL_API_KEY"
 
 # Page 2 — use the cursor from the page 1 response
-curl "https://api.trident.telocel.com/v1/events?limit=50&after=eyJpZCI6..." \
-  -H "X-API-Key: $TRIDENT_API_KEY"
+curl "https://api.sentinel.a4stellar.com/v1/events?limit=50&after=eyJpZCI6..." \
+  -H "X-API-Key: $SENTINEL_API_KEY"
 ```
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { PaginatedEvents, SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { PaginatedEvents, SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -93,12 +93,12 @@ if (page1.hasMore && page1.cursor) {
 The SDK's `iterEvents` method handles cursor management automatically:
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -124,7 +124,7 @@ for await (const event of client.iterEvents(
 }
 ```
 
-If the page cap is hit while results remain, a `TridentError` with `code: "ITERATION_LIMIT"` is thrown.
+If the page cap is hit while results remain, a `SentinelError` with `code: "ITERATION_LIMIT"` is thrown.
 
 ---
 

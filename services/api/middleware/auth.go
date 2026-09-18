@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"

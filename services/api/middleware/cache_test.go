@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 )
@@ -259,7 +259,7 @@ func TestStartCacheInvalidator_BumpsVersionOnNewEvent(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	const streamKey = "test:trident:events"
+	const streamKey = "test:sentinel:events"
 	go middleware.StartCacheInvalidator(ctx, rdb, streamKey)
 
 	// StartCacheInvalidator's first XRead pins "$" (the stream's current
@@ -285,7 +285,7 @@ func TestStartCacheInvalidator_IgnoresMessagesWithoutContractID(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	const streamKey = "test:trident:events:malformed"
+	const streamKey = "test:sentinel:events:malformed"
 	go middleware.StartCacheInvalidator(ctx, rdb, streamKey)
 
 	// Malformed / missing-field messages must not panic the invalidator or

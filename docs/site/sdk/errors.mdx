@@ -1,19 +1,19 @@
 ---
-title: "TridentError"
-description: "Error class thrown by all TridentClient methods, with error codes and handling patterns."
+title: "SentinelError"
+description: "Error class thrown by all SentinelClient methods, with error codes and handling patterns."
 ---
 
 ## Overview
 
-All `TridentClient` methods throw `TridentError` on failure. `TridentError` extends the standard `Error` class and adds a `code` property for programmatic error handling.
+All `SentinelClient` methods throw `SentinelError` on failure. `SentinelError` extends the standard `Error` class and adds a `code` property for programmatic error handling.
 
 ```typescript
-import { TridentError } from "@trident-indexer/sdk";
+import { SentinelError } from "@sentinel-indexer/sdk";
 
 try {
   const event = await client.getEventById({ id: "..." });
 } catch (err) {
-  if (err instanceof TridentError) {
+  if (err instanceof SentinelError) {
     console.error(err.code, err.message);
   }
 }
@@ -25,7 +25,7 @@ try {
 
 | Property              | Type                | Description                                         |
 |-----------------------|---------------------|-----------------------------------------------------|
-| `code`                | `TridentErrorCode`  | Machine-readable error identifier.                 |
+| `code`                | `SentinelErrorCode`  | Machine-readable error identifier.                 |
 | `message`             | `string`            | Human-readable description of the error.            |
 | `httpStatus`          | `number \| undefined` | HTTP status code, if the error came from a response.|
 | `retryAfterSeconds`   | `number \| undefined` | Set on `RATE_LIMITED` — seconds to wait before retrying. |
@@ -50,12 +50,12 @@ try {
 ## Handling all codes
 
 ```typescript
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
-import type { TridentErrorCode } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
+import type { SentinelErrorCode } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -63,9 +63,9 @@ async function fetchEvent(id: string) {
   try {
     return await client.getEventById({ id });
   } catch (err) {
-    if (!(err instanceof TridentError)) throw err;
+    if (!(err instanceof SentinelError)) throw err;
 
-    const code: TridentErrorCode = err.code;
+    const code: SentinelErrorCode = err.code;
 
     switch (code) {
       case "NOT_FOUND":
@@ -73,7 +73,7 @@ async function fetchEvent(id: string) {
         return null;
 
       case "UNAUTHORIZED":
-        throw new Error("Check your TRIDENT_API_KEY environment variable");
+        throw new Error("Check your SENTINEL_API_KEY environment variable");
 
       case "FORBIDDEN":
         throw new Error("Your API key tier cannot access this resource");
@@ -89,7 +89,7 @@ async function fetchEvent(id: string) {
         throw new Error(`Invalid event ID format: ${id}`);
 
       case "UNAVAILABLE":
-        throw new Error("Trident API is temporarily unavailable — try again shortly");
+        throw new Error("Sentinel API is temporarily unavailable — try again shortly");
 
       case "INTERNAL":
       default:
@@ -106,11 +106,11 @@ async function fetchEvent(id: string) {
 `ITERATION_LIMIT` is thrown by `iterEvents` when the page cap is reached:
 
 ```typescript
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -122,7 +122,7 @@ try {
     console.log(event.id);
   }
 } catch (err) {
-  if (err instanceof TridentError && err.code === "ITERATION_LIMIT") {
+  if (err instanceof SentinelError && err.code === "ITERATION_LIMIT") {
     console.warn("Reached page limit — increase maxPages for full backfill");
   } else {
     throw err;

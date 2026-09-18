@@ -3,7 +3,7 @@
 # Small dedicated image for running the sqlx-tracked migration chain
 # (database/migrations/*.sql) as a Helm pre-install/pre-upgrade hook Job
 # (issue #308) — deliberately separate from the app images so it can be
-# built/tagged/rolled back independently of trident-go-api/grpc-api/indexer.
+# built/tagged/rolled back independently of sentinel-go-api/grpc-api/indexer.
 
 # ── builder ──────────────────────────────────────────────────────────────────
 # Same base + digest pin as crates/api/Dockerfile and crates/indexer/Dockerfile
@@ -27,12 +27,12 @@ FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bb
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates libssl3 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 1001 --no-create-home trident
+    && useradd --system --uid 1001 --no-create-home sentinel
 
 COPY --from=builder /usr/local/cargo/bin/sqlx /usr/local/bin/sqlx
 COPY database/migrations /migrations
 
-USER trident
+USER sentinel
 
 # `sqlx migrate run` is idempotent — it records applied migrations in the
 # database's own _sqlx_migrations table and only applies files that aren't

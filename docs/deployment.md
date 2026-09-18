@@ -1,6 +1,6 @@
-﻿# Trident Production Deployment Runbook
+﻿# Sentinel Production Deployment Runbook
 
-Trident is a Stellar blockchain event indexer. The production stack runs four services under Docker Compose: `postgres`, `redis`, `indexer` (Rust), and `api` (Go), with `nginx` providing TLS termination via a prod overlay.
+Sentinel is a Stellar blockchain event indexer. The production stack runs four services under Docker Compose: `postgres`, `redis`, `indexer` (Rust), and `api` (Go), with `nginx` providing TLS termination via a prod overlay.
 
 ---
 
@@ -21,8 +21,8 @@ Before deploying, ensure the following are ready on the target server:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Telocel-Labs/Trident.git
-cd Trident
+git clone https://github.com/A4-Stellar/Sentinel.git
+cd Sentinel
 ```
 
 ### 2. Create `.env` from the example
@@ -37,7 +37,7 @@ Open `.env` and set every value below. Do not leave defaults in production.
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string, e.g. `postgresql://trident:password@postgres:5432/trident` |
+| `DATABASE_URL` | PostgreSQL connection string, e.g. `postgresql://sentinel:password@postgres:5432/sentinel` |
 | `REDIS_URL` | Redis connection string, e.g. `redis://redis:6379` |
 | `STELLAR_RPC_URL` | Soroban RPC endpoint (`https://soroban-testnet.stellar.org` for testnet) |
 | `NETWORK` | One of `mainnet`, `testnet`, or `futurenet` |
@@ -82,7 +82,7 @@ and count toward the failover threshold.
 
 **The indexer runs as exactly one replica. This is enforced, not advisory.**
 
-`helm/trident/templates/indexer-deployment.yaml` fails template rendering if
+`helm/sentinel/templates/indexer-deployment.yaml` fails template rendering if
 `indexer.replicaCount` is greater than 1, and sets the deployment strategy to
 `Recreate` so a rolling update cannot briefly run two pods at once.
 
@@ -133,17 +133,17 @@ openssl rand -hex 32
 The nginx service expects certificates in the `nginx_certs` Docker volume.
 
 ```bash
-docker volume create trident_nginx_certs
+docker volume create sentinel_nginx_certs
 ```
 
 > **Note**: Docker Compose prefixes volume names with the project name (directory name by default).
-> If your working directory is not named `trident`, use
+> If your working directory is not named `sentinel`, use
 > `docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml config --volumes`
 > to find the actual volume name, then substitute it in the `docker volume create` and `docker run` commands above.
 
 ```bash
 docker run --rm \
-  -v trident_nginx_certs:/certs \
+  -v sentinel_nginx_certs:/certs \
   -v $(pwd)/certs:/src \
   alpine \
   sh -c "cp /src/fullchain.pem /certs/ && cp /src/privkey.pem /certs/"
@@ -248,7 +248,7 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml \
 ### 1. Identify the previous image
 
 ```bash
-docker images | grep trident
+docker images | grep sentinel
 ```
 
 ### 2. Update the image tag in compose or re-tag, then restart
@@ -295,7 +295,7 @@ curl https://your-domain.com/v1/ready
      exec postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
    ```
    ```sql
-   ALTER USER trident WITH PASSWORD 'new-password';
+   ALTER USER sentinel WITH PASSWORD 'new-password';
    \q
    ```
 2. Update `DATABASE_URL` and `POSTGRES_PASSWORD` in `.env`.
@@ -358,10 +358,10 @@ Alert when disk usage exceeds 80% of available space.
 
 ```bash
 docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml \
-  exec redis redis-cli XLEN trident:events
+  exec redis redis-cli XLEN sentinel:events
 ```
 
-A growing `trident:events` stream length indicates consumer lag. Investigate the `api` service logs if the stream is not draining.
+A growing `sentinel:events` stream length indicates consumer lag. Investigate the `api` service logs if the stream is not draining.
 
 ### Indexer Lag
 
@@ -397,7 +397,7 @@ docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml lo
 
 ## Connection Topology
 
-Trident runs three database clients:
+Sentinel runs three database clients:
 
 | Service              | Role                         | Pool env var            | Default |
 | -------------------- | ---------------------------- | ----------------------- | ------- |
@@ -426,7 +426,7 @@ Transaction pooling is efficient but means **no session state survives across tr
 2. **`SET SESSION` variables** — Not preserved across transactions.
 3. **Session-level advisory locks** — Behave unexpectedly because the "session" is not stable.
 
-Trident's clients are configured to avoid (1):
+Sentinel's clients are configured to avoid (1):
 
 - **Rust (sqlx):** `PgConnectOptions::statement_cache_capacity(0)`
 - **Go (pgx v5):** `cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol`
@@ -465,7 +465,7 @@ full runbook. These run in CI only via `workflow_dispatch`/a weekly schedule
 
 ## Fly.io Deployment
 
-Trident can be deployed to [Fly.io](https://fly.io) as three separate apps sharing a private network (6PN). Configuration files live in `fly/`.
+Sentinel can be deployed to [Fly.io](https://fly.io) as three separate apps sharing a private network (6PN). Configuration files live in `fly/`.
 
 ### Prerequisites
 
@@ -476,12 +476,12 @@ Trident can be deployed to [Fly.io](https://fly.io) as three separate apps shari
 
 | App name | Config | Description |
 |---|---|---|
-| `trident-grpc-api` | `fly/grpc-api.toml` | Rust gRPC API — event query backend |
-| `trident-indexer` | `fly/indexer.toml` | Rust Stellar event indexer |
-| `trident-api` | `fly/api.toml` | Go REST API — public-facing |
+| `sentinel-grpc-api` | `fly/grpc-api.toml` | Rust gRPC API — event query backend |
+| `sentinel-indexer` | `fly/indexer.toml` | Rust Stellar event indexer |
+| `sentinel-api` | `fly/api.toml` | Go REST API — public-facing |
 
 Services communicate over Fly's private 6PN network:
-- Go API → gRPC API at `trident-grpc-api.internal:50051`
+- Go API → gRPC API at `sentinel-grpc-api.internal:50051`
 - Indexer → database and Redis directly (no external exposure needed)
 
 ### First-time setup
@@ -489,18 +489,18 @@ Services communicate over Fly's private 6PN network:
 #### 1. Create the Fly apps
 
 ```bash
-fly apps create trident-grpc-api
-fly apps create trident-indexer
-fly apps create trident-api
+fly apps create sentinel-grpc-api
+fly apps create sentinel-indexer
+fly apps create sentinel-api
 ```
 
 #### 2. Provision Fly Postgres
 
 ```bash
-fly postgres create --name trident-db --region iad
-fly postgres attach trident-db -a trident-grpc-api
-fly postgres attach trident-db -a trident-indexer
-fly postgres attach trident-db -a trident-api
+fly postgres create --name sentinel-db --region iad
+fly postgres attach sentinel-db -a sentinel-grpc-api
+fly postgres attach sentinel-db -a sentinel-indexer
+fly postgres attach sentinel-db -a sentinel-api
 ```
 
 `fly postgres attach` automatically sets `DATABASE_URL` as a secret on each app.
@@ -508,14 +508,14 @@ fly postgres attach trident-db -a trident-api
 #### 3. Provision Fly Redis
 
 ```bash
-fly redis create --name trident-redis --region iad
+fly redis create --name sentinel-redis --region iad
 ```
 
 Note the Redis URL from the output, then set it on the apps that need it:
 
 ```bash
-fly secrets set -a trident-indexer REDIS_URL="redis://..."
-fly secrets set -a trident-api     REDIS_URL="redis://..."
+fly secrets set -a sentinel-indexer REDIS_URL="redis://..."
+fly secrets set -a sentinel-api     REDIS_URL="redis://..."
 ```
 
 #### 4. Set required secrets
@@ -524,10 +524,10 @@ Each service reads its secrets from process environment; the lists below are
 cross-checked against the actual `env::var`/`os.Getenv` calls in each
 service's source, not just the comments in the `fly/*.toml` files.
 
-**gRPC API** (`trident-grpc-api`, Rust, `crates/api`):
+**gRPC API** (`sentinel-grpc-api`, Rust, `crates/api`):
 ```bash
 # DATABASE_URL is set automatically by `fly postgres attach` (step 2).
-fly secrets set -a trident-grpc-api \
+fly secrets set -a sentinel-grpc-api \
   REDIS_URL="redis://..."
 ```
 `crates/api/src/config.rs` requires `DATABASE_URL` and `GRPC_ADDR` at startup
@@ -537,9 +537,9 @@ sensitive, only internal-network configuration. `REDIS_URL` is read directly
 in `crates/api/src/main.rs` via `.expect(...)`, so it is just as required in
 practice even though it is not part of `Config::from_env`.
 
-**Indexer** (`trident-indexer`, Rust, `crates/indexer`):
+**Indexer** (`sentinel-indexer`, Rust, `crates/indexer`):
 ```bash
-fly secrets set -a trident-indexer \
+fly secrets set -a sentinel-indexer \
   REDIS_URL="redis://..." \
   STELLAR_RPC_URL="https://soroban-testnet.stellar.org"
 ```
@@ -548,12 +548,12 @@ fly secrets set -a trident-indexer \
 optional and defaults to `"testnet"` if unset — set it explicitly for
 mainnet deployments:
 ```bash
-fly secrets set -a trident-indexer NETWORK="mainnet"
+fly secrets set -a sentinel-indexer NETWORK="mainnet"
 ```
 
-**Go REST API** (`trident-api`, Go, `services/api`):
+**Go REST API** (`sentinel-api`, Go, `services/api`):
 ```bash
-fly secrets set -a trident-api \
+fly secrets set -a sentinel-api \
   API_KEY_SALT="$(openssl rand -hex 32)" \
   ADMIN_API_KEY="$(openssl rand -hex 32)" \
   API_KEY_HASHES="<hex(hmac_sha256(salt, key)) list, comma-separated>"
@@ -570,10 +570,10 @@ endpoint) and `PGBOUNCER_ADMIN_URL` (enables `GET /v1/admin/db`).
 
 #### 5. Run database migrations
 
-Attach to a temporary machine in the Trident private network and run migrations directly against Postgres (not through PgBouncer):
+Attach to a temporary machine in the Sentinel private network and run migrations directly against Postgres (not through PgBouncer):
 
 ```bash
-fly ssh console -a trident-grpc-api -C \
+fly ssh console -a sentinel-grpc-api -C \
   "psql \$DATABASE_URL -f /path/to/migrations/0001_init.sql"
 ```
 
@@ -598,15 +598,15 @@ fly deploy -c fly/api.toml     --remote-only
 ### Scaling
 
 ```bash
-fly scale count 2 -a trident-api               # scale Go API to 2 instances
-fly scale count 2 -a trident-grpc-api          # scale gRPC API to 2 instances
-fly scale vm shared-cpu-2x -a trident-indexer  # upgrade indexer VM
-fly scale show -a trident-api                  # show current VM size / count
+fly scale count 2 -a sentinel-api               # scale Go API to 2 instances
+fly scale count 2 -a sentinel-grpc-api          # scale gRPC API to 2 instances
+fly scale vm shared-cpu-2x -a sentinel-indexer  # upgrade indexer VM
+fly scale show -a sentinel-api                  # show current VM size / count
 ```
 
 The indexer should normally stay at `count = 1` — it is a single writer
 (issue #87); running more than one instance against the same database causes
-duplicate polling, not higher throughput. `trident-api` and `trident-grpc-api`
+duplicate polling, not higher throughput. `sentinel-api` and `sentinel-grpc-api`
 are stateless request handlers and scale horizontally.
 
 Each `fly/*.toml` also pins a starting VM size under `[[vm]]` and
@@ -614,9 +614,9 @@ Each `fly/*.toml` also pins a starting VM size under `[[vm]]` and
 
 | App | VM size (`fly/*.toml`) | `min_machines_running` |
 |---|---|---|
-| `trident-api` | `shared-cpu-1x` / 512mb | 1 (always at least one machine up) |
-| `trident-grpc-api` | `shared-cpu-1x` / 256mb | not set (services block has no `http_service`; Fly autostarts on demand) |
-| `trident-indexer` | `shared-cpu-1x` / 512mb | not set — this is a worker, not scaled to zero on request traffic |
+| `sentinel-api` | `shared-cpu-1x` / 512mb | 1 (always at least one machine up) |
+| `sentinel-grpc-api` | `shared-cpu-1x` / 256mb | not set (services block has no `http_service`; Fly autostarts on demand) |
+| `sentinel-indexer` | `shared-cpu-1x` / 512mb | not set — this is a worker, not scaled to zero on request traffic |
 
 Adjust the `[[vm]]` block or pass `fly scale vm <size> -a <app>` for a one-off
 resize; edit `min_machines_running` in the relevant toml and redeploy for a
@@ -624,14 +624,14 @@ lasting change.
 
 ### Monitoring
 
-- **Indexer metrics**: accessible on the 6PN at `trident-indexer.internal:9090/metrics`
+- **Indexer metrics**: accessible on the 6PN at `sentinel-indexer.internal:9090/metrics`
 - **Indexer health/readiness**: accessible on the 6PN at
-  `trident-indexer.internal:8080/healthz` (liveness) and `.../readyz`
+  `sentinel-indexer.internal:8080/healthz` (liveness) and `.../readyz`
   (readiness — checks both Postgres and Redis connectivity; see
   `crates/indexer/src/health.rs`). These are also wired into `fly/indexer.toml`
   under the top-level `[checks]` section so Fly restarts the machine if
   readiness fails, not just if the TCP port stops accepting connections.
-- **Go API metrics**: `GET /metrics` on the public `trident-api` endpoint
+- **Go API metrics**: `GET /metrics` on the public `sentinel-api` endpoint
 - **Go API health check**: `GET /v1/ready` (used by Fly's HTTP service check
   in `fly/api.toml` to gate traffic routing). `/v1/ready` verifies
   Postgres/Redis/gRPC reachability, unlike `/v1/health`, which is a cheap
@@ -675,15 +675,15 @@ Fly automatically redeploys the app when secrets change.
 ### Rollback
 
 ```bash
-fly releases -a trident-api          # list releases
-fly deploy --image-label <version> -a trident-api  # roll back to a specific release
+fly releases -a sentinel-api          # list releases
+fly deploy --image-label <version> -a sentinel-api  # roll back to a specific release
 ```
 
 ---
 
 ## Distributed Tracing (OpenTelemetry)
 
-All three Trident services — `trident-go-api`, `trident-grpc-api`, and `trident-indexer` — are instrumented with OpenTelemetry. Tracing is **opt-in**: set `OTEL_EXPORTER_OTLP_ENDPOINT` to enable it; leave it empty for zero overhead.
+All three Sentinel services — `sentinel-go-api`, `sentinel-grpc-api`, and `sentinel-indexer` — are instrumented with OpenTelemetry. Tracing is **opt-in**: set `OTEL_EXPORTER_OTLP_ENDPOINT` to enable it; leave it empty for zero overhead.
 
 ### Local development with Jaeger
 
@@ -702,9 +702,9 @@ OTEL_SAMPLING_RATIO=1.0
 
 Open the Jaeger UI at **http://localhost:16686** and search by service name:
 
-- `trident-go-api` — HTTP handler spans and outbound gRPC call spans
-- `trident-grpc-api` — inbound gRPC handler spans and SQL query spans
-- `trident-indexer` — poll cycle, RPC, parse, DB insert, and Redis publish spans
+- `sentinel-go-api` — HTTP handler spans and outbound gRPC call spans
+- `sentinel-grpc-api` — inbound gRPC handler spans and SQL query spans
+- `sentinel-indexer` — poll cycle, RPC, parse, DB insert, and Redis publish spans
 
 A single `GET /v1/events` request produces a trace with spans linked across all three services via the W3C `traceparent` header.
 
@@ -713,33 +713,33 @@ A single `GET /v1/events` request produces a trace with spans linked across all 
 Set `OTEL_EXPORTER_OTLP_ENDPOINT` to your Grafana Tempo OTLP gRPC endpoint on each app:
 
 ```bash
-fly secrets set -a trident-api       OTEL_EXPORTER_OTLP_ENDPOINT="https://tempo.your-org.grafana.net:443"
-fly secrets set -a trident-grpc-api  OTEL_EXPORTER_OTLP_ENDPOINT="https://tempo.your-org.grafana.net:443"
-fly secrets set -a trident-indexer   OTEL_EXPORTER_OTLP_ENDPOINT="https://tempo.your-org.grafana.net:443"
+fly secrets set -a sentinel-api       OTEL_EXPORTER_OTLP_ENDPOINT="https://tempo.your-org.grafana.net:443"
+fly secrets set -a sentinel-grpc-api  OTEL_EXPORTER_OTLP_ENDPOINT="https://tempo.your-org.grafana.net:443"
+fly secrets set -a sentinel-indexer   OTEL_EXPORTER_OTLP_ENDPOINT="https://tempo.your-org.grafana.net:443"
 ```
 
 Set the sampling ratio (default 10% in production):
 
 ```bash
-fly secrets set -a trident-api       OTEL_SAMPLING_RATIO=0.1
-fly secrets set -a trident-grpc-api  OTEL_SAMPLING_RATIO=0.1
-fly secrets set -a trident-indexer   OTEL_SAMPLING_RATIO=0.1
+fly secrets set -a sentinel-api       OTEL_SAMPLING_RATIO=0.1
+fly secrets set -a sentinel-grpc-api  OTEL_SAMPLING_RATIO=0.1
+fly secrets set -a sentinel-indexer   OTEL_SAMPLING_RATIO=0.1
 ```
 
 ### Span attributes
 
 | Service | Span name | Key attributes |
 |---|---|---|
-| `trident-go-api` | HTTP handler (auto via `otelhttp`) | `http.method`, `http.status_code`, `http.route` |
-| `trident-go-api` | gRPC client call (auto via `otelgrpc`) | `rpc.system`, `rpc.method` |
-| `trident-grpc-api` | `list_events` | `rpc.system`, `contract_id` |
-| `trident-grpc-api` | `get_event` | `rpc.system` |
-| `trident-grpc-api` | `stream_events` | `rpc.system` |
-| `trident-indexer` | `poll_cycle` | `cursor` |
-| `trident-indexer` | `rpc_get_events` | — |
-| `trident-indexer` | `parse_events` | — |
-| `trident-indexer` | `db_insert_events` | `contract_id` |
-| `trident-indexer` | `redis_xadd` | — |
+| `sentinel-go-api` | HTTP handler (auto via `otelhttp`) | `http.method`, `http.status_code`, `http.route` |
+| `sentinel-go-api` | gRPC client call (auto via `otelgrpc`) | `rpc.system`, `rpc.method` |
+| `sentinel-grpc-api` | `list_events` | `rpc.system`, `contract_id` |
+| `sentinel-grpc-api` | `get_event` | `rpc.system` |
+| `sentinel-grpc-api` | `stream_events` | `rpc.system` |
+| `sentinel-indexer` | `poll_cycle` | `cursor` |
+| `sentinel-indexer` | `rpc_get_events` | — |
+| `sentinel-indexer` | `parse_events` | — |
+| `sentinel-indexer` | `db_insert_events` | `contract_id` |
+| `sentinel-indexer` | `redis_xadd` | — |
 
 ## Staging Environment {#staging}
 
@@ -753,8 +753,8 @@ then runs a post-deploy smoke test before staging is considered promotable.
   (indexer, grpc-api, go-api) and pushes them to GHCR tagged `staging` and
   `staging-<short-sha>`, reusing the same Dockerfiles and Buildx setup as the
   tag-triggered `release.yml` (issue #302).
-- **Helm deploy**: `helm upgrade --install trident-staging` using
-  `helm/trident/values-staging.yaml` (a scaled-down overlay: single replicas,
+- **Helm deploy**: `helm upgrade --install sentinel-staging` using
+  `helm/sentinel/values-staging.yaml` (a scaled-down overlay: single replicas,
   smaller resource requests, ingress disabled) plus the new image tags.
 - **Smoke test**: health check, a real `GET /v1/events` query, a bounded read
   of the `GET /v1/events/stream` SSE endpoint, and an error-path check
@@ -783,7 +783,7 @@ following require you to provision them once:
   provisioned — trigger the workflow via `workflow_dispatch` with
   `dry_run=true`; the check then emits a notice, sets `configured=false`, and
   the deploy and smoke-test jobs are skipped without failing the run.
-- **Variables**: `STAGING_NAMESPACE` (defaults to `trident-staging`) and
+- **Variables**: `STAGING_NAMESPACE` (defaults to `sentinel-staging`) and
   `STAGING_URL` (public URL of the deployed staging stack, used by the smoke
   test). Variables must never contain credentials.
 - **Migrations are stubbed pending issue #308** ("database migration job as
@@ -815,7 +815,7 @@ following require you to provision them once:
    that version and `latest` (issue #302).
 4. Roll out to production the same way as any other release — see
    [Updating (Rolling Update)](#updating-rolling-update) above — pointing
-   `helm/trident/values.yaml` (production defaults, no `-staging` overlay) at
+   `helm/sentinel/values.yaml` (production defaults, no `-staging` overlay) at
    the new tag.
 5. If a smoke test on `dev` fails, treat the branch as un-promotable until
    fixed — do not cut a `main` PR or tag from a red `dev`.

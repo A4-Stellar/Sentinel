@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TridentApiError, TridentClient, TridentError } from "../src/index.js";
+import { SentinelApiError, SentinelClient, SentinelError } from "../src/index.js";
 
 const BASE_URL = "http://localhost:3000";
 const API_KEY = "test-key";
 
-const client = new TridentClient({
+const client = new SentinelClient({
   apiUrl: BASE_URL,
   apiKey: API_KEY,
   network: "testnet",
@@ -129,22 +129,22 @@ describe("queryEvents", () => {
     expect(url).toContain(`cursor=${cursor1}`);
   });
 
-  it("throws TridentApiError on 401 with status and code", async () => {
+  it("throws SentinelApiError on 401 with status and code", async () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(401, "UNAUTHORIZED", "Unauthorized"));
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(401);
-    expect((err as TridentApiError).code).toBe("UNAUTHORIZED");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(401);
+    expect((err as SentinelApiError).code).toBe("UNAUTHORIZED");
   });
 
-  it("throws TridentApiError on 429", async () => {
+  it("throws SentinelApiError on 429", async () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(429, "RATE_LIMITED", "Too many requests"));
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(429);
-    expect((err as TridentApiError).code).toBe("RATE_LIMITED");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(429);
+    expect((err as SentinelApiError).code).toBe("RATE_LIMITED");
   });
 });
 
@@ -164,34 +164,34 @@ describe("getEventById", () => {
     expect(event).toBeInstanceOf(Object);
   });
 
-  it("throws TridentApiError(NOT_FOUND) on 404", async () => {
+  it("throws SentinelApiError(NOT_FOUND) on 404", async () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(404, "NOT_FOUND", "Not found"));
 
     const err = await client
       .getEventById({ id: "00000000-0000-0000-0000-000000000099" })
       .catch((e: unknown) => e);
 
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(404);
-    expect((err as TridentApiError).code).toBe("NOT_FOUND");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(404);
+    expect((err as SentinelApiError).code).toBe("NOT_FOUND");
   });
 
-  it("throws TridentApiError(UNAUTHORIZED) on 401", async () => {
+  it("throws SentinelApiError(UNAUTHORIZED) on 401", async () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(401, "UNAUTHORIZED", "Unauthorized"));
 
     const err = await client
       .getEventById({ id: "some-id" })
       .catch((e: unknown) => e);
 
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(401);
-    expect((err as TridentApiError).code).toBe("UNAUTHORIZED");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(401);
+    expect((err as SentinelApiError).code).toBe("UNAUTHORIZED");
   });
 });
 
-// ── TridentApiError envelope parsing (#133) ───────────────────────────────────
+// ── SentinelApiError envelope parsing (#133) ───────────────────────────────────
 
-describe("TridentApiError", () => {
+describe("SentinelApiError", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -200,20 +200,20 @@ describe("TridentApiError", () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(422, "INVALID_ARGUMENT", "bad cursor", "cursor"));
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(422);
-    expect((err as TridentApiError).code).toBe("INVALID_ARGUMENT");
-    expect((err as TridentApiError).field).toBe("cursor");
-    expect((err as TridentApiError).message).toBe("bad cursor");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(422);
+    expect((err as SentinelApiError).code).toBe("INVALID_ARGUMENT");
+    expect((err as SentinelApiError).field).toBe("cursor");
+    expect((err as SentinelApiError).message).toBe("bad cursor");
   });
 
   it("parses structured error envelope — 500", async () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(500, "INTERNAL", "unexpected error"));
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(500);
-    expect((err as TridentApiError).code).toBe("INTERNAL");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(500);
+    expect((err as SentinelApiError).code).toBe("INTERNAL");
   });
 
   it("falls back to INTERNAL when body is not JSON", async () => {
@@ -225,16 +225,16 @@ describe("TridentApiError", () => {
     }));
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(503);
-    expect((err as TridentApiError).code).toBe("INTERNAL");
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(503);
+    expect((err as SentinelApiError).code).toBe("INTERNAL");
   });
 
-  it("instanceof TridentApiError works correctly", async () => {
+  it("instanceof SentinelApiError works correctly", async () => {
     vi.stubGlobal("fetch", mockApiErrorFetch(401, "UNAUTHORIZED", "bad key"));
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
-    expect(err instanceof TridentApiError).toBe(true);
+    expect(err instanceof SentinelApiError).toBe(true);
   });
 });
 
@@ -322,10 +322,10 @@ describe("subscribeToContract", () => {
     vi.unstubAllGlobals();
   });
 
-  it("throws TridentApiError(INVALID_ARGUMENT) for empty topic0", () => {
+  it("throws SentinelApiError(INVALID_ARGUMENT) for empty topic0", () => {
     expect(() =>
       client.subscribeToContract({ contractId: "CTEST", topic0: "", onEvent: () => {} }),
-    ).toThrow(TridentApiError);
+    ).toThrow(SentinelApiError);
 
     expect(() =>
       client.subscribeToContract({ contractId: "CTEST", topic0: "", onEvent: () => {} }),
@@ -379,7 +379,7 @@ describe("subscribeToContract", () => {
       close() {}
     };
 
-    const clientWithCustomWS = new TridentClient({
+    const clientWithCustomWS = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",

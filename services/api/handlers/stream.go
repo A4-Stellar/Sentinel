@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	"github.com/redis/go-redis/v9"
 )
 
 const (
-	eventStreamKey = "trident:events"
+	eventStreamKey = "sentinel:events"
 	streamReadWait = time.Second
 
 	// sseWriteDeadline bounds a single SSE write. A stalled client (full TCP

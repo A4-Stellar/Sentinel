@@ -19,9 +19,9 @@ not to support scale-out.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "trident.fullname" . }}-indexer
+  name: {{ include "sentinel.fullname" . }}-indexer
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: indexer
 spec:
   # Single-writer by design — see the note at the top of this file (issue #418).
@@ -34,21 +34,21 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      {{- include "trident.selectorLabels" (dict "root" . "component" "indexer") | nindent 6 }}
+      {{- include "sentinel.selectorLabels" (dict "root" . "component" "indexer") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "trident.selectorLabels" (dict "root" . "component" "indexer") | nindent 8 }}
+        {{- include "sentinel.selectorLabels" (dict "root" . "component" "indexer") | nindent 8 }}
     spec:
-      {{- include "trident.imagePullSecrets" . | nindent 6 }}
+      {{- include "sentinel.imagePullSecrets" . | nindent 6 }}
       securityContext:
-        {{- include "trident.podSecurityContext" (dict "uid" .Values.indexer.securityContextUid) | nindent 8 }}
+        {{- include "sentinel.podSecurityContext" (dict "uid" .Values.indexer.securityContextUid) | nindent 8 }}
       containers:
         - name: indexer
           image: "{{ .Values.indexer.image.repository }}:{{ .Values.indexer.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           securityContext:
-            {{- include "trident.containerSecurityContext" . | nindent 12 }}
+            {{- include "sentinel.containerSecurityContext" . | nindent 12 }}
           ports:
             - name: metrics
               containerPort: {{ .Values.indexer.metricsPort }}

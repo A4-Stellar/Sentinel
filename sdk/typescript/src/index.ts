@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseApiError, TridentApiError, TridentError } from "./errors.js";
+import { parseApiError, SentinelApiError, SentinelError } from "./errors.js";
 import { redactKey, resolveApiKey, resolveApiUrl } from "./config.js";
 import { createSubscription } from "./subscription.js";
 import { iterEvents as iterEventsImpl } from "./iterator.js";
@@ -13,8 +13,8 @@ import {
 } from "./retry.js";
 import type { RetryConfig } from "./retry.js";
 
-export { TridentError, TridentApiError } from "./errors.js";
-export type { TridentErrorCode } from "./errors.js";
+export { SentinelError, SentinelApiError } from "./errors.js";
+export type { SentinelErrorCode } from "./errors.js";
 export { ENV_API_KEY, ENV_BASE_URL, redactKey } from "./config.js";
 export { iterEvents, DEFAULT_MAX_PAGES } from "./iterator.js";
 export type { IterEventsOptions, QueryEventsFn } from "./iterator.js";
@@ -55,15 +55,15 @@ function resolveTimeoutMs(
   const chosen = override ?? clientValue ?? DEFAULT_TIMEOUT_MS;
   if (chosen === false) return false;
   if (!Number.isFinite(chosen) || chosen <= 0) {
-    throw new TridentError("INTERNAL", `timeoutMs must be a positive number or false, got ${chosen}`);
+    throw new SentinelError("INTERNAL", `timeoutMs must be a positive number or false, got ${chosen}`);
   }
   return chosen;
 }
 
-export interface TridentClientConfig {
-  /** Falls back to the TRIDENT_BASE_URL environment variable when omitted. */
+export interface SentinelClientConfig {
+  /** Falls back to the SENTINEL_BASE_URL environment variable when omitted. */
   apiUrl?: string;
-  /** Falls back to the TRIDENT_API_KEY environment variable when omitted. */
+  /** Falls back to the SENTINEL_API_KEY environment variable when omitted. */
   apiKey?: string;
   network: Network;
   webSocketImpl?: any;
@@ -84,7 +84,7 @@ export interface TridentClientConfig {
   timeoutMs?: number | false;
 }
 
-/** Per-call options accepted by {@link TridentClient.queryEvents} and {@link TridentClient.getEventById}. */
+/** Per-call options accepted by {@link SentinelClient.queryEvents} and {@link SentinelClient.getEventById}. */
 export interface RequestOptions {
   /** Overrides the client-level `retry` config for this call only. */
   retry?: RetryConfig | false;
@@ -199,14 +199,14 @@ function apiEventToSorobanEvent(
 // Client
 // ---------------------------------------------------------------------------
 
-export class TridentClient {
-  private readonly config: TridentClientConfig;
+export class SentinelClient {
+  private readonly config: SentinelClientConfig;
   private readonly apiUrl: string;
   private readonly apiKey: string;
   private readonly transport: "rest" | "graphql";
   private graphqlTransport?: any; // Lazy-loaded GraphQL transport
 
-  constructor(config: TridentClientConfig) {
+  constructor(config: SentinelClientConfig) {
     this.config = config;
     this.apiUrl = resolveApiUrl(config.apiUrl);
     this.apiKey = resolveApiKey(config.apiKey);
@@ -215,7 +215,7 @@ export class TridentClient {
 
   /** Redacted string representation — never includes the raw API key. */
   toString(): string {
-    return `TridentClient(apiUrl=${this.apiUrl}, apiKey=${redactKey(this.apiKey)})`;
+    return `SentinelClient(apiUrl=${this.apiUrl}, apiKey=${redactKey(this.apiKey)})`;
   }
 
   /** Ensures Node's `console.log`/`util.inspect` also redact the API key. */
@@ -263,12 +263,12 @@ export class TridentClient {
           }
         }
         const err = timedOut
-          ? new TridentError(
+          ? new SentinelError(
               "TIMEOUT",
               `Request timed out after ${timeoutMs}ms${attempt > 1 ? ` on each of ${attempt} attempts` : ""}`,
               cause,
             )
-          : new TridentError(
+          : new SentinelError(
               attempt > 1 ? "RETRY_EXHAUSTED" : "INTERNAL",
               attempt > 1
                 ? `Network request failed after ${attempt} attempts`
@@ -298,7 +298,7 @@ export class TridentClient {
       }
 
       const json: unknown = await res.json().catch((cause: unknown) => {
-        throw new TridentError("INTERNAL", "Failed to parse response JSON", cause);
+        throw new SentinelError("INTERNAL", "Failed to parse response JSON", cause);
       });
 
       return schema.parse(json);
@@ -376,8 +376,8 @@ export class TridentClient {
    *
    * Stops when the server reports `has_more === false`. Fetches at most
    * `options.maxPages` pages (default 100); if that limit is reached while more
-   * results remain, throws `TridentError` with code `ITERATION_LIMIT`. Any
-   * `TridentError` from an underlying page request propagates transparently.
+   * results remain, throws `SentinelError` with code `ITERATION_LIMIT`. Any
+   * `SentinelError` from an underlying page request propagates transparently.
    */
   iterEvents(
     params: QueryEventsParams,
@@ -393,7 +393,7 @@ export class TridentClient {
   /**
    * Fetch a single event by its UUID.
    *
-   * Throws `TridentError` with code `NOT_FOUND` if no event exists.
+   * Throws `SentinelError` with code `NOT_FOUND` if no event exists.
    */
   async getEventById(
     params: GetEventByIdParams,
@@ -418,7 +418,7 @@ export class TridentClient {
    */
   subscribeToContract(params: SubscribeToContractParams): Subscription {
     if (params.topic0 !== undefined && params.topic0 === "") {
-      throw new TridentApiError(
+      throw new SentinelApiError(
         400,
         "INVALID_ARGUMENT",
         "topic0 must not be an empty string; omit the field to receive all events",
@@ -431,7 +431,7 @@ export class TridentClient {
         // Attempt to import graphql-ws
         require("graphql-ws");
       } catch {
-        throw new TridentError(
+        throw new SentinelError(
           "INTERNAL",
           "GraphQL subscriptions require graphql-ws. Install it with: npm install graphql-ws",
         );
@@ -439,7 +439,7 @@ export class TridentClient {
 
       // Use graphql-ws protocol for subscriptions
       // This will be implemented via the graphql-ws client library
-      throw new TridentError(
+      throw new SentinelError(
         "INTERNAL",
         "GraphQL subscriptions are not yet fully implemented",
       );

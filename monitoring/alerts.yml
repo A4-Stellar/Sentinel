@@ -1,9 +1,9 @@
-# Prometheus alerting rules for Trident.
+# Prometheus alerting rules for Sentinel.
 #
 # Load via Prometheus's `rule_files:` (see monitoring/README.md for a sample
 # scrape config) or adapt into a PrometheusRule CRD if running the Prometheus
-# Operator. Every rule assumes the indexer is scraped as job "trident-indexer"
-# and the Go API as job "trident-api" — rename the `job=` label matchers
+# Operator. Every rule assumes the indexer is scraped as job "sentinel-indexer"
+# and the Go API as job "sentinel-api" — rename the `job=` label matchers
 # below if your scrape config uses different job names.
 #
 # Each alert's `runbook_url` points at docs/runbooks/alerts.md#<anchor>,
@@ -16,115 +16,115 @@ groups:
   # ---------------------------------------------------------------------------
   # Ledger lag — indexer falling behind the Stellar chain tip.
   # ---------------------------------------------------------------------------
-  - name: trident.indexer.lag
+  - name: sentinel.indexer.lag
     rules:
-      - alert: TridentIndexerLagWarning
-        expr: trident_indexer_ledger_lag > 200
+      - alert: SentinelIndexerLagWarning
+        expr: sentinel_indexer_ledger_lag > 200
         for: 10m
         labels:
           severity: warning
           service: indexer
         annotations:
-          summary: "Trident indexer is {{ $value }} ledgers behind chain tip"
+          summary: "Sentinel indexer is {{ $value }} ledgers behind chain tip"
           description: >
-            trident_indexer_ledger_lag has been above 200 ledgers for 10
+            sentinel_indexer_ledger_lag has been above 200 ledgers for 10
             minutes on {{ $labels.instance }}. The indexer is falling behind
             but has not yet crossed the critical threshold.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerlagwarning"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerlagwarning"
 
-      - alert: TridentIndexerLagCritical
-        expr: trident_indexer_ledger_lag > 1000
+      - alert: SentinelIndexerLagCritical
+        expr: sentinel_indexer_ledger_lag > 1000
         for: 5m
         labels:
           severity: critical
           service: indexer
         annotations:
-          summary: "Trident indexer is critically behind chain tip ({{ $value }} ledgers)"
+          summary: "Sentinel indexer is critically behind chain tip ({{ $value }} ledgers)"
           description: >
-            trident_indexer_ledger_lag has been above 1000 ledgers for 5
+            sentinel_indexer_ledger_lag has been above 1000 ledgers for 5
             minutes on {{ $labels.instance }}. API consumers are reading
             stale data.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerlagcritical"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerlagcritical"
 
   # ---------------------------------------------------------------------------
   # Dead-man's-switch — the poll loop must tick even when nothing else fires.
   # ---------------------------------------------------------------------------
-  - name: trident.indexer.heartbeat
+  - name: sentinel.indexer.heartbeat
     rules:
-      - alert: TridentIndexerHeartbeatStale
-        expr: (time() - trident_indexer_last_poll_timestamp_seconds) > 300
+      - alert: SentinelIndexerHeartbeatStale
+        expr: (time() - sentinel_indexer_last_poll_timestamp_seconds) > 300
         for: 2m
         labels:
           severity: critical
           service: indexer
         annotations:
-          summary: "Trident indexer heartbeat is stale"
+          summary: "Sentinel indexer heartbeat is stale"
           description: >
-            trident_indexer_last_poll_timestamp_seconds on
+            sentinel_indexer_last_poll_timestamp_seconds on
             {{ $labels.instance }} has not advanced in over 5 minutes. The
             poll loop is hung (deadlock, panic caught by a supervisor,
             blocked I/O) even though the process may still be running and
             /metrics may still respond.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerheartbeatstale"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerheartbeatstale"
 
-      # #466 added a TridentIndexerStalled alert here for issue #400. It is
-      # dropped: with the metric name corrected above, TridentIndexerHeartbeatStale
-      # already covers staleness and TridentIndexerMetricsMissing already
+      # #466 added a SentinelIndexerStalled alert here for issue #400. It is
+      # dropped: with the metric name corrected above, SentinelIndexerHeartbeatStale
+      # already covers staleness and SentinelIndexerMetricsMissing already
       # covers absence, both at the same critical severity. A third rule on
       # the same series only pages twice for one failure. What #400 actually
       # asked for — firing on silence rather than on lag — is satisfied by
       # these two now that they query a series the indexer emits.
 
-      - alert: TridentIndexerMetricsMissing
-        expr: absent(trident_indexer_last_poll_timestamp_seconds)
+      - alert: SentinelIndexerMetricsMissing
+        expr: absent(sentinel_indexer_last_poll_timestamp_seconds)
         for: 3m
         labels:
           severity: critical
           service: indexer
         annotations:
-          summary: "Trident indexer metrics are missing entirely"
+          summary: "Sentinel indexer metrics are missing entirely"
           description: >
-            No trident_indexer_last_poll_timestamp_seconds series exists —
+            No sentinel_indexer_last_poll_timestamp_seconds series exists —
             the indexer's /metrics endpoint is not scrapeable at all (process
             down, crashed, or a scrape-config/network problem).
-          runbook_url: "docs/runbooks/alerts.md#tridentindexermetricsmissing"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexermetricsmissing"
 
-      - alert: TridentIndexerProcessDown
-        expr: up{job="trident-indexer"} == 0
+      - alert: SentinelIndexerProcessDown
+        expr: up{job="sentinel-indexer"} == 0
         for: 2m
         labels:
           severity: critical
           service: indexer
         annotations:
-          summary: "Trident indexer scrape target is down"
-          description: "Prometheus has not been able to scrape trident-indexer for 2 minutes."
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerprocessdown"
+          summary: "Sentinel indexer scrape target is down"
+          description: "Prometheus has not been able to scrape sentinel-indexer for 2 minutes."
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerprocessdown"
 
   # ---------------------------------------------------------------------------
   # Parse errors — malformed events written to parse_errors instead of being
   # indexed (see crates/indexer parse-error-isolation).
   # ---------------------------------------------------------------------------
-  - name: trident.indexer.parse_errors
+  - name: sentinel.indexer.parse_errors
     rules:
-      - alert: TridentIndexerParseErrorRateHigh
+      - alert: SentinelIndexerParseErrorRateHigh
         expr: >
           (
-            sum(rate(trident_indexer_parse_errors_total[10m]))
+            sum(rate(sentinel_indexer_parse_errors_total[10m]))
             /
-            (sum(rate(trident_indexer_events_total[10m])) + sum(rate(trident_indexer_parse_errors_total[10m])) + 0.0001)
+            (sum(rate(sentinel_indexer_events_total[10m])) + sum(rate(sentinel_indexer_parse_errors_total[10m])) + 0.0001)
           ) > 0.01
         for: 15m
         labels:
           severity: warning
           service: indexer
         annotations:
-          summary: "Elevated Trident indexer parse-error rate ({{ $value | humanizePercentage }})"
+          summary: "Elevated Sentinel indexer parse-error rate ({{ $value | humanizePercentage }})"
           description: >
             Over 1% of events in the last 10 minutes failed XDR decoding and
             were written to parse_errors instead of soroban_events. Usually
             means an upstream RPC/XDR format change the parser doesn't
             recognise yet.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerparseerrorratehigh"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerparseerrorratehigh"
 
       # Unexpected ScVal variants (#506). The decoder matches every ScVal
       # variant exhaustively — a new XDR variant fails compilation, so this
@@ -133,75 +133,75 @@ groups:
       # (ContractInstance / LedgerKeyContractInstance / LedgerKeyNonce) is
       # decoded from live traffic: the value is stored faithfully, but the
       # emitting contract deserves a look.
-      - alert: TridentIndexerUnexpectedScValVariant
-        expr: increase(trident_scval_unexpected_variant_total[1h]) > 0
+      - alert: SentinelIndexerUnexpectedScValVariant
+        expr: increase(sentinel_scval_unexpected_variant_total[1h]) > 0
       # A non-empty persist dead-letter queue is data missing from
       # soroban_events until someone replays it — a silently growing DLQ is
       # the same as data loss. Rows leave the pending state only through the
       # documented replay procedure, so this fires for as long as any exist.
-      - alert: TridentIndexerPersistDeadLetterBacklog
-        expr: trident_indexer_persist_dead_letter_backlog > 0
+      - alert: SentinelIndexerPersistDeadLetterBacklog
+        expr: sentinel_indexer_persist_dead_letter_backlog > 0
         for: 5m
         labels:
           severity: warning
           service: indexer
         annotations:
-          summary: "Trident decoded {{ $value | humanize }} anomalous ScVal variant(s) in the last hour"
+          summary: "Sentinel decoded {{ $value | humanize }} anomalous ScVal variant(s) in the last hour"
           description: >
             An event payload contained an ScVal variant that no well-behaved
             contract emits (ContractInstance or a ledger-key form). The value
             was decoded and stored faithfully — never coerced — and the
             indexer logs name the variant and context. Identify the emitting
             contract from the logs and review what it is publishing.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerunexpectedscvalvariant"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerunexpectedscvalvariant"
 
   # ---------------------------------------------------------------------------
   # Ledger-range reconciliation against the RPC source (#511).
   # ---------------------------------------------------------------------------
-  - name: trident.indexer.reconciliation
+  - name: sentinel.indexer.reconciliation
     rules:
-      - alert: TridentIndexerReconciliationMismatch
-        expr: trident_indexer_reconcile_discrepant_ledgers > 0
+      - alert: SentinelIndexerReconciliationMismatch
+        expr: sentinel_indexer_reconcile_discrepant_ledgers > 0
         for: 15m
         labels:
           severity: warning
           service: indexer
         annotations:
-          summary: "Trident indexed counts disagree with the RPC source for {{ $value }} ledger(s)"
+          summary: "Sentinel indexed counts disagree with the RPC source for {{ $value }} ledger(s)"
           description: >
             The reconciliation loop compared indexed event counts per ledger
             against getEvents over a settled window and found disagreement.
             The indexer logs name the exact ledger ranges with both counts.
             This is the silent-under-indexing signal: the API may be
             returning confident, incomplete answers for these ledgers.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerreconciliationmismatch"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerreconciliationmismatch"
 
-      - alert: TridentIndexerReconciliationFailing
-        expr: increase(trident_indexer_reconcile_pass_failures_total[30m]) > 2
+      - alert: SentinelIndexerReconciliationFailing
+        expr: increase(sentinel_indexer_reconcile_pass_failures_total[30m]) > 2
         for: 30m
         labels:
           severity: warning
           service: indexer
         annotations:
-          summary: "Trident reconciliation passes are failing"
+          summary: "Sentinel reconciliation passes are failing"
           description: >
             The reconciliation loop keeps aborting before producing a report
             (RPC or database failures). While this fires, nothing is
             verifying that indexed counts match the chain - treat the
             mismatch alert's silence as unknown, not clean.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerreconciliationfailing"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerreconciliationfailing"
 
   # ---------------------------------------------------------------------------
   # Stellar RPC health (#297).
   # ---------------------------------------------------------------------------
-  - name: trident.indexer.rpc
+  - name: sentinel.indexer.rpc
     rules:
-      - alert: TridentIndexerRPCErrorRateHigh
+      - alert: SentinelIndexerRPCErrorRateHigh
         expr: >
           (
-            sum(rate(trident_indexer_rpc_errors_total[5m]))
+            sum(rate(sentinel_indexer_rpc_errors_total[5m]))
             /
-            (sum(rate(trident_indexer_rpc_call_duration_seconds_count[5m])) + 0.0001)
+            (sum(rate(sentinel_indexer_rpc_call_duration_seconds_count[5m])) + 0.0001)
           ) > 0.05
         for: 10m
         labels:
@@ -213,14 +213,14 @@ groups:
             Over 5% of Stellar RPC calls (getEvents/getLedgers) have errored
             in the last 5 minutes. The upstream RPC node may be degraded,
             rate-limiting, or unreachable.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerrpcerrorratehigh"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerrpcerrorratehigh"
 
-      - alert: TridentIndexerRPCErrorRateCritical
+      - alert: SentinelIndexerRPCErrorRateCritical
         expr: >
           (
-            sum(rate(trident_indexer_rpc_errors_total[5m]))
+            sum(rate(sentinel_indexer_rpc_errors_total[5m]))
             /
-            (sum(rate(trident_indexer_rpc_call_duration_seconds_count[5m])) + 0.0001)
+            (sum(rate(sentinel_indexer_rpc_call_duration_seconds_count[5m])) + 0.0001)
           ) > 0.25
         for: 5m
         labels:
@@ -231,98 +231,98 @@ groups:
           description: >
             Over 25% of Stellar RPC calls have errored in the last 5 minutes
             — the indexer is very likely stalled on RPC failures.
-          runbook_url: "docs/runbooks/alerts.md#tridentindexerrpcerrorratecritical"
+          runbook_url: "docs/runbooks/alerts.md#sentinelindexerrpcerrorratecritical"
 
   # ---------------------------------------------------------------------------
   # Go API — HTTP error rate and process health.
   # ---------------------------------------------------------------------------
-  - name: trident.api.http
+  - name: sentinel.api.http
     rules:
-      - alert: TridentAPIHTTP5xxRateHigh
+      - alert: SentinelAPIHTTP5xxRateHigh
         expr: >
           (
-            sum(rate(trident_api_http_requests_total{status=~"5.."}[5m]))
+            sum(rate(sentinel_api_http_requests_total{status=~"5.."}[5m]))
             /
-            (sum(rate(trident_api_http_requests_total[5m])) + 0.0001)
+            (sum(rate(sentinel_api_http_requests_total[5m])) + 0.0001)
           ) > 0.05
         for: 10m
         labels:
           severity: warning
           service: api
         annotations:
-          summary: "Elevated Trident API 5xx rate ({{ $value | humanizePercentage }})"
+          summary: "Elevated Sentinel API 5xx rate ({{ $value | humanizePercentage }})"
           description: >
             Over 5% of Go API requests returned a 5xx status in the last 5
             minutes.
-          runbook_url: "docs/runbooks/alerts.md#tridentapihttp5xxratehigh"
+          runbook_url: "docs/runbooks/alerts.md#sentinelapihttp5xxratehigh"
 
-      - alert: TridentAPIHTTP5xxRateCritical
+      - alert: SentinelAPIHTTP5xxRateCritical
         expr: >
           (
-            sum(rate(trident_api_http_requests_total{status=~"5.."}[5m]))
+            sum(rate(sentinel_api_http_requests_total{status=~"5.."}[5m]))
             /
-            (sum(rate(trident_api_http_requests_total[5m])) + 0.0001)
+            (sum(rate(sentinel_api_http_requests_total[5m])) + 0.0001)
           ) > 0.25
         for: 5m
         labels:
           severity: critical
           service: api
         annotations:
-          summary: "Critical Trident API 5xx rate ({{ $value | humanizePercentage }})"
+          summary: "Critical Sentinel API 5xx rate ({{ $value | humanizePercentage }})"
           description: >
             Over 25% of Go API requests returned a 5xx status in the last 5
             minutes — the API is largely unusable.
-          runbook_url: "docs/runbooks/alerts.md#tridentapihttp5xxratecritical"
+          runbook_url: "docs/runbooks/alerts.md#sentinelapihttp5xxratecritical"
 
-      - alert: TridentAPIProcessDown
-        expr: up{job="trident-api"} == 0
+      - alert: SentinelAPIProcessDown
+        expr: up{job="sentinel-api"} == 0
         for: 2m
         labels:
           severity: critical
           service: api
         annotations:
-          summary: "Trident API scrape target is down"
-          description: "Prometheus has not been able to scrape trident-api for 2 minutes."
-          runbook_url: "docs/runbooks/alerts.md#tridentapiprocessdown"
+          summary: "Sentinel API scrape target is down"
+          description: "Prometheus has not been able to scrape sentinel-api for 2 minutes."
+          runbook_url: "docs/runbooks/alerts.md#sentinelapiprocessdown"
 
   # ---------------------------------------------------------------------------
   # Dependency health — Postgres and Redis, as seen through the Go API.
   # GET /v1/health checks both (and gRPC) directly; the Helm chart's
   # liveness/readiness probes already poll it every 10s, which is what keeps
   # this counter moving even when nothing else calls the endpoint. If you run
-  # Trident without those probes (e.g. plain docker compose), add an
+  # Sentinel without those probes (e.g. plain docker compose), add an
   # equivalent periodic health check so this alert has samples to evaluate.
   # ---------------------------------------------------------------------------
-  - name: trident.api.dependencies
+  - name: sentinel.api.dependencies
     rules:
-      - alert: TridentAPIDependencyUnhealthy
-        expr: sum(rate(trident_api_http_requests_total{route="GET /v1/health",status!="200"}[5m])) > 0
+      - alert: SentinelAPIDependencyUnhealthy
+        expr: sum(rate(sentinel_api_http_requests_total{route="GET /v1/health",status!="200"}[5m])) > 0
         for: 5m
         labels:
           severity: critical
           service: api
         annotations:
-          summary: "Trident API dependency check is failing"
+          summary: "Sentinel API dependency check is failing"
           description: >
             GET /v1/health has been returning non-200 for 5 minutes. Check
             the response body's `checks` field (postgres/redis/grpc_api) to
             see which dependency is down.
-          runbook_url: "docs/runbooks/alerts.md#tridentapidependencyunhealthy"
+          runbook_url: "docs/runbooks/alerts.md#sentinelapidependencyunhealthy"
 
-      - alert: TridentAPIDBPoolSaturated
+      - alert: SentinelAPIDBPoolSaturated
         expr: >
-          (trident_api_db_pool_acquired_connections / trident_api_db_pool_max_connections) > 0.9
+          (sentinel_api_db_pool_acquired_connections / sentinel_api_db_pool_max_connections) > 0.9
         for: 10m
         labels:
           severity: warning
           service: api
         annotations:
-          summary: "Trident API Postgres pool is close to exhausted ({{ $value | humanizePercentage }} acquired)"
+          summary: "Sentinel API Postgres pool is close to exhausted ({{ $value | humanizePercentage }} acquired)"
           description: >
             Over 90% of the API's Postgres connection pool has been checked
             out for 10 minutes. Requests will start queuing or timing out on
             acquire once it's fully saturated.
-          runbook_url: "docs/runbooks/alerts.md#tridentapidbpoolsaturated"
+          runbook_url: "docs/runbooks/alerts.md#sentinelapidbpoolsaturated"
 
   # ---------------------------------------------------------------------------
   # Disk capacity — soroban_events grows without bound (issue #432).
@@ -341,9 +341,9 @@ groups:
   # Postgres is managed and does not expose those series, substitute the
   # provider's equivalent disk metric — the thresholds still apply.
   # ---------------------------------------------------------------------------
-  - name: trident.storage.capacity
+  - name: sentinel.storage.capacity
     rules:
-      - alert: TridentDiskFillingWithin14Days
+      - alert: SentinelDiskFillingWithin14Days
         expr: >
           predict_linear(
             node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql",fstype!~"tmpfs|overlay"}[6h],
@@ -361,9 +361,9 @@ groups:
             measured 890 bytes/event this is the expected trajectory once
             sustained event rates rise; it is a provisioning signal, not an
             incident. Plan a volume resize or enable partition retention.
-          runbook_url: "docs/runbooks/alerts.md#tridentdiskfillingwithin14days"
+          runbook_url: "docs/runbooks/alerts.md#sentineldiskfillingwithin14days"
 
-      - alert: TridentDiskFillingWithin48Hours
+      - alert: SentinelDiskFillingWithin48Hours
         expr: >
           predict_linear(
             node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql",fstype!~"tmpfs|overlay"}[6h],
@@ -380,11 +380,11 @@ groups:
             be full within 48 hours. A full volume stops ingest and fails
             writes across the API. Resize now, or drop the oldest
             soroban_events partition if retention allows.
-          runbook_url: "docs/runbooks/alerts.md#tridentdiskfillingwithin48hours"
+          runbook_url: "docs/runbooks/alerts.md#sentineldiskfillingwithin48hours"
 
       # Backstop for the case predict_linear cannot see: a step change in
       # consumption (a large backfill, a WAL pileup) that outruns a 6h trend.
-      - alert: TridentDiskSpaceLow
+      - alert: SentinelDiskSpaceLow
         expr: >
           node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql",fstype!~"tmpfs|overlay"}
             / node_filesystem_size_bytes{mountpoint="/var/lib/postgresql",fstype!~"tmpfs|overlay"}
@@ -400,14 +400,14 @@ groups:
             {{ $labels.instance }}. Unlike the predictive alerts above this
             fires regardless of trend, so it also catches a sudden step in
             usage such as a backfill or a WAL pileup.
-          runbook_url: "docs/runbooks/alerts.md#tridentdiskspacelow"
+          runbook_url: "docs/runbooks/alerts.md#sentineldiskspacelow"
 
   # ---------------------------------------------------------------------------
   # Container resource saturation & OOM killer (#444)
   # ---------------------------------------------------------------------------
-  - name: trident.container.resources
+  - name: sentinel.container.resources
     rules:
-      - alert: TridentContainerOOMKilled
+      - alert: SentinelContainerOOMKilled
         expr: increase(kube_pod_container_status_terminated_reason{reason="OOMKilled"}[10m]) > 0
         for: 0m
         labels:
@@ -418,9 +418,9 @@ groups:
           description: >
             Container {{ $labels.container }} exceeded its memory limit and was terminated
             by the kernel OOM killer. Check memory headroom and increase memory limits or tune GOMEMLIMIT.
-          runbook_url: "docs/runbooks/alerts.md#tridentcontaineroomkilled"
+          runbook_url: "docs/runbooks/alerts.md#sentinelcontaineroomkilled"
 
-      - alert: TridentContainerMemoryHigh
+      - alert: SentinelContainerMemoryHigh
         expr: >
           container_memory_working_set_bytes{container=~"api|grpc-api|indexer"}
             / container_spec_memory_limit_bytes{container=~"api|grpc-api|indexer"}
@@ -434,9 +434,9 @@ groups:
           description: >
             Container {{ $labels.container }} in pod {{ $labels.pod }} is at {{ $value | humanizePercentage }}
             of its configured memory limit.
-          runbook_url: "docs/runbooks/alerts.md#tridentcontainermemoryhigh"
+          runbook_url: "docs/runbooks/alerts.md#sentinelcontainermemoryhigh"
 
-      - alert: TridentContainerCPUThrottling
+      - alert: SentinelContainerCPUThrottling
         expr: >
           increase(container_cpu_cfs_throttled_periods_total{container=~"api|grpc-api|indexer"}[5m])
             / increase(container_cpu_cfs_periods_total{container=~"api|grpc-api|indexer"}[5m])
@@ -450,7 +450,7 @@ groups:
           description: >
             Container {{ $labels.container }} in pod {{ $labels.pod }} is experiencing significant CPU throttling
             under CFS quotas. Consider raising CPU limits or scaling out replicas.
-          runbook_url: "docs/runbooks/alerts.md#tridentcontainercputhrottling"
+          runbook_url: "docs/runbooks/alerts.md#sentinelcontainercputhrottling"
 
   # ---------------------------------------------------------------------------
   # Partition coverage — soroban_events named partitions (issue #525).
@@ -460,7 +460,7 @@ groups:
   # new row silently falls into soroban_events_default (the catch-all DEFAULT
   # partition), which has no indexes and no retention tooling.
   #
-  # The indexer exposes trident_indexer_partition_lookahead_ledgers: the
+  # The indexer exposes sentinel_indexer_partition_lookahead_ledgers: the
   # distance in ledgers between the current cursor and the upper bound of the
   # last named partition. When it reaches 0 the indexer halts with a Fatal
   # error rather than writing to DEFAULT (see assert_no_default_partition_overflow
@@ -472,13 +472,13 @@ groups:
   #
   # To add the next partition:
   #   SELECT create_soroban_partition(<last_upper>, <last_upper + 2000000>);
-  # See docs/runbooks/alerts.md#tridentpartitionexhaustionwarning for the full
+  # See docs/runbooks/alerts.md#sentinelpartitionexhaustionwarning for the full
   # procedure and docs/deployment.md#staging for the partition strategy.
   # ---------------------------------------------------------------------------
-  - name: trident.indexer.partitions
+  - name: sentinel.indexer.partitions
     rules:
-      - alert: TridentPartitionExhaustionWarning
-        expr: trident_indexer_partition_lookahead_ledgers < 5000000
+      - alert: SentinelPartitionExhaustionWarning
+        expr: sentinel_indexer_partition_lookahead_ledgers < 5000000
         for: 30m
         labels:
           severity: warning
@@ -488,17 +488,17 @@ groups:
             soroban_events partition lookahead below 5M ledgers
             ({{ $value | humanize }} remaining)
           description: >
-            trident_indexer_partition_lookahead_ledgers has been below
+            sentinel_indexer_partition_lookahead_ledgers has been below
             5,000,000 for 30 minutes. At the current Stellar mainnet rate of
             ~17,280 ledgers/day that is fewer than 289 days before the ingest
             frontier reaches the last named partition boundary and the indexer
             halts. Run `SELECT create_soroban_partition(<last_upper>,
             <last_upper + 2000000>);` to extend the partition table before
             that deadline.
-          runbook_url: "docs/runbooks/alerts.md#tridentpartitionexhaustionwarning"
+          runbook_url: "docs/runbooks/alerts.md#sentinelpartitionexhaustionwarning"
 
-      - alert: TridentPartitionExhausted
-        expr: trident_indexer_partition_lookahead_ledgers <= 0
+      - alert: SentinelPartitionExhausted
+        expr: sentinel_indexer_partition_lookahead_ledgers <= 0
         for: 5m
         labels:
           severity: critical
@@ -506,12 +506,12 @@ groups:
         annotations:
           summary: "soroban_events partition lookahead exhausted — indexer will halt"
           description: >
-            trident_indexer_partition_lookahead_ledgers is at or below 0: the
+            sentinel_indexer_partition_lookahead_ledgers is at or below 0: the
             ingest cursor has reached or passed the upper bound of the last
             named soroban_events partition. The indexer will refuse to commit
             any further pages and will halt with a Fatal error to prevent
             silent writes to soroban_events_default. Add the next partition
             immediately: `SELECT create_soroban_partition(<last_upper>,
             <last_upper + 2000000>);` — see the runbook for the exact values.
-          runbook_url: "docs/runbooks/alerts.md#tridentpartitionexhausted"
+          runbook_url: "docs/runbooks/alerts.md#sentinelpartitionexhausted"
 

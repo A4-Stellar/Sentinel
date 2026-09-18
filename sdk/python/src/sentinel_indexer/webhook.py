@@ -1,4 +1,4 @@
-"""Webhook signature verification helpers for Trident (issue #452).
+"""Webhook signature verification helpers for Sentinel (issue #452).
 
 Receivers call :func:`verify_signature` on every incoming webhook request to
 confirm the delivery is authentic and within the replay-protection window.
@@ -10,7 +10,7 @@ Signing scheme (for offline validation)::
     mac      = hmac.new(secret.encode(), message, hashlib.sha256)
     expected = "sha256=" + mac.hexdigest()
 
-The ``X-Trident-Signature`` header may contain two space-separated signatures
+The ``X-Sentinel-Signature`` header may contain two space-separated signatures
 during a secret rotation overlap window.  Pass your current active secret —
 the function checks all tokens and returns ``True`` if any one matches.
 """
@@ -65,11 +65,11 @@ def verify_signature(
     secret: str,
     tolerance_seconds: int = DEFAULT_TOLERANCE_SECONDS,
 ) -> None:
-    """Verify an incoming Trident webhook delivery.
+    """Verify an incoming Sentinel webhook delivery.
 
     :param body: Raw request body — read it **before** parsing JSON.
-    :param signature: Value of the ``X-Trident-Signature`` header.
-    :param timestamp: Value of the ``X-Trident-Timestamp`` header (Unix seconds).
+    :param signature: Value of the ``X-Sentinel-Signature`` header.
+    :param timestamp: Value of the ``X-Sentinel-Timestamp`` header (Unix seconds).
     :param secret: Your webhook subscription secret (starts with ``whsec_``).
     :param tolerance_seconds: Maximum delivery age in seconds.  Pass ``0`` to
         disable the timestamp check (not recommended in production).
@@ -83,11 +83,11 @@ def verify_signature(
         ts = int(timestamp)
     except (ValueError, TypeError):
         raise WebhookVerificationError(
-            "X-Trident-Timestamp is missing or not a valid Unix second"
+            "X-Sentinel-Timestamp is missing or not a valid Unix second"
         )
     if ts <= 0:
         raise WebhookVerificationError(
-            "X-Trident-Timestamp must be a positive Unix second"
+            "X-Sentinel-Timestamp must be a positive Unix second"
         )
     if tolerance_seconds > 0:
         age = abs(int(time.time()) - ts)

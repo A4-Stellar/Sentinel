@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -226,9 +226,9 @@ func TestMetricsHandler_ExposesAllThreeGauges(t *testing.T) {
 	}
 	body := rec.Body.String()
 	for _, metric := range []string{
-		"trident_api_indexer_lag_ledgers",
-		"trident_api_indexer_last_poll_timestamp_seconds",
-		"trident_api_indexer_events_indexed",
+		"sentinel_api_indexer_lag_ledgers",
+		"sentinel_api_indexer_last_poll_timestamp_seconds",
+		"sentinel_api_indexer_events_indexed",
 	} {
 		if !strings.Contains(body, metric) {
 			t.Errorf("metric %q not found in /metrics output", metric)

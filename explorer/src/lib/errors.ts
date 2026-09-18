@@ -97,7 +97,7 @@ export function getErrorState(type: ErrorType, context?: Record<string, any>): E
         details:
           'Free tier: 60 req/min. Get an API key for higher limits.',
         actionText: 'Get an API key',
-        actionUrl: 'https://app.trident.dev/signup',
+        actionUrl: 'https://app.sentinel.dev/signup',
         retryable: false,
       };
 

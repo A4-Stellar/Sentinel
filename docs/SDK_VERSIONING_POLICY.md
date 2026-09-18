@@ -1,18 +1,18 @@
-# 📦 Trident SDK Versioning and Release Policy
+# 📦 Sentinel SDK Versioning and Release Policy
 
-This document defines the formal **versioning scheme, release workflows, changelog standards, and breaking change propagation lifecycle** across all official Trident client SDKs:
+This document defines the formal **versioning scheme, release workflows, changelog standards, and breaking change propagation lifecycle** across all official Sentinel client SDKs:
 
-- **TypeScript SDK** (`@trident/sdk` on [npm](https://www.npmjs.com))
-- **React SDK** (`@trident/react` on [npm](https://www.npmjs.com))
-- **Python SDK** (`trident-sdk` on [PyPI](https://pypi.org))
-- **Rust SDK** (`trident-sdk` on [crates.io](https://crates.io))
-- **Go SDK** (`github.com/Telocel-Labs/Trident/sdk/go` on [Go Modules](https://pkg.go.dev))
+- **TypeScript SDK** (`@sentinel/sdk` on [npm](https://www.npmjs.com))
+- **React SDK** (`@sentinel/react` on [npm](https://www.npmjs.com))
+- **Python SDK** (`sentinel-sdk` on [PyPI](https://pypi.org))
+- **Rust SDK** (`sentinel-sdk` on [crates.io](https://crates.io))
+- **Go SDK** (`github.com/A4-Stellar/Sentinel/sdk/go` on [Go Modules](https://pkg.go.dev))
 
 ---
 
 ## 1. Versioning Scheme & API Alignment
 
-All official Trident SDKs adhere strictly to **Semantic Versioning 2.0.0** (`MAJOR.MINOR.PATCH`).
+All official Sentinel SDKs adhere strictly to **Semantic Versioning 2.0.0** (`MAJOR.MINOR.PATCH`).
 
 ```
            v [MAJOR] . [MINOR] . [PATCH]
@@ -22,7 +22,7 @@ All official Trident SDKs adhere strictly to **Semantic Versioning 2.0.0** (`MAJ
                 └─────────────────────► Breaking SDK changes or API Major Version alignment
 ```
 
-### Relationship with Trident API Versions
+### Relationship with Sentinel API Versions
 
 | Component | Version Sync Rule | Example |
 |---|---|---|
@@ -30,7 +30,7 @@ All official Trident SDKs adhere strictly to **Semantic Versioning 2.0.0** (`MAJ
 | **API `v2`** | SDKs bump to `2.0.0` series | `v2.0.0` SDK queries `/v2/*` API endpoints |
 
 1. **`MAJOR` (Breaking Changes)**:
-   - Incremented when the underlying Trident API introduces a breaking change (e.g. endpoint deprecation, schema restructuring).
+   - Incremented when the underlying Sentinel API introduces a breaking change (e.g. endpoint deprecation, schema restructuring).
    - Incremented when SDK method signatures, configuration types, or required runtime environments break backward compatibility.
 2. **`MINOR` (New Capabilities)**:
    - Incremented when new backward-compatible features are added (e.g. support for new Soroban event types, new query helpers, WebSocket reconnection policies).
@@ -57,7 +57,7 @@ Each SDK is published to its canonical package manager following automated CI/CD
  └───────────┘           └───────────┘           └───────────┘
 ```
 
-### 2.1 TypeScript (`@trident/sdk`) & React (`@trident/react`)
+### 2.1 TypeScript (`@sentinel/sdk`) & React (`@sentinel/react`)
 
 - **Registry**: npm
 - **Release Tag Pattern**: `sdk/typescript/v1.0.0` / `sdk/react/v1.0.0`
@@ -70,7 +70,7 @@ Each SDK is published to its canonical package manager following automated CI/CD
   npm publish --access public --provenance
   ```
 
-### 2.2 Python (`trident-sdk`)
+### 2.2 Python (`sentinel-sdk`)
 
 - **Registry**: PyPI
 - **Release Tag Pattern**: `sdk/python/v1.0.0`
@@ -83,7 +83,7 @@ Each SDK is published to its canonical package manager following automated CI/CD
   twine upload dist/*
   ```
 
-### 2.3 Rust (`trident-sdk`)
+### 2.3 Rust (`sentinel-sdk`)
 
 - **Registry**: crates.io
 - **Release Tag Pattern**: `sdk/rust/v1.0.0`
@@ -95,7 +95,7 @@ Each SDK is published to its canonical package manager following automated CI/CD
   cargo publish
   ```
 
-### 2.4 Go (`github.com/Telocel-Labs/Trident/sdk/go`)
+### 2.4 Go (`github.com/A4-Stellar/Sentinel/sdk/go`)
 
 - **Registry**: Go Module Proxy (`proxy.golang.org`)
 - **Release Tag Pattern**: `sdk/go/v1.0.0` (Semantic Submodule Tagging)
@@ -105,7 +105,7 @@ Each SDK is published to its canonical package manager following automated CI/CD
   git tag sdk/go/v1.0.0
   git push origin sdk/go/v1.0.0
   # Proxy warm-up:
-  GOPROXY=https://proxy.golang.org go list -m github.com/Telocel-Labs/Trident/sdk/go@v1.0.0
+  GOPROXY=https://proxy.golang.org go list -m github.com/A4-Stellar/Sentinel/sdk/go@v1.0.0
   ```
 
 ---
@@ -143,7 +143,7 @@ Every SDK release **must** update its corresponding `CHANGELOG.md` following [Ke
 
 ## 4. Breaking API Change Propagation Lifecycle
 
-When the Trident API introduces a breaking change, the SDKs follow a **staged 3-phase deprecation lifecycle**:
+When the Sentinel API introduces a breaking change, the SDKs follow a **staged 3-phase deprecation lifecycle**:
 
 ```
 [Phase 1: Deprecation Notice] ──► [Phase 2: Migration Period (6 Months)] ──► [Phase 3: Hard Removal]

@@ -1,5 +1,5 @@
-﻿# fly/api.toml — Trident Go REST API
-app = "trident-api"
+﻿# fly/api.toml — Sentinel Go REST API
+app = "sentinel-api"
 primary_region = "iad"
 
 [build]
@@ -9,10 +9,10 @@ primary_region = "iad"
   PORT      = "3000"
   LOG_LEVEL = "info"
   # Connect to gRPC API over Fly private network (6PN)
-  GRPC_ADDR = "trident-grpc-api.internal:50051"
+  GRPC_ADDR = "sentinel-grpc-api.internal:50051"
 
 # Secrets are sourced exclusively from Fly's encrypted secrets store
-# (set via: fly secrets set -a trident-api KEY=value), never from [env].
+# (set via: fly secrets set -a sentinel-api KEY=value), never from [env].
 # Required: DATABASE_URL, REDIS_URL, API_KEY_SALT (services/api/middleware/auth.go
 # HMACs incoming keys with this), ADMIN_API_KEY (guards /v1/admin/*)
 # Required for the legacy env-var auth path: API_KEY_HASHES (skip only if all

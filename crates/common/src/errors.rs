@@ -4,12 +4,12 @@ use thiserror::Error;
 ///
 /// Each variant carries its underlying `#[source]` error (preserving the full
 /// error chain for logs — no lossy `to_string()`) plus optional context such as
-/// the ledger being processed. The [`TridentError::retryable`] and
-/// [`TridentError::severity`] classifiers let the streamer decide whether a
+/// the ledger being processed. The [`SentinelError::retryable`] and
+/// [`SentinelError::severity`] classifiers let the streamer decide whether a
 /// failure should be retried, the offending item skipped, or the process
 /// halted.
 #[derive(Debug, Error)]
-pub enum TridentError {
+pub enum SentinelError {
     /// Failure communicating with or parsing a response from Stellar RPC.
     /// Typically transient (timeouts, resets, 5xx) and therefore retryable.
     // Every variant renders its source with `{source:#}` — the whole anyhow
@@ -62,41 +62,41 @@ pub enum Severity {
     Fatal,
 }
 
-impl TridentError {
-    /// Construct an [`RpcError`](TridentError::RpcError) without ledger context.
+impl SentinelError {
+    /// Construct an [`RpcError`](SentinelError::RpcError) without ledger context.
     pub fn rpc(source: impl Into<anyhow::Error>) -> Self {
-        TridentError::RpcError {
+        SentinelError::RpcError {
             source: source.into(),
             ledger: None,
         }
     }
 
-    /// Construct an [`RpcError`](TridentError::RpcError) tagged with the ledger
+    /// Construct an [`RpcError`](SentinelError::RpcError) tagged with the ledger
     /// being processed when the failure occurred.
     pub fn rpc_at(source: impl Into<anyhow::Error>, ledger: u64) -> Self {
-        TridentError::RpcError {
+        SentinelError::RpcError {
             source: source.into(),
             ledger: Some(ledger),
         }
     }
 
-    /// Construct a [`ParseError`](TridentError::ParseError).
+    /// Construct a [`ParseError`](SentinelError::ParseError).
     pub fn parse(source: impl Into<anyhow::Error>) -> Self {
-        TridentError::ParseError {
+        SentinelError::ParseError {
             source: source.into(),
         }
     }
 
-    /// Construct a [`StorageError`](TridentError::StorageError).
+    /// Construct a [`StorageError`](SentinelError::StorageError).
     pub fn storage(source: impl Into<anyhow::Error>) -> Self {
-        TridentError::StorageError {
+        SentinelError::StorageError {
             source: source.into(),
         }
     }
 
-    /// Construct a [`ConfigError`](TridentError::ConfigError).
+    /// Construct a [`ConfigError`](SentinelError::ConfigError).
     pub fn config(source: impl Into<anyhow::Error>) -> Self {
-        TridentError::ConfigError {
+        SentinelError::ConfigError {
             source: source.into(),
         }
     }
@@ -105,13 +105,13 @@ impl TridentError {
     pub fn severity(&self) -> Severity {
         match self {
             // Transient infrastructure failures — retrying may succeed.
-            TridentError::RpcError { .. } | TridentError::StorageError { .. } => {
+            SentinelError::RpcError { .. } | SentinelError::StorageError { .. } => {
                 Severity::Retryable
             }
             // Malformed input — retrying is pointless; skip the item.
-            TridentError::ParseError { .. } => Severity::Skip,
+            SentinelError::ParseError { .. } => Severity::Skip,
             // Misconfiguration — cannot make progress; halt.
-            TridentError::ConfigError { .. } => Severity::Fatal,
+            SentinelError::ConfigError { .. } => Severity::Fatal,
         }
     }
 
@@ -132,7 +132,7 @@ impl TridentError {
     /// breaker (issue #197), which trips on sustained RPC outages and should
     /// not open because of an unrelated database blip.
     pub fn is_rpc(&self) -> bool {
-        matches!(self, TridentError::RpcError { .. })
+        matches!(self, SentinelError::RpcError { .. })
     }
 }
 
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn rpc_errors_are_retryable() {
-        let err = TridentError::rpc(anyhow::anyhow!("connection reset"));
+        let err = SentinelError::rpc(anyhow::anyhow!("connection reset"));
         assert_eq!(err.severity(), Severity::Retryable);
         assert!(err.retryable());
         assert!(!err.fatal());
@@ -150,22 +150,22 @@ mod tests {
 
     #[test]
     fn storage_errors_are_retryable() {
-        let err = TridentError::storage(anyhow::anyhow!("pool timeout"));
+        let err = SentinelError::storage(anyhow::anyhow!("pool timeout"));
         assert_eq!(err.severity(), Severity::Retryable);
         assert!(err.retryable());
     }
 
     #[test]
     fn only_rpc_errors_report_is_rpc() {
-        assert!(TridentError::rpc(anyhow::anyhow!("x")).is_rpc());
-        assert!(!TridentError::storage(anyhow::anyhow!("x")).is_rpc());
-        assert!(!TridentError::parse(anyhow::anyhow!("x")).is_rpc());
-        assert!(!TridentError::config(anyhow::anyhow!("x")).is_rpc());
+        assert!(SentinelError::rpc(anyhow::anyhow!("x")).is_rpc());
+        assert!(!SentinelError::storage(anyhow::anyhow!("x")).is_rpc());
+        assert!(!SentinelError::parse(anyhow::anyhow!("x")).is_rpc());
+        assert!(!SentinelError::config(anyhow::anyhow!("x")).is_rpc());
     }
 
     #[test]
     fn parse_errors_are_skipped_not_retried() {
-        let err = TridentError::parse(anyhow::anyhow!("bad XDR"));
+        let err = SentinelError::parse(anyhow::anyhow!("bad XDR"));
         assert_eq!(err.severity(), Severity::Skip);
         assert!(!err.retryable());
         assert!(!err.fatal());
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn config_errors_are_fatal() {
-        let err = TridentError::config(anyhow::anyhow!("missing DATABASE_URL"));
+        let err = SentinelError::config(anyhow::anyhow!("missing DATABASE_URL"));
         assert_eq!(err.severity(), Severity::Fatal);
         assert!(err.fatal());
         assert!(!err.retryable());
@@ -183,7 +183,7 @@ mod tests {
     fn source_chain_is_preserved() {
         use std::error::Error;
         let root = std::io::Error::new(std::io::ErrorKind::TimedOut, "socket timeout");
-        let err = TridentError::storage(anyhow::Error::new(root).context("insert_event"));
+        let err = SentinelError::storage(anyhow::Error::new(root).context("insert_event"));
         // The #[source] chain is intact — no lossy stringify.
         let src = err.source().expect("source present");
         assert!(src.to_string().contains("insert_event"));
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn rpc_error_carries_ledger_context() {
-        let err = TridentError::rpc_at(anyhow::anyhow!("504"), 12345);
+        let err = SentinelError::rpc_at(anyhow::anyhow!("504"), 12345);
         assert!(err.to_string().contains("ledger 12345"));
         assert!(err.retryable());
     }
@@ -213,11 +213,11 @@ mod tests {
         };
 
         for err in [
-            TridentError::rpc(chained()),
-            TridentError::rpc_at(chained(), 42),
-            TridentError::parse(chained()),
-            TridentError::storage(chained()),
-            TridentError::config(chained()),
+            SentinelError::rpc(chained()),
+            SentinelError::rpc_at(chained(), 42),
+            SentinelError::parse(chained()),
+            SentinelError::storage(chained()),
+            SentinelError::config(chained()),
         ] {
             let rendered = err.to_string();
             assert!(

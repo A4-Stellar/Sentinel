@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "trident.fullname" . }}
+  name: {{ include "sentinel.fullname" . }}
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -29,14 +29,14 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "trident.fullname" . }}-go-api
+                name: {{ include "sentinel.fullname" . }}-go-api
                 port:
                   number: {{ .Values.goApi.service.port }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "trident.fullname" . }}-go-api
+                name: {{ include "sentinel.fullname" . }}-go-api
                 port:
                   number: {{ .Values.goApi.service.port }}
   {{- with .Values.ingress.tls }}

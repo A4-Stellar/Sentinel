@@ -1,4 +1,4 @@
-# cargo-deny configuration for Trident
+# cargo-deny configuration for Sentinel
 #
 # Tracks triaged cargo-audit advisories (issue #401). Every advisory surfaced
 # by `cargo audit` must be either fixed (upgrade/replace the dependency) or

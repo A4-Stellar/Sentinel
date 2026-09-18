@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "trident.fullname" . }}-grpc-api
+  name: {{ include "sentinel.fullname" . }}-grpc-api
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: grpc-api
 spec:
   replicas: {{ .Values.grpcApi.replicaCount }}
   selector:
     matchLabels:
-      {{- include "trident.selectorLabels" (dict "root" . "component" "grpc-api") | nindent 6 }}
+      {{- include "sentinel.selectorLabels" (dict "root" . "component" "grpc-api") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "trident.selectorLabels" (dict "root" . "component" "grpc-api") | nindent 8 }}
+        {{- include "sentinel.selectorLabels" (dict "root" . "component" "grpc-api") | nindent 8 }}
     spec:
-      {{- include "trident.imagePullSecrets" . | nindent 6 }}
+      {{- include "sentinel.imagePullSecrets" . | nindent 6 }}
       securityContext:
-        {{- include "trident.podSecurityContext" (dict "uid" .Values.grpcApi.securityContextUid) | nindent 8 }}
+        {{- include "sentinel.podSecurityContext" (dict "uid" .Values.grpcApi.securityContextUid) | nindent 8 }}
       containers:
         - name: grpc-api
           image: "{{ .Values.grpcApi.image.repository }}:{{ .Values.grpcApi.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           securityContext:
-            {{- include "trident.containerSecurityContext" . | nindent 12 }}
+            {{- include "sentinel.containerSecurityContext" . | nindent 12 }}
           ports:
             - name: grpc
               containerPort: {{ .Values.grpcApi.service.port }}
@@ -102,14 +102,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "trident.fullname" . }}-grpc-api
+  name: {{ include "sentinel.fullname" . }}-grpc-api
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: grpc-api
 spec:
   type: ClusterIP
   selector:
-    {{- include "trident.selectorLabels" (dict "root" . "component" "grpc-api") | nindent 4 }}
+    {{- include "sentinel.selectorLabels" (dict "root" . "component" "grpc-api") | nindent 4 }}
   ports:
     - name: grpc
       port: {{ .Values.grpcApi.service.port }}

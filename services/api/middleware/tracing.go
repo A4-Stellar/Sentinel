@@ -12,7 +12,7 @@ import (
 
 // Tracer creates an OpenTelemetry tracer for the middleware package.
 func Tracer() trace.Tracer {
-	return otel.Tracer("github.com/Depo-dev/trident/services/api/middleware")
+	return otel.Tracer("github.com/Depo-dev/sentinel/services/api/middleware")
 }
 
 // TracingMiddleware instruments HTTP requests with OpenTelemetry tracing,

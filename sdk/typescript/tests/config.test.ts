@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TridentClient, TridentError } from "../src/index.js";
+import { SentinelClient, SentinelError } from "../src/index.js";
 
 const ORIGINAL_ENV = { ...process.env };
 
 describe("config precedence", () => {
   beforeEach(() => {
-    process.env.TRIDENT_API_KEY = "env-key";
-    process.env.TRIDENT_BASE_URL = "https://env.example.com";
+    process.env.SENTINEL_API_KEY = "env-key";
+    process.env.SENTINEL_BASE_URL = "https://env.example.com";
   });
 
   afterEach(() => {
@@ -14,7 +14,7 @@ describe("config precedence", () => {
   });
 
   it("prefers explicit apiKey/apiUrl over env vars", () => {
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "https://explicit.example.com",
       apiKey: "explicit-key",
       network: "testnet",
@@ -25,42 +25,42 @@ describe("config precedence", () => {
   });
 
   it("falls back to env vars when config omits apiKey/apiUrl", () => {
-    const client = new TridentClient({ network: "testnet" });
+    const client = new SentinelClient({ network: "testnet" });
 
     expect(client.toString()).toContain("https://env.example.com");
   });
 
   it("throws a clear CONFIG error when apiKey is missing everywhere", () => {
-    delete process.env.TRIDENT_API_KEY;
+    delete process.env.SENTINEL_API_KEY;
 
-    expect(() => new TridentClient({ apiUrl: "https://x.example.com", network: "testnet" })).toThrow(
-      TridentError,
+    expect(() => new SentinelClient({ apiUrl: "https://x.example.com", network: "testnet" })).toThrow(
+      SentinelError,
     );
     try {
-      new TridentClient({ apiUrl: "https://x.example.com", network: "testnet" });
+      new SentinelClient({ apiUrl: "https://x.example.com", network: "testnet" });
     } catch (err) {
-      expect(err).toBeInstanceOf(TridentError);
-      expect((err as TridentError).code).toBe("CONFIG");
+      expect(err).toBeInstanceOf(SentinelError);
+      expect((err as SentinelError).code).toBe("CONFIG");
     }
   });
 
   it("throws a clear CONFIG error when apiUrl is missing everywhere", () => {
-    delete process.env.TRIDENT_BASE_URL;
+    delete process.env.SENTINEL_BASE_URL;
 
-    expect(() => new TridentClient({ apiKey: "explicit-key", network: "testnet" })).toThrow(
-      TridentError,
+    expect(() => new SentinelClient({ apiKey: "explicit-key", network: "testnet" })).toThrow(
+      SentinelError,
     );
   });
 });
 
 describe("redaction", () => {
   beforeEach(() => {
-    delete process.env.TRIDENT_API_KEY;
-    delete process.env.TRIDENT_BASE_URL;
+    delete process.env.SENTINEL_API_KEY;
+    delete process.env.SENTINEL_BASE_URL;
   });
 
   it("never includes the raw API key in toString()", () => {
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "https://x.example.com",
       apiKey: "super-secret-value",
       network: "testnet",

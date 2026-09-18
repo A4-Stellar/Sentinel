@@ -1,15 +1,15 @@
 use futures::StreamExt;
-use trident_sdk::{ContractStatsQuery, QueryParams, TridentClient, TridentConfig, TridentError};
+use sentinel_sdk::{ContractStatsQuery, QueryParams, SentinelClient, SentinelConfig, SentinelError};
 
 #[tokio::main]
-async fn main() -> Result<(), TridentError> {
+async fn main() -> Result<(), SentinelError> {
     let api_url =
-        std::env::var("TRIDENT_API_URL").unwrap_or_else(|_| "https://trident-api.fly.dev".into());
-    let api_key = std::env::var("TRIDENT_API_KEY").unwrap_or_default();
-    let contract_id = std::env::var("TRIDENT_CONTRACT_ID")
+        std::env::var("SENTINEL_API_URL").unwrap_or_else(|_| "https://sentinel-api.fly.dev".into());
+    let api_key = std::env::var("SENTINEL_API_KEY").unwrap_or_default();
+    let contract_id = std::env::var("SENTINEL_CONTRACT_ID")
         .unwrap_or_else(|_| "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4".into());
 
-    let client = TridentClient::new(TridentConfig {
+    let client = SentinelClient::new(SentinelConfig {
         api_url,
         api_key,
         ..Default::default()

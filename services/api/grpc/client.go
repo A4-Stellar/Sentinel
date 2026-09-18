@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/gen"
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/backoff"
@@ -107,7 +107,7 @@ func (c *Client) Close() error {
 // inside the cluster network only. When GRPC_MTLS_ENABLED=true, the client
 // presents a client certificate and verifies the server against a CA bundle
 // — both read from files (mounted from a Kubernetes Secret via
-// helm/trident/templates/go-api-deployment.yaml + internalMTLS in
+// helm/sentinel/templates/go-api-deployment.yaml + internalMTLS in
 // values.yaml), never baked into the image. See docs/kubernetes.md#internal-mtls
 // for the full setup and cert rotation procedure.
 func transportCredentials() (credentials.TransportCredentials, error) {

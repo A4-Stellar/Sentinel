@@ -1,15 +1,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "trident.fullname" . }}-go-api
+  name: {{ include "sentinel.fullname" . }}-go-api
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: go-api
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "trident.fullname" . }}-go-api
+    name: {{ include "sentinel.fullname" . }}-go-api
   minReplicas: {{ .Values.goApi.hpa.minReplicas }}
   maxReplicas: {{ .Values.goApi.hpa.maxReplicas }}
   metrics:

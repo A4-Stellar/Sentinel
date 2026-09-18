@@ -57,7 +57,7 @@ but there is no meaningful third state worth the complexity of reporting.
 Cached entries also expire by TTL alone, but contract-scoped routes
 (`GET /v1/contracts/{id}/spec`, `GET /v1/contracts/{id}/events/schema` — 5
 minute TTL) don't have to wait that long: `middleware.StartCacheInvalidator`
-does a best-effort, non-consumer-group `XRead` of the same `trident:events`
+does a best-effort, non-consumer-group `XRead` of the same `sentinel:events`
 Redis Stream the indexer publishes to and the WebSocket hub consumes
 (`ws.StreamKey`). For every event it sees, it increments `cachever:<contract_id>`.
 

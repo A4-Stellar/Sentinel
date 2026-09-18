@@ -1,9 +1,9 @@
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
-import type { PaginatedEvents, SorobanEvent, Subscription } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
+import type { PaginatedEvents, SorobanEvent, Subscription } from "@sentinel-indexer/sdk";
 
 async function runExamples() {
-  const client = new TridentClient({
-    apiUrl: "https://api.trident.telocel.com",
+  const client = new SentinelClient({
+    apiUrl: "https://api.sentinel.a4stellar.com",
     apiKey: "tdk_live_demo12345",
     network: "testnet",
   });
@@ -24,7 +24,7 @@ async function runExamples() {
     });
     console.log("Event ledger:", event.ledgerSequence);
   } catch (err) {
-    if (err instanceof TridentError && err.code === "NOT_FOUND") {
+    if (err instanceof SentinelError && err.code === "NOT_FOUND") {
       console.log("Event not found");
     }
   }

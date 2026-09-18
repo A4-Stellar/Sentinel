@@ -6,10 +6,10 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/Depo-dev/trident/services/api/grpc"
-	"github.com/Depo-dev/trident/services/api/handlers"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/ws"
+	"github.com/Depo-dev/sentinel/services/api/grpc"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/ws"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )

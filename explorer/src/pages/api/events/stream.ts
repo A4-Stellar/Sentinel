@@ -7,7 +7,7 @@ import type { Network } from '../../../lib/types';
  * Server-Sent Events proxy.
  *
  * The browser opens an EventSource against this route; it forwards to the
- * Trident `/v1/events/stream` endpoint so the `X-API-Key`, the `Last-Event-ID`
+ * Sentinel `/v1/events/stream` endpoint so the `X-API-Key`, the `Last-Event-ID`
  * resume header, and any SSE `id:` frames all stay on the server hop. The
  * browser's EventSource reconnects by itself and re-sends `Last-Event-ID`,
  * which this route forwards so no events are skipped after a drop.

@@ -1,6 +1,6 @@
-# Trident Grafana Dashboards
+# Sentinel Grafana Dashboards
 
-This directory contains Grafana dashboard JSON files for monitoring Trident infrastructure.
+This directory contains Grafana dashboard JSON files for monitoring Sentinel infrastructure.
 
 ## Available Dashboards
 
@@ -8,7 +8,7 @@ This directory contains Grafana dashboard JSON files for monitoring Trident infr
 
 **Purpose**: Single-pane-of-glass health dashboard for testnet launch monitoring.
 
-**URL**: Once imported, access via Grafana at `/d/trident-launch-health`
+**URL**: Once imported, access via Grafana at `/d/sentinel-launch-health`
 
 **What it shows**:
 - **System Health Status**: Overall health of Indexer, API, Postgres, and Redis
@@ -23,7 +23,7 @@ This directory contains Grafana dashboard JSON files for monitoring Trident infr
 - **Webhook Delivery Success Ratio**: Percentage of successful webhook deliveries
 - **Additional panels**: DB pool details, webhook delivery rates, Redis connection status, event processing lag, rate limit rejections, and database query errors
 
-**Use case**: During launch day, this is the one URL to watch. It answers "is Trident healthy right now?" for operators who didn't build the system.
+**Use case**: During launch day, this is the one URL to watch. It answers "is Sentinel healthy right now?" for operators who didn't build the system.
 
 **Auto-refresh**: 10 seconds (configurable in dashboard settings)
 
@@ -63,9 +63,9 @@ grafana:
   enabled: true
   dashboards:
     default:
-      trident-launch-health:
+      sentinel-launch-health:
         file: dashboards/launch-health.json
-      trident-rpc-health:
+      sentinel-rpc-health:
         file: dashboards/rpc-health.json
 ```
 
@@ -85,31 +85,31 @@ curl -X POST \
 These dashboards expect the following Prometheus metrics to be exported:
 
 ### Indexer Metrics
-- `trident_indexer_ledger_lag` — ledger gap between network tip and last processed
-- `trident_indexer_events_ingested_total` — counter of ingested events
-- `trident_indexer_event_processing_lag_seconds` — time lag in event processing
-- `trident_indexer_rpc_active_endpoint` — current active RPC endpoint index
-- `trident_indexer_rpc_call_duration_seconds_*` — RPC call latency histogram
-- `trident_indexer_rpc_errors_total` — RPC error counter
-- `trident_indexer_rpc_failovers_total` — RPC failover event counter
+- `sentinel_indexer_ledger_lag` — ledger gap between network tip and last processed
+- `sentinel_indexer_events_ingested_total` — counter of ingested events
+- `sentinel_indexer_event_processing_lag_seconds` — time lag in event processing
+- `sentinel_indexer_rpc_active_endpoint` — current active RPC endpoint index
+- `sentinel_indexer_rpc_call_duration_seconds_*` — RPC call latency histogram
+- `sentinel_indexer_rpc_errors_total` — RPC error counter
+- `sentinel_indexer_rpc_failovers_total` — RPC failover event counter
 
 ### API Metrics
-- `trident_api_http_requests_total` — counter of HTTP requests by endpoint, status
-- `trident_api_http_request_duration_seconds_bucket` — request latency histogram
-- `trident_api_rate_limit_rejections_total` — rate limit rejection counter
+- `sentinel_api_http_requests_total` — counter of HTTP requests by endpoint, status
+- `sentinel_api_http_request_duration_seconds_bucket` — request latency histogram
+- `sentinel_api_rate_limit_rejections_total` — rate limit rejection counter
 
 ### Database Metrics
-- `trident_db_pool_connections_acquired` — active DB connections
-- `trident_db_pool_connections_idle` — idle connections in pool
-- `trident_db_pool_connections_max` — max pool size
-- `trident_db_query_errors_total` — database query error counter
+- `sentinel_db_pool_connections_acquired` — active DB connections
+- `sentinel_db_pool_connections_idle` — idle connections in pool
+- `sentinel_db_pool_connections_max` — max pool size
+- `sentinel_db_query_errors_total` — database query error counter
 
 ### Redis Metrics
-- `trident_redis_stream_length` — event stream backlog length
+- `sentinel_redis_stream_length` — event stream backlog length
 - `redis_up` — Redis availability (1 = up, 0 = down)
 
 ### Webhook Metrics
-- `trident_webhook_deliveries_total` — webhook delivery counter by status
+- `sentinel_webhook_deliveries_total` — webhook delivery counter by status
 
 ### Service Availability
 - `up` — standard Prometheus up metric for all jobs
@@ -131,7 +131,7 @@ All dashboards are editable. Common customizations:
 
 **No data showing up?**
 - Verify your Prometheus datasource is configured and reachable
-- Check that the Trident services are exporting metrics on `/metrics` endpoints
+- Check that the Sentinel services are exporting metrics on `/metrics` endpoints
 - Confirm metric names match (they may have changed if you're using a custom build)
 
 **"Template variable not found" error?**
@@ -153,4 +153,4 @@ When adding new dashboards:
 3. Add descriptive titles and panel descriptions
 4. Document required metrics in this README
 5. Use semantic panel IDs (increment from existing max)
-6. Tag appropriately (`trident`, `indexer`, `api`, etc.)
+6. Tag appropriately (`sentinel`, `indexer`, `api`, etc.)

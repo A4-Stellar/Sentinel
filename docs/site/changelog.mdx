@@ -1,6 +1,6 @@
 ---
 title: "Changelog"
-description: "Version history and release notes for Trident API, SDK, and Indexer releases."
+description: "Version history and release notes for Sentinel API, SDK, and Indexer releases."
 ---
 
 ## Unreleased
@@ -19,7 +19,7 @@ description: "Version history and release notes for Trident API, SDK, and Indexe
 
   Explicit `null` is normative and is now documented as such in `api/openapi.yaml`. It is the better default because absence and `null` are not equivalent to a strictly-typed client: an absent key cannot be distinguished from a server too old to send the field, whereas `null` unambiguously means "no next page". Fixing one representation across all endpoints is what lets an SDK auto-pager loop on a single rule instead of special-casing per endpoint.
 
-  **Who is affected:** callers of `GET /v1/admin/contracts` that branch on the *presence* of the `next_cursor` key (for example `if ("next_cursor" in body)`, or a strict schema that rejects unexpected `null`). Callers that already test `next_cursor` for null/undefined — including all Trident SDKs — need no change.
+  **Who is affected:** callers of `GET /v1/admin/contracts` that branch on the *presence* of the `next_cursor` key (for example `if ("next_cursor" in body)`, or a strict schema that rejects unexpected `null`). Callers that already test `next_cursor` for null/undefined — including all Sentinel SDKs — need no change.
 
 ## v0.1.0 (Phase 1 — MVP Release)
 
@@ -30,7 +30,7 @@ description: "Version history and release notes for Trident API, SDK, and Indexe
 - **Rust Indexer Core (`crates/indexer`)**:
   - Soroban RPC ledger ingestion pipeline decoding XDR events directly.
   - PostgreSQL batch storage adapter with configurable batch size (`DB_BATCH_SIZE`).
-  - Redis Stream publisher (`trident:events`) for low-latency event relay.
+  - Redis Stream publisher (`sentinel:events`) for low-latency event relay.
   - Adaptive poll interval scaling based on chain-tip lag (`POLL_INTERVAL_FLOOR_MS` / `POLL_INTERVAL_CEILING_MS`).
   - Outbound webhook lag alerting system.
 
@@ -44,12 +44,12 @@ description: "Version history and release notes for Trident API, SDK, and Indexe
   - Rate limiting middleware with per-tier quotas (`Free`, `Pro`, `Internal`).
   - Real-time WebSocket event fan-out (`GET /ws`).
 
-- **TypeScript SDK (`@trident-indexer/sdk`)**:
-  - `TridentClient` providing full TypeScript typings out-of-the-box.
+- **TypeScript SDK (`@sentinel-indexer/sdk`)**:
+  - `SentinelClient` providing full TypeScript typings out-of-the-box.
   - Historical query support (`queryEvents`, `getEventById`).
   - Auto-paginating async iterator (`iterEvents`).
   - Real-time subscription handle with automatic exponential backoff reconnection (`subscribeToContract`).
-  - Custom `TridentError` class categorizing error status codes.
+  - Custom `SentinelError` class categorizing error status codes.
 
 - **Developer Documentation Site**:
   - Full documentation site built with Mintlify.

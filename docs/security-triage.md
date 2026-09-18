@@ -91,7 +91,7 @@ overlap rotation, revocation, and compromise response.
 ### Two key formats, two hashing schemes
 
 - **DB-backed keys** (`api_keys` table, created via `POST /v1/api-keys`):
-  the plaintext key (`trident_` + 32 random bytes, generated with
+  the plaintext key (`sentinel_` + 32 random bytes, generated with
   `crypto/rand`) is hashed with **plain SHA-256, no salt**
   (`handlers.sha256hex`, `middleware.sha256KeyHash`) and only the hash is
   stored/looked up (`WHERE key_hash = $1`).
@@ -99,7 +99,7 @@ overlap rotation, revocation, and compromise response.
   No salt is used here, and that is intentional rather than an oversight:
   salting exists to defeat precomputed dictionaries/rainbow tables against
   *low-entropy secrets* (e.g. human-chosen passwords) and to stop the same
-  password reused across sites from sharing a hash. A Trident API key is a
+  password reused across sites from sharing a hash. A Sentinel API key is a
   256-bit `crypto/rand` value with no dictionary to precompute against, is
   never reused across services, and is never intended to be memorized —
   those are exactly the properties that make salting unnecessary for a

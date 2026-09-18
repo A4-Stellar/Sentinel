@@ -137,7 +137,7 @@ run_redis_evicting() {
 }
 
 echo "timestamp,label,path,status" > "${OUT_DIR}/probes.csv"
-echo "Trident launch chaos run ${RUN_ID}" > "${OUT_DIR}/summary.txt"
+echo "Sentinel launch chaos run ${RUN_ID}" > "${OUT_DIR}/summary.txt"
 echo "BASE_URL=${BASE_URL}" >> "${OUT_DIR}/summary.txt"
 echo "COMPOSE_FILE=${COMPOSE_FILE}" >> "${OUT_DIR}/summary.txt"
 

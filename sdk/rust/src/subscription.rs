@@ -2,7 +2,7 @@ use futures::stream::Stream;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use crate::{SorobanEvent, TridentError};
+use crate::{SorobanEvent, SentinelError};
 
 /// A real-time stream of Soroban events from a WebSocket subscription.
 ///
@@ -12,12 +12,12 @@ use crate::{SorobanEvent, TridentError};
 /// Terminates cleanly when dropped: the underlying WebSocket connection is
 /// closed as soon as the `Subscription` is dropped.
 pub struct Subscription {
-    inner: Pin<Box<dyn Stream<Item = Result<SorobanEvent, TridentError>> + Send>>,
+    inner: Pin<Box<dyn Stream<Item = Result<SorobanEvent, SentinelError>> + Send>>,
 }
 
 impl Subscription {
     pub(crate) fn new(
-        stream: impl Stream<Item = Result<SorobanEvent, TridentError>> + Send + 'static,
+        stream: impl Stream<Item = Result<SorobanEvent, SentinelError>> + Send + 'static,
     ) -> Self {
         Subscription {
             inner: Box::pin(stream),
@@ -26,7 +26,7 @@ impl Subscription {
 }
 
 impl Stream for Subscription {
-    type Item = Result<SorobanEvent, TridentError>;
+    type Item = Result<SorobanEvent, SentinelError>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         use futures::StreamExt;

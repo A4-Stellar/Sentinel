@@ -107,7 +107,7 @@ relied on for a real incident.
   account for provisioning a replacement database, network transfer of the
   backup artifact, and bringing the indexer back up against the restored
   database (reconciling its ingest cursor — see `docs/runbooks/incident-response.md`'s
-  `TridentIndexerLagCritical` alert for what "caught back up" means
+  `SentinelIndexerLagCritical` alert for what "caught back up" means
   operationally).
 
 ## Reproducing this drill
@@ -118,16 +118,16 @@ docker compose -f docker/docker-compose.dev.yml up -d postgres
 
 # 2. Apply schema + the partition-creation function (until database/schema.sql
 #    is updated to include it — see "What was actually done" step 4 above):
-psql -h localhost -U trident -d trident -f database/schema.sql
-psql -h localhost -U trident -d trident -c "$(sed -n '/CREATE OR REPLACE FUNCTION create_soroban_partition/,/^\$\$;/p' database/migrations/0017_soroban_events_partitioning.sql)"
+psql -h localhost -U sentinel -d sentinel -f database/schema.sql
+psql -h localhost -U sentinel -d sentinel -c "$(sed -n '/CREATE OR REPLACE FUNCTION create_soroban_partition/,/^\$\$;/p' database/migrations/0017_soroban_events_partitioning.sql)"
 
 # 3. Create partitions and seed representative data, then:
-pg_dump -h localhost -U trident -d trident -Fc -f backup.dump
+pg_dump -h localhost -U sentinel -d sentinel -Fc -f backup.dump
 
 # 4. Restore into a fresh database and verify:
-createdb -h localhost -U trident trident_restored
-pg_restore -h localhost -U trident -d trident_restored --no-owner --no-privileges backup.dump
-psql -h localhost -U trident -d trident_restored -c "\d+ soroban_events"
+createdb -h localhost -U sentinel sentinel_restored
+pg_restore -h localhost -U sentinel -d sentinel_restored --no-owner --no-privileges backup.dump
+psql -h localhost -U sentinel -d sentinel_restored -c "\d+ soroban_events"
 ```
 
 ## Next steps once #431 lands

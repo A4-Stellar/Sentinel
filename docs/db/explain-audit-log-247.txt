@@ -267,8 +267,8 @@ excludes by construction.
 Reproducing
 ================================================================================
 
-  docker run -d --name trident-audit-explain \
-    -e POSTGRES_PASSWORD=trident -e POSTGRES_DB=trident -p 55432:5432 postgres:16-alpine
+  docker run -d --name sentinel-audit-explain \
+    -e POSTGRES_PASSWORD=sentinel -e POSTGRES_DB=sentinel -p 55432:5432 postgres:16-alpine
 
   psql -f database/schema.sql
   # seed 50 keys and 2M rows over 120 days, then ANALYZE audit_log

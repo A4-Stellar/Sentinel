@@ -3,7 +3,7 @@ title: "Rate Limiting"
 description: "Rate limits per API key tier, the 429 response, the Retry-After header, and backoff strategies."
 ---
 
-Trident enforces per-key rate limits to ensure fair access and system stability. Limits are applied as a sliding-window requests-per-second (RPS) budget.
+Sentinel enforces per-key rate limits to ensure fair access and system stability. Limits are applied as a sliding-window requests-per-second (RPS) budget.
 
 ---
 
@@ -12,8 +12,8 @@ Trident enforces per-key rate limits to ensure fair access and system stability.
 | Tier         | Requests / second | Notes                                      |
 |--------------|-------------------|--------------------------------------------|
 | **Free**     | 10 RPS            | Default for all new accounts               |
-| **Pro**      | 100 RPS           | [Contact us](https://trident.telocel.com/pricing) to upgrade |
-| **Internal** | 1 000 RPS         | Reserved for Trident infrastructure        |
+| **Pro**      | 100 RPS           | [Contact us](https://sentinel.a4stellar.com/pricing) to upgrade |
+| **Internal** | 1 000 RPS         | Reserved for Sentinel infrastructure        |
 
 These defaults apply to the hosted API. In a self-hosted deployment, configure them via:
 
@@ -50,14 +50,14 @@ Content-Type: application/json
 
 ### With the SDK
 
-The SDK does **not** automatically retry on `429`. Handle it by catching `TridentError`:
+The SDK does **not** automatically retry on `429`. Handle it by catching `SentinelError`:
 
 ```typescript
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -68,7 +68,7 @@ async function queryWithBackoff(retries = 3): Promise<void> {
       console.log(`Got ${result.events.length} events`);
       return;
     } catch (err) {
-      if (err instanceof TridentError && err.code === "RATE_LIMITED") {
+      if (err instanceof SentinelError && err.code === "RATE_LIMITED") {
         const waitMs = (err.retryAfterSeconds ?? 1) * 1000;
         console.warn(`Rate limited — waiting ${waitMs}ms`);
         await new Promise((resolve) => setTimeout(resolve, waitMs));
@@ -91,8 +91,8 @@ delay=1
 
 while [ $attempt -lt $max_attempts ]; do
   response=$(curl -s -w "\n%{http_code}" \
-    -H "X-API-Key: $TRIDENT_API_KEY" \
-    "https://api.trident.telocel.com/v1/events?limit=10")
+    -H "X-API-Key: $SENTINEL_API_KEY" \
+    "https://api.sentinel.a4stellar.com/v1/events?limit=10")
 
   http_code=$(echo "$response" | tail -1)
 
@@ -121,4 +121,4 @@ exit 1
 - Use cursor-based `iterEvents` with a delay between pages rather than firing requests in tight loops.
 - Cache results client-side when the same query is repeated frequently.
 - Use WebSocket subscriptions for real-time use cases — a single persistent connection does not consume REST quota.
-- If you need higher limits, [upgrade to Pro](https://trident.telocel.com/pricing).
+- If you need higher limits, [upgrade to Pro](https://sentinel.a4stellar.com/pricing).

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

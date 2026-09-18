@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔱 Trident
+# 🔱 Sentinel
 
 **Soroban Event Indexer for Stellar**
 
@@ -11,7 +11,7 @@
 
 *The indexing layer Stellar's developer ecosystem needs.*
 
-> ⚠️ Trident is in active pre-development. The codebase is not yet public. Watch this repo for updates.
+> ⚠️ Sentinel is in active pre-development. The codebase is not yet public. Watch this repo for updates.
 
 </div>
 
@@ -19,10 +19,10 @@
 
 ## Quick Start
 
-> ⚡ **Evaluating Trident?** Walk through the **[10-Minute Testnet Developer Quickstart](docs/QUICKSTART.md)** to get from zero to your first indexed event query with no prior setup.
+> ⚡ **Evaluating Sentinel?** Walk through the **[10-Minute Testnet Developer Quickstart](docs/QUICKSTART.md)** to get from zero to your first indexed event query with no prior setup.
 
 ### Prerequisites
-Before running Trident locally, make sure you have the following installed:
+Before running Sentinel locally, make sure you have the following installed:
 - **Docker** with Compose v2
 - **Rust** (via [rustup](https://rustup.rs))
 - **Go** (1.21+)
@@ -57,13 +57,13 @@ Every mature smart contract ecosystem has solved this exactly once:
 | Ethereum  | The Graph |
 | Solana    | Helius / Triton |
 | Cosmos    | SubQuery |
-| **Stellar** | **Trident** |
+| **Stellar** | **Sentinel** |
 
 ---
 
-## What Trident Does
+## What Sentinel Does
 
-Trident is a dedicated indexing layer that streams every Soroban contract event off the network, stores it persistently, and exposes it through a clean API. A developer using Trident can query every event a contract has ever emitted — filtered by topic, paginated, in real time or historically — without writing a single line of indexing infrastructure themselves.
+Sentinel is a dedicated indexing layer that streams every Soroban contract event off the network, stores it persistently, and exposes it through a clean API. A developer using Sentinel can query every event a contract has ever emitted — filtered by topic, paginated, in real time or historically — without writing a single line of indexing infrastructure themselves.
 
 ---
 
@@ -71,7 +71,7 @@ Trident is a dedicated indexing layer that streams every Soroban contract event 
 
 The system is split into two layers with a hard boundary between them. Everything from ingestion to storage is handled by a **Rust core** — chosen because it decodes XDR natively through the same libraries the Stellar protocol uses, has no garbage collector to introduce latency spikes, and gives the kind of predictable performance a 24/7 indexer demands. The **Go front office** sits in front of that, serving the REST, GraphQL, and WebSocket interfaces that developers actually interact with.
 
-<img width="1400" height="1000" alt="trident-architecture" src="https://github.com/user-attachments/assets/91b8fddf-4837-406e-a76d-d44d0b963005" />
+<img width="1400" height="1000" alt="sentinel-architecture" src="https://github.com/user-attachments/assets/91b8fddf-4837-406e-a76d-d44d0b963005" />
 
 
 The Rust gRPC server polls Soroban RPC on a short interval, decodes every event from XDR into a normalised record, and writes it to PostgreSQL. It also publishes each event into Redis Streams — a persistent, ordered log that the Go layer consumes to power real-time WebSocket subscriptions. This separation is intentional: historical queries read from PostgreSQL, real-time delivery reads from Redis, and the two paths never interfere with each other.
@@ -80,7 +80,7 @@ The Rust gRPC server polls Soroban RPC on a short interval, decodes every event 
 
 ## Planned Features
 
-Trident is being built to cover the full range of what developers need from an indexer — not just the easy parts.
+Sentinel is being built to cover the full range of what developers need from an indexer — not just the easy parts.
 
 Full historical event storage with no enforced retention limit, so a query against a contract's entire history works on day one and on day one thousand. Filtering by contract address, event topic, ledger range, and timestamp, with cursor-based pagination for large result sets. A REST API for straightforward queries and a GraphQL interface for composable ones. Real-time WebSocket subscriptions so a frontend can react to new contract events as they land on-chain. A TypeScript SDK that wraps all of this into a typed client developers can drop into an existing project in minutes. Self-hosted deployment via a single Docker Compose command, and a free hosted tier so teams that don't want to run infrastructure don't have to.
 
@@ -118,7 +118,7 @@ See [`contracts/README.md`](./contracts/README.md).
 
 ## Production Deployment
 
-Trident ships a docker-compose overlay for production that terminates TLS at nginx and hides the API port from the host.
+Sentinel ships a docker-compose overlay for production that terminates TLS at nginx and hides the API port from the host.
 
 ### Prerequisites
 
@@ -181,6 +181,6 @@ Running these before pushing means CI passes on the first try. See [`CONTRIBUTIN
 
 🔱
 
-[Discussions](https://github.com/trident-build/trident/discussions) · [Specification](./docs/SPECIFICATION.md) · [API Stability Policy](./docs/API_STABILITY.md) · [SDK Versioning Policy](./docs/SDK_VERSIONING_POLICY.md) · [10-Min Quickstart](./docs/QUICKSTART.md) · [Cutover Runbook](./docs/runbooks/testnet-cutover.md) · [Example App](./examples/testnet-monitor)
+[Discussions](https://github.com/A4-Stellar/Sentinel/discussions) · [Specification](./docs/SPECIFICATION.md) · [API Stability Policy](./docs/API_STABILITY.md) · [SDK Versioning Policy](./docs/SDK_VERSIONING_POLICY.md) · [10-Min Quickstart](./docs/QUICKSTART.md) · [Cutover Runbook](./docs/runbooks/testnet-cutover.md) · [Example App](./examples/testnet-monitor)
 
 </div>

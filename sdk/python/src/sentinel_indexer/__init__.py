@@ -1,12 +1,12 @@
-"""trident-indexer — Python client SDK for the Trident Soroban event indexer."""
+"""sentinel-indexer — Python client SDK for the Sentinel Soroban event indexer."""
 
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
-from ._config import TridentConfigError
-from .client import TridentClient
-from .async_client import AsyncTridentClient
-from .errors import TridentApiError
+from ._config import SentinelConfigError
+from .client import SentinelClient
+from .async_client import AsyncSentinelClient
+from .errors import SentinelApiError
 from .retry import DEFAULT_RETRY_CONFIG, RetryConfig
 from .types import SorobanEvent, PaginatedEvents, Network
 from .openapi_models_gen import OpenAPIModels, SorobanEvent as OpenAPISorobanEvent, EventListResponse, LivenessResponse, ReadyResponse, ReadyChecks, IndexerStatsResponse, ContractStats, ContractStatsResponse, ErrorResponse
@@ -18,18 +18,18 @@ from .webhook import (
 )
 
 try:
-    __version__ = _version("trident-indexer")
+    __version__ = _version("sentinel-indexer")
 except PackageNotFoundError:
     # Package metadata is unavailable when running from a source checkout
-    # that was never installed (e.g. `python -c "import trident_indexer"`
+    # that was never installed (e.g. `python -c "import sentinel_indexer"`
     # from the repo root without `pip install -e .`).
     __version__ = "0.0.0+unknown"
 
 __all__ = [
-    "TridentClient",
-    "AsyncTridentClient",
-    "TridentApiError",
-    "TridentConfigError",
+    "SentinelClient",
+    "AsyncSentinelClient",
+    "SentinelApiError",
+    "SentinelConfigError",
     "SorobanEvent",
     "PaginatedEvents",
     "Network",

@@ -1,4 +1,4 @@
-// Package handlers contains the HTTP handler functions for the Trident REST API.
+// Package handlers contains the HTTP handler functions for the Sentinel REST API.
 package handlers
 
 import (
@@ -13,7 +13,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
-	"github.com/Depo-dev/trident/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/gen"
 )
 
 const healthCheckTimeout = 3 * time.Second

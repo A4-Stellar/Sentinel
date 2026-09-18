@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 )
 
 // Issue #576: DefaultCacheKey joined path, network and query with an

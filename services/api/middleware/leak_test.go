@@ -22,7 +22,7 @@ import (
 // the audit trail — only its SHA-256/HMAC-SHA256 hash (or the opaque
 // api_key_id derived from it) should ever be observable outside the request.
 func TestNoRawKeyLeakage(t *testing.T) {
-	const rawKey = "trident_super-secret-raw-key-should-never-appear-anywhere"
+	const rawKey = "sentinel_super-secret-raw-key-should-never-appear-anywhere"
 
 	// Use the legacy env-var fallback path (step 3 of NewDBAuth) since it's
 	// the one that historically did a hash-map lookup on a hashed key; DB and

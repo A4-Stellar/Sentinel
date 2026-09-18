@@ -10,12 +10,12 @@ interface Props {
 
 const {
   title,
-  description = 'Explore Soroban contract events on Stellar with Trident.',
+  description = 'Explore Soroban contract events on Stellar with Sentinel.',
   ogTitle,
   ogDescription,
 } = Astro.props;
 
-const fullTitle = title ? `${title} | Trident Explorer` : 'Trident Explorer';
+const fullTitle = title ? `${title} | Sentinel Explorer` : 'Sentinel Explorer';
 ---
 
 <!doctype html>
@@ -28,24 +28,24 @@ const fullTitle = title ? `${title} | Trident Explorer` : 'Trident Explorer';
     {ogTitle && <meta property="og:title" content={ogTitle} />}
     {ogDescription && <meta property="og:description" content={ogDescription} />}
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Trident Explorer" />
+    <meta property="og:site_name" content="Sentinel Explorer" />
   </head>
   <body class="min-h-full flex flex-col antialiased">
     <header class="sticky top-0 z-10 bg-gray-950 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
       <a href="/" class="font-bold text-white tracking-tight text-lg">
-        <span aria-hidden="true">&#x1F531;</span> Trident
+        <span aria-hidden="true">&#x1F531;</span> Sentinel
       </a>
       <nav class="flex gap-5 text-sm text-gray-400">
         <a href="/" class="hover:text-white transition-colors">Explorer</a>
         <a href="/status" class="hover:text-white transition-colors">Status</a>
         <a
-          href="https://docs.trident.dev"
+          href="https://docs.sentinel.dev"
           class="hover:text-white transition-colors"
           target="_blank"
           rel="noopener noreferrer">Docs</a
         >
         <a
-          href="https://app.trident.dev/signup"
+          href="https://app.sentinel.dev/signup"
           class="hover:text-white transition-colors"
           target="_blank"
           rel="noopener noreferrer">Get API Key</a
@@ -58,7 +58,7 @@ const fullTitle = title ? `${title} | Trident Explorer` : 'Trident Explorer';
     </main>
 
     <footer class="border-t border-gray-800 px-4 py-4 text-center text-xs text-gray-500 flex justify-between items-center max-w-6xl mx-auto">
-      <span>Trident &mdash; Soroban Event Indexer for Stellar</span>
+      <span>Sentinel &mdash; Soroban Event Indexer for Stellar</span>
       <a href="/status" class="hover:text-gray-300 transition-colors">System Status</a>
     </footer>
   </body>

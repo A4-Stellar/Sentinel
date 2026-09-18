@@ -1,7 +1,7 @@
 {
-  "name": "@trident-indexer/sdk",
+  "name": "@sentinel-indexer/sdk",
   "version": "1.0.0",
-  "description": "TypeScript client SDK for the Trident Soroban event indexer",
+  "description": "TypeScript client SDK for the Sentinel Soroban event indexer",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

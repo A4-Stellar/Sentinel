@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 )

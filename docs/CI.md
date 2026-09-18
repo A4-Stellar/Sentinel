@@ -228,7 +228,7 @@ Two things are normalised, both artifacts rather than differences:
 Run it locally against a scratch database:
 
 ```bash
-export DATABASE_URL=postgres://postgres:trident@localhost:5432/scratch
+export DATABASE_URL=postgres://postgres:sentinel@localhost:5432/scratch
 bash scripts/check-schema-drift.sh
 ```
 
@@ -264,7 +264,7 @@ enforces this in the `schema-guard` job.
 The rule exists because the SDKs are generated artifacts. If `sdk/python` ships
 `0.3.0` built from spec `1.1.0` while `sdk/typescript` ships `0.2.0` built from
 `1.0.0`, the version tells a user nothing about which API contract the client
-implements. Tying them together means `trident-sdk 1.2.0` implements OpenAPI
+implements. Tying them together means `sentinel-sdk 1.2.0` implements OpenAPI
 `1.2.0`, and a breaking spec change bumps all five at once.
 
 Realign after a spec version bump:

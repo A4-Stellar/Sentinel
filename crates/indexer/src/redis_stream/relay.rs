@@ -14,7 +14,7 @@ use std::time::Duration;
 
 use sqlx::PgPool;
 use tokio_util::sync::CancellationToken;
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 use crate::db::outbox;
 use crate::metrics;
@@ -80,7 +80,7 @@ impl OutboxRelay {
     }
 
     /// Publish one bounded batch. Returns how many events reached Redis.
-    pub async fn publish_pending(&mut self) -> Result<usize, TridentError> {
+    pub async fn publish_pending(&mut self) -> Result<usize, SentinelError> {
         let records = outbox::fetch_unpublished(&self.db, self.config.batch_size).await?;
         if records.is_empty() {
             self.report_backlog(0).await;
@@ -88,7 +88,7 @@ impl OutboxRelay {
         }
 
         let mut published_seqs: Vec<i64> = Vec::with_capacity(records.len());
-        let mut failure: Option<TridentError> = None;
+        let mut failure: Option<SentinelError> = None;
 
         for record in &records {
             let event = match record.event() {

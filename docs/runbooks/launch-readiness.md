@@ -1,6 +1,6 @@
 # Launch Readiness Gate
 
-This runbook is the launch gate for the public Trident testnet experience. It joins the checks for explorer accessibility, real-data performance, staging smoke coverage, and webhook delivery guarantees into one repeatable release ritual.
+This runbook is the launch gate for the public Sentinel testnet experience. It joins the checks for explorer accessibility, real-data performance, staging smoke coverage, and webhook delivery guarantees into one repeatable release ritual.
 
 ## Required staging inputs
 
@@ -8,7 +8,7 @@ Set these repository variables before running the launch-readiness workflow:
 
 | Variable | Purpose |
 | --- | --- |
-| `STAGING_URL` | Base API URL, for example `https://api-staging.trident.telocel.com`. |
+| `STAGING_URL` | Base API URL, for example `https://api-staging.sentinel.a4stellar.com`. |
 | `STAGING_EXPLORER_URL` | Public explorer URL to audit from a user entry point. |
 | `STAGING_CONTRACT_ID` | Busy testnet contract used for explorer/event checks. |
 | `LAUNCH_MAX_HTML_BYTES` | Optional page-weight budget, defaults to `350000`. |
@@ -49,7 +49,7 @@ Run this immediately before launch and after every staging deploy.
 
 ## Webhook delivery guarantee
 
-Trident webhooks target at-least-once delivery. The indexer commits each event together with an `event_outbox` row in one transaction, and a relay publishes outbox rows to a Redis stream; delivery workers then consume with `XReadGroup` and record each attempt in `webhook_deliveries`. A non-2xx response or network failure remains retryable until the retry budget is exhausted, after which the delivery is visible as a dead-lettered failure for operator review. One caveat for launch: webhook retries are in-process, so a delivery-worker crash mid-retry strands the entry in the consumer group's pending list — no `XAutoClaim` recovery exists on that path yet. Dead-letter rows are pruned after 7 days, so replay is bounded by that window. See `docs/observability/event-delivery.md`.
+Sentinel webhooks target at-least-once delivery. The indexer commits each event together with an `event_outbox` row in one transaction, and a relay publishes outbox rows to a Redis stream; delivery workers then consume with `XReadGroup` and record each attempt in `webhook_deliveries`. A non-2xx response or network failure remains retryable until the retry budget is exhausted, after which the delivery is visible as a dead-lettered failure for operator review. One caveat for launch: webhook retries are in-process, so a delivery-worker crash mid-retry strands the entry in the consumer group's pending list — no `XAutoClaim` recovery exists on that path yet. Dead-letter rows are pruned after 7 days, so replay is bounded by that window. See `docs/observability/event-delivery.md`.
 
 Ordering is best-effort per subscription while deliveries succeed on the first attempt. Retries can reorder events because a later event may be delivered before an earlier event finishes its retry schedule. Consumers must deduplicate by event id and treat delivery order as advisory.
 

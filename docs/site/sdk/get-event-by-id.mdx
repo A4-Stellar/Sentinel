@@ -69,12 +69,12 @@ type EventType = "contract" | "system" | "diagnostic";
 ### Basic usage
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -91,11 +91,11 @@ console.log("Topics:", event.topics);
 ### Handling 404
 
 ```typescript
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -105,13 +105,13 @@ try {
   });
   return event;
 } catch (err) {
-  if (err instanceof TridentError) {
+  if (err instanceof SentinelError) {
     if (err.code === "NOT_FOUND") {
       console.warn("Event not found in index");
       return null;
     }
     if (err.code === "UNAUTHORIZED") {
-      throw new Error("Invalid API key — check your TRIDENT_API_KEY");
+      throw new Error("Invalid API key — check your SENTINEL_API_KEY");
     }
   }
   throw err;

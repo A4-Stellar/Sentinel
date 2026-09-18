@@ -1,15 +1,15 @@
-"""Tests for the async AsyncTridentClient."""
+"""Tests for the async AsyncSentinelClient."""
 
 import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
-from trident_indexer import AsyncTridentClient, TridentApiError, SorobanEvent, PaginatedEvents
+from sentinel_indexer import AsyncSentinelClient, SentinelApiError, SorobanEvent, PaginatedEvents
 from tests.conftest import API_URL, API_KEY, RAW_EVENT, LIST_RESPONSE
 
 
-def make_client() -> AsyncTridentClient:
-    return AsyncTridentClient(api_url=API_URL, api_key=API_KEY)
+def make_client() -> AsyncSentinelClient:
+    return AsyncSentinelClient(api_url=API_URL, api_key=API_KEY)
 
 
 def make_aiohttp_response(status: int, body: dict) -> MagicMock:
@@ -60,7 +60,7 @@ class TestAsyncQueryEvents:
 
         with patch("aiohttp.ClientSession.get", return_value=resp):
             async with client:
-                with pytest.raises(TridentApiError) as exc_info:
+                with pytest.raises(SentinelApiError) as exc_info:
                     await client.query_events()
 
         assert exc_info.value.status == 401
@@ -88,7 +88,7 @@ class TestAsyncGetEventById:
 
         with patch("aiohttp.ClientSession.get", return_value=resp):
             async with client:
-                with pytest.raises(TridentApiError) as exc_info:
+                with pytest.raises(SentinelApiError) as exc_info:
                     await client.get_event_by_id("missing")
 
         assert exc_info.value.code == "NOT_FOUND"
@@ -127,21 +127,21 @@ class TestIterEvents:
         assert received[0].id == RAW_EVENT["id"]
 
 
-class TestTridentApiError:
+class TestSentinelApiError:
     def test_from_response_parses_structured_error(self):
         body = json.dumps({"error": {"code": "NOT_FOUND", "message": "not found", "field": "id"}})
-        err = TridentApiError.from_response(404, body)
+        err = SentinelApiError.from_response(404, body)
         assert err.status == 404
         assert err.code == "NOT_FOUND"
         assert err.field == "id"
         assert str(err) == "not found"
 
     def test_from_response_falls_back_on_non_json(self):
-        err = TridentApiError.from_response(503, "Service Unavailable")
+        err = SentinelApiError.from_response(503, "Service Unavailable")
         assert err.status == 503
         assert err.code == "INTERNAL"
         assert "Service Unavailable" in str(err)
 
     def test_from_response_handles_empty_body(self):
-        err = TridentApiError.from_response(500, "")
+        err = SentinelApiError.from_response(500, "")
         assert err.code == "INTERNAL"

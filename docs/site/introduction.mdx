@@ -1,9 +1,9 @@
 ---
 title: "Introduction"
-description: "Trident is the event indexing layer Stellar's developer ecosystem needs — query every Soroban contract event ever emitted, filtered and paginated, without running your own infrastructure."
+description: "Sentinel is the event indexing layer Stellar's developer ecosystem needs — query every Soroban contract event ever emitted, filtered and paginated, without running your own infrastructure."
 ---
 
-# What is Trident?
+# What is Sentinel?
 
 Soroban's RPC node is intentionally thin. It does not retain events beyond a short rolling window, has no historical query capability, and offers minimal filtering. That's a reasonable protocol decision — but it forces every team building on Stellar to solve the same infrastructure problem before they can build their actual product.
 
@@ -14,9 +14,9 @@ Every mature smart contract ecosystem has solved this exactly once:
 | Ethereum   | The Graph      |
 | Solana     | Helius / Triton|
 | Cosmos     | SubQuery       |
-| **Stellar**| **Trident**    |
+| **Stellar**| **Sentinel**    |
 
-Trident is a dedicated indexing layer that streams every Soroban contract event off the network, stores it persistently, and exposes it through a clean API and SDK. A developer using Trident can query every event a contract has ever emitted — filtered by topic, paginated, in real time or historically — without writing a single line of indexing infrastructure.
+Sentinel is a dedicated indexing layer that streams every Soroban contract event off the network, stores it persistently, and exposes it through a clean API and SDK. A developer using Sentinel can query every event a contract has ever emitted — filtered by topic, paginated, in real time or historically — without writing a single line of indexing infrastructure.
 
 ---
 
@@ -56,7 +56,7 @@ Stellar RPC
 │  • GQL   → POST /graphql                        │
 └────────────────────┬────────────────────────────┘
                      ▼
-          TypeScript SDK (@trident-indexer/sdk)
+          TypeScript SDK (@sentinel-indexer/sdk)
 ```
 
 **Historical queries** read from PostgreSQL. **Real-time delivery** reads from Redis. The two paths never interfere with each other.
@@ -65,7 +65,7 @@ The Rust core was chosen because it decodes XDR natively through the same librar
 
 ---
 
-## Two ways to use Trident
+## Two ways to use Sentinel
 
 <CardGroup cols={2}>
   <Card title="Hosted API" icon="cloud" href="/quickstart-sdk">

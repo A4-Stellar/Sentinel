@@ -8,7 +8,7 @@ cd "$CONTRACTS_DIR"
 
 stellar contract build
 
-WASM="target/wasm32v1-none/release/trident_reference_token.wasm"
+WASM="target/wasm32v1-none/release/sentinel_reference_token.wasm"
 if [ ! -f "$WASM" ]; then
   echo "error: expected build output at $WASM" >&2
   exit 1

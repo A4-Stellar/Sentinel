@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 )
 
 // TestCreateAPIKey_RejectsUnknownNetwork guards against issue #252: before

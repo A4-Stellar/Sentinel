@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -64,8 +64,8 @@ func WriteClientMetrics(w io.Writer) {
 	defer clientMetrics.mu.Unlock()
 
 	if len(clientMetrics.requests) > 0 {
-		_, _ = fmt.Fprintf(w, "# HELP trident_grpc_client_requests_total gRPC client call attempts by method and status code.\n")
-		_, _ = fmt.Fprintf(w, "# TYPE trident_grpc_client_requests_total counter\n")
+		_, _ = fmt.Fprintf(w, "# HELP sentinel_grpc_client_requests_total gRPC client call attempts by method and status code.\n")
+		_, _ = fmt.Fprintf(w, "# TYPE sentinel_grpc_client_requests_total counter\n")
 		keys := make([]string, 0, len(clientMetrics.requests))
 		for k := range clientMetrics.requests {
 			keys = append(keys, k)
@@ -73,20 +73,20 @@ func WriteClientMetrics(w io.Writer) {
 		sort.Strings(keys)
 		for _, k := range keys {
 			method, code, _ := strings.Cut(k, "\x00")
-			_, _ = fmt.Fprintf(w, "trident_grpc_client_requests_total{method=%q,code=%q} %d\n", method, code, clientMetrics.requests[k])
+			_, _ = fmt.Fprintf(w, "sentinel_grpc_client_requests_total{method=%q,code=%q} %d\n", method, code, clientMetrics.requests[k])
 		}
 	}
 
 	if len(clientMetrics.latencySeconds) > 0 {
-		_, _ = fmt.Fprintf(w, "# HELP trident_grpc_client_latency_seconds_total Cumulative gRPC client call latency by method.\n")
-		_, _ = fmt.Fprintf(w, "# TYPE trident_grpc_client_latency_seconds_total counter\n")
+		_, _ = fmt.Fprintf(w, "# HELP sentinel_grpc_client_latency_seconds_total Cumulative gRPC client call latency by method.\n")
+		_, _ = fmt.Fprintf(w, "# TYPE sentinel_grpc_client_latency_seconds_total counter\n")
 		methods := make([]string, 0, len(clientMetrics.latencySeconds))
 		for m := range clientMetrics.latencySeconds {
 			methods = append(methods, m)
 		}
 		sort.Strings(methods)
 		for _, m := range methods {
-			_, _ = fmt.Fprintf(w, "trident_grpc_client_latency_seconds_total{method=%q} %g\n", m, clientMetrics.latencySeconds[m])
+			_, _ = fmt.Fprintf(w, "sentinel_grpc_client_latency_seconds_total{method=%q} %g\n", m, clientMetrics.latencySeconds[m])
 		}
 	}
 }

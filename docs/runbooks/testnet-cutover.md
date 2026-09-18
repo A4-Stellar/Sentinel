@@ -34,7 +34,7 @@ already has, gathered into one list.
 
 ### Which issues must be closed
 
-- [ ] [#431](https://github.com/Telocel-Labs/Trident/issues/431) —
+- [ ] [#431](https://github.com/A4-Stellar/Sentinel/issues/431) —
       automated backups with a real restore performed. **Currently open.**
       Cutting over to testnet without this means the first real incident
       that needs a restore will be the first time anyone has ever
@@ -43,7 +43,7 @@ already has, gathered into one list.
       been verified so far (schema/partition round-trip, real dump/restore
       timing) and what's still missing (a real backup to restore, at
       production-shaped scale).
-- [ ] [#460](https://github.com/Telocel-Labs/Trident/issues/460) — rollback
+- [ ] [#460](https://github.com/A4-Stellar/Sentinel/issues/460) — rollback
       rehearsed. **Closed**, but its own runbook
       ([`ROLLBACK_RUNBOOK.md`](../ROLLBACK_RUNBOOK.md)) is explicitly
       marked "template — not yet rehearsed" and documents a real, load-bearing
@@ -52,7 +52,7 @@ already has, gathered into one list.
       runbook's "Finding: migrations here are forward-only" section before
       cutover, especially if the release being cut over includes a
       migration.
-- [ ] [#445](https://github.com/Telocel-Labs/Trident/issues/445) —
+- [ ] [#445](https://github.com/A4-Stellar/Sentinel/issues/445) —
       incident response process with a named on-call owner. **Closed** —
       [`incident-response.md`](incident-response.md) exists with severity
       levels, escalation path, and a communication channel. Its "On-call
@@ -99,7 +99,7 @@ Even without #431's automated backups yet, take a manual one immediately
 before cutover so there is at least one restore point:
 
 ```bash
-pg_dump -Fc -h <host> -U trident -d trident -f pre-cutover-$(date -u +%Y%m%dT%H%M%SZ).dump
+pg_dump -Fc -h <host> -U sentinel -d sentinel -f pre-cutover-$(date -u +%Y%m%dT%H%M%SZ).dump
 ```
 
 **Verify:** the dump file exists and is non-empty; spot-check its size is in
@@ -136,7 +136,7 @@ indexer resumed consuming testnet ledgers.
 ### 6. Watch for the first full ingest cycle — *on-call owner*
 
 Per [`incident-response.md`](incident-response.md)'s alert catalog,
-specifically `TridentIndexerHeartbeatStale` and `TridentIndexerLagCritical`
+specifically `SentinelIndexerHeartbeatStale` and `SentinelIndexerLagCritical`
 — these are exactly the signals that would fire if cutover left the indexer
 unable to reach testnet RPC or resume its cursor correctly.
 

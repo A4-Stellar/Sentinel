@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 	"github.com/stellar/go/xdr"
 )
 

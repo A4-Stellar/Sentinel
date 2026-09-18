@@ -1,5 +1,5 @@
 // Package config loads and validates required environment variables for the
-// Trident Go API. All required variables are collected before exiting so
+// Sentinel Go API. All required variables are collected before exiting so
 // operators see every problem in a single run.
 package config
 
@@ -21,7 +21,7 @@ func Load() *Config {
 	missing := CollectMissing()
 
 	if len(missing) > 0 {
-		fmt.Fprintln(os.Stderr, "[trident-api] missing required env vars:")
+		fmt.Fprintln(os.Stderr, "[sentinel-api] missing required env vars:")
 		for _, v := range missing {
 			fmt.Fprintln(os.Stderr, v)
 		}

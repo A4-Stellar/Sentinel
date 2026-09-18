@@ -10,10 +10,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/cursor"
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/cursor"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -102,7 +102,7 @@ func requireAdmin(cfg APIKeyConfig, w http.ResponseWriter, r *http.Request) bool
 
 // CreateAPIKey handles POST /v1/api-keys (admin-only).
 //
-// Generates a key: "trident_" + 32 random hex bytes. Only the SHA-256 hash is
+// Generates a key: "sentinel_" + 32 random hex bytes. Only the SHA-256 hash is
 // stored. The plaintext key is returned exactly once in the response.
 func CreateAPIKey(cfg APIKeyConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +134,7 @@ func CreateAPIKey(cfg APIKeyConfig) http.HandlerFunc {
 			httputil.WriteErrorCtx(r.Context(), w, http.StatusInternalServerError, httputil.INTERNAL, "failed to generate key")
 			return
 		}
-		plaintext := "trident_" + hex.EncodeToString(raw)
+		plaintext := "sentinel_" + hex.EncodeToString(raw)
 		hash := sha256hex(plaintext)
 		prefix := plaintext[:16]
 
@@ -403,13 +403,13 @@ func RotateAPIKey(cfg APIKeyConfig) http.HandlerFunc {
 			return
 		}
 
-		// Generate new key: "trident_" + 32 random hex bytes
+		// Generate new key: "sentinel_" + 32 random hex bytes
 		rawBytes := make([]byte, 32)
 		if _, err := rand.Read(rawBytes); err != nil {
 			httputil.WriteErrorCtx(r.Context(), w, http.StatusInternalServerError, httputil.INTERNAL, "failed to generate key entropy")
 			return
 		}
-		plainKey := "trident_" + hex.EncodeToString(rawBytes)
+		plainKey := "sentinel_" + hex.EncodeToString(rawBytes)
 		keyHash := sha256hex(plainKey)
 		keyPrefix := plainKey[:16]
 

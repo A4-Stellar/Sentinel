@@ -1,16 +1,16 @@
 ---
-title: "TridentClient"
-description: "Constructor options and configuration for the TridentClient TypeScript SDK."
+title: "SentinelClient"
+description: "Constructor options and configuration for the SentinelClient TypeScript SDK."
 ---
 
 ## Installation
 
 ```bash
-npm install @trident-indexer/sdk
+npm install @sentinel-indexer/sdk
 # or
-yarn add @trident-indexer/sdk
+yarn add @sentinel-indexer/sdk
 # or
-pnpm add @trident-indexer/sdk
+pnpm add @sentinel-indexer/sdk
 ```
 
 ---
@@ -18,18 +18,18 @@ pnpm add @trident-indexer/sdk
 ## Constructor
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient(config: TridentClientConfig);
+const client = new SentinelClient(config: SentinelClientConfig);
 ```
 
 ---
 
-## TridentClientConfig
+## SentinelClientConfig
 
 | Option          | Type                                    | Required | Description                                                                      |
 |-----------------|-----------------------------------------|----------|----------------------------------------------------------------------------------|
-| `apiUrl`        | `string`                                | ✅       | Base URL of the Trident REST API. No trailing slash. Example: `https://api.trident.telocel.com` |
+| `apiUrl`        | `string`                                | ✅       | Base URL of the Sentinel REST API. No trailing slash. Example: `https://api.sentinel.a4stellar.com` |
 | `apiKey`        | `string`                                | ✅       | API key sent as the `X-API-Key` header on every request.                        |
 | `network`       | `"mainnet" \| "testnet" \| "futurenet"` | ✅       | Stellar network to query. Included in WebSocket subscription frames.            |
 | `webSocketImpl` | `WebSocketConstructor`                  |          | Custom WebSocket implementation. Defaults to the global `WebSocket` (or `ws` on Node 18/20). |
@@ -43,12 +43,12 @@ By default, the SDK uses:
 Override with a custom implementation for testing or specific environments:
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 import WebSocket from "ws";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
   webSocketImpl: WebSocket,
 });
@@ -59,11 +59,11 @@ const client = new TridentClient({
 ## Full example
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 

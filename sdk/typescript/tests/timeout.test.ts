@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_TIMEOUT_MS, TridentClient, TridentError } from "../src/index.js";
+import { DEFAULT_TIMEOUT_MS, SentinelClient, SentinelError } from "../src/index.js";
 
 // Issue #520 follow-up: the explorer's move onto the SDK dropped a 30s
 // AbortController timeout, and the SDK had none of its own — `fetch` never
@@ -54,7 +54,7 @@ function hangingFetch() {
 }
 
 function client(overrides: Record<string, unknown> = {}) {
-  return new TridentClient({
+  return new SentinelClient({
     apiUrl: BASE_URL,
     apiKey: API_KEY,
     network: "testnet",
@@ -80,9 +80,9 @@ describe("request timeout", () => {
         (e: unknown) => e,
       );
 
-    expect(err).toBeInstanceOf(TridentError);
-    expect((err as TridentError).code).toBe("TIMEOUT");
-    expect((err as TridentError).message).toContain("20ms");
+    expect(err).toBeInstanceOf(SentinelError);
+    expect((err as SentinelError).code).toBe("TIMEOUT");
+    expect((err as SentinelError).message).toContain("20ms");
   });
 
   it("passes an AbortSignal to fetch by default", async () => {
@@ -121,8 +121,8 @@ describe("request timeout", () => {
         (e: unknown) => e,
       );
 
-    expect((err as TridentError).code).toBe("TIMEOUT");
-    expect((err as TridentError).message).toContain("15ms");
+    expect((err as SentinelError).code).toBe("TIMEOUT");
+    expect((err as SentinelError).message).toContain("15ms");
   });
 
   it("gives each retry attempt a fresh signal instead of reusing an aborted one", async () => {
@@ -139,7 +139,7 @@ describe("request timeout", () => {
         (e: unknown) => e,
       );
 
-    expect((err as TridentError).code).toBe("TIMEOUT");
+    expect((err as SentinelError).code).toBe("TIMEOUT");
     expect(fetchMock).toHaveBeenCalledTimes(3);
     // Each attempt must carry its own controller — a reused aborted signal
     // would make attempts 2 and 3 fail instantly rather than being retried.

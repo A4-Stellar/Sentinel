@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/internal/logsampling"
+	"github.com/Depo-dev/sentinel/services/api/internal/logsampling"
 )
 
 func TestSampler_AllowsOneInN(t *testing.T) {

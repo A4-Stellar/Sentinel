@@ -65,8 +65,8 @@ jobs:
       - name: Verify the built server actually starts
         working-directory: explorer
         env:
-          TRIDENT_TESTNET_API_URL: https://api.testnet.trident.dev
-          TRIDENT_MAINNET_API_URL: https://api.mainnet.trident.dev
+          SENTINEL_TESTNET_API_URL: https://api.testnet.sentinel.dev
+          SENTINEL_MAINNET_API_URL: https://api.mainnet.sentinel.dev
           EXPLORER_API_KEY: ci-smoke-test-key
           PORT: 4321
         run: |

@@ -32,7 +32,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 use std::time::{Duration, Instant};
 
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 use crate::metrics;
 
@@ -121,9 +121,9 @@ impl RpcHealthScorer {
     /// Create a new health scorer with the given endpoint URLs.
     ///
     /// All endpoints start with a score of 100.
-    pub fn new(urls: Vec<String>) -> Result<Self, TridentError> {
+    pub fn new(urls: Vec<String>) -> Result<Self, SentinelError> {
         if urls.is_empty() {
-            return Err(TridentError::config(anyhow::anyhow!(
+            return Err(SentinelError::config(anyhow::anyhow!(
                 "[indexer] at least one RPC endpoint must be configured for health scoring"
             )));
         }

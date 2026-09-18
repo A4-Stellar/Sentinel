@@ -4,12 +4,12 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Depo-dev/trident/services/api/cursor"
-	"github.com/Depo-dev/trident/services/api/gen"
-	"github.com/Depo-dev/trident/services/api/grpcclient"
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/validation"
-	"github.com/Depo-dev/trident/services/api/ws"
+	"github.com/Depo-dev/sentinel/services/api/cursor"
+	"github.com/Depo-dev/sentinel/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/grpcclient"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/ws"
 )
 
 // GraphQLBackend resolves the GraphQL query operations (issue #223) against

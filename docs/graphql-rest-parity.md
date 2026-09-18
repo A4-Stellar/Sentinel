@@ -1,6 +1,6 @@
 # GraphQL & REST Event Query Parity Specification
 
-This document establishes the **parity contract** between Trident's REST API (`GET /v1/events`, `GET /v1/stream`) and GraphQL interface (`graphql-transport-ws`). Both interfaces expose the same underlying Stellar Soroban event data stream and must produce identical data structures, observe the same authentication tiers, and enforce identical rate limits (issues #223, #427, #514).
+This document establishes the **parity contract** between Sentinel's REST API (`GET /v1/events`, `GET /v1/stream`) and GraphQL interface (`graphql-transport-ws`). Both interfaces expose the same underlying Stellar Soroban event data stream and must produce identical data structures, observe the same authentication tiers, and enforce identical rate limits (issues #223, #427, #514).
 
 ---
 

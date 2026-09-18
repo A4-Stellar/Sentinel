@@ -6,7 +6,7 @@ export default defineConfig({
     environment: "jsdom",
     server: {
       deps: {
-        inline: ["@trident-indexer/sdk"],
+        inline: ["@sentinel-indexer/sdk"],
       },
     },
   },

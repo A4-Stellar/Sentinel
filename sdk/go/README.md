@@ -1,6 +1,6 @@
-# trident-go-sdk
+# sentinel-go-sdk
 
-Go client SDK for the [Trident](https://github.com/Telocel-Labs/Trident) Soroban event indexer.
+Go client SDK for the [Sentinel](https://github.com/A4-Stellar/Sentinel) Soroban event indexer.
 
 ## Regenerating OpenAPI models
 
@@ -10,4 +10,4 @@ See [docs/sdk-regeneration.md](../../docs/sdk-regeneration.md) for the full cros
 python3 scripts/generate_sdk_models.py --language go
 ```
 
-Generated models live in `github.com/Depo-dev/trident/sdk/go/openapi`.
+Generated models live in `github.com/Depo-dev/sentinel/sdk/go/openapi`.

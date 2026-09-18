@@ -10,17 +10,17 @@
 # these paths do not exist, so the checker fails on links the docs are correct
 # to contain — they are where a reader should go once the pages ship. Remove
 # each line as the corresponding page goes live.
-https://trident\.telocel\.com/signup
-https://trident\.telocel\.com/pricing
+https://sentinel\.telocel\.com/signup
+https://sentinel\.telocel\.com/pricing
 
 # The API root serves no HTML document; only the versioned endpoints beneath it
 # do, and those are covered by the contract tests rather than a link check.
-https://api\.trident\.telocel\.com/?$
+https://api\.sentinel\.telocel\.com/?$
 
 # GitHub Discussions is not enabled for this repository (has_discussions is
 # false), so this 404s. Delete this line if Discussions is turned on, or drop
 # the link from the docs.
-https://github\.com/Telocel-Labs/Trident/discussions
+https://github\.com/A4-Stellar/Sentinel/discussions
 
 # npmjs.com returns 403 to the link checker's user agent rather than serving
 # the page, so a correct link to the npm registry fails the run. The link is

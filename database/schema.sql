@@ -1,4 +1,4 @@
--- Trident PostgreSQL Schema
+-- Sentinel PostgreSQL Schema
 -- Convenience full-schema snapshot for local/dev bootstrap and documentation.
 -- The migration chain in ./migrations/ (0001-0029) is the source of truth and is
 -- what CI and production apply; this file must mirror the end state of that chain.
@@ -79,7 +79,7 @@ ON CONFLICT (key) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- indexed_contracts
--- Registry of contracts whose events Trident is actively indexing.
+-- Registry of contracts whose events Sentinel is actively indexing.
 -- A NULL network means "all networks".
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS indexed_contracts (

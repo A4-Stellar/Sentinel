@@ -222,7 +222,7 @@ func (s *liveSuite) stream(headers map[string]string) {
 	defer func() { _ = rdb.Close() }()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	anchor, err := rdb.XAdd(ctx, &redis.XAddArgs{Stream: "trident:events", Values: map[string]any{"contract_id": "anchor"}}).Result()
+	anchor, err := rdb.XAdd(ctx, &redis.XAddArgs{Stream: "sentinel:events", Values: map[string]any{"contract_id": "anchor"}}).Result()
 	if err != nil {
 		s.t.Fatalf("seed Redis stream anchor: %v", err)
 	}
@@ -241,7 +241,7 @@ func (s *liveSuite) stream(headers map[string]string) {
 		responseBody, _ := io.ReadAll(resp.Body)
 		s.t.Fatalf("open SSE response: status %d; body=%s", resp.StatusCode, responseBody)
 	}
-	if _, err := rdb.XAdd(ctx, &redis.XAddArgs{Stream: "trident:events", Values: map[string]any{
+	if _, err := rdb.XAdd(ctx, &redis.XAddArgs{Stream: "sentinel:events", Values: map[string]any{
 		"contract_id": fixtureContractID,
 		"topics":      `["transfer"]`,
 		"data":        `"ci-contract-test-data"`,

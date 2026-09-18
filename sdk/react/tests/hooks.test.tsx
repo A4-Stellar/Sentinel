@@ -1,20 +1,20 @@
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import type { SorobanEvent, PaginatedEvents } from "@trident-indexer/sdk";
+import type { SorobanEvent, PaginatedEvents } from "@sentinel-indexer/sdk";
 
 // ---------------------------------------------------------------------------
-// Mock @trident-indexer/sdk
+// Mock @sentinel-indexer/sdk
 // Vitest hoists vi.mock calls, so we cannot reference outer variables inside
 // the factory. Instead, expose stable mock functions on the class prototype
 // so every test can spy on and configure them via the class.
 // ---------------------------------------------------------------------------
 
-vi.mock("@trident-indexer/sdk", () => {
+vi.mock("@sentinel-indexer/sdk", () => {
   const queryEvents = vi.fn<() => Promise<PaginatedEvents>>();
   const subscribeToContract = vi.fn();
 
-  class MockTridentClient {
+  class MockSentinelClient {
     static __queryEvents = queryEvents;
     static __subscribeToContract = subscribeToContract;
     queryEvents = queryEvents;
@@ -22,19 +22,19 @@ vi.mock("@trident-indexer/sdk", () => {
   }
 
   return {
-    TridentClient: MockTridentClient,
+    SentinelClient: MockSentinelClient,
   };
 });
 
-import { TridentClient } from "@trident-indexer/sdk";
-import { TridentProvider } from "../src/context.js";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import { SentinelProvider } from "../src/context.js";
 import { useContractEvents } from "../src/useContractEvents.js";
 import { useSubscription } from "../src/useSubscription.js";
 
 // ---------------------------------------------------------------------------
-// Helpers — grab stable mock references from the MockTridentClient statics
+// Helpers — grab stable mock references from the MockSentinelClient statics
 // ---------------------------------------------------------------------------
-const MockClient = TridentClient as unknown as {
+const MockClient = SentinelClient as unknown as {
   __queryEvents: ReturnType<typeof vi.fn>;
   __subscribeToContract: ReturnType<typeof vi.fn>;
   new (...args: unknown[]): unknown;
@@ -65,9 +65,9 @@ const onePage: PaginatedEvents = { events: [sampleEvent], cursor: "cur1", hasMor
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return (
-    <TridentProvider apiUrl="http://localhost:3000" apiKey="test-key">
+    <SentinelProvider apiUrl="http://localhost:3000" apiKey="test-key">
       {children}
-    </TridentProvider>
+    </SentinelProvider>
   );
 }
 

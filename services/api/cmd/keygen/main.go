@@ -36,7 +36,7 @@ func main() {
 	mac.Write([]byte(rawKey))
 	keyHash := hex.EncodeToString(mac.Sum(nil))
 
-	fmt.Println("=== Trident API Key Generator ===")
+	fmt.Println("=== Sentinel API Key Generator ===")
 	fmt.Printf("Raw API Key (client X-API-Key): %s\n", rawKey)
 	fmt.Printf("HMAC-SHA256 Hash (server config): %s\n", keyHash)
 	fmt.Printf("Salt used:                       %s\n\n", salt)

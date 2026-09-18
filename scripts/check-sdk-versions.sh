@@ -13,7 +13,7 @@
 #
 # The rule enforced here: every SDK carries the spec's version, exactly. A
 # breaking spec change bumps all five together, and a user reading
-# `trident-sdk 1.2.0` knows it implements OpenAPI 1.2.0.
+# `sentinel-sdk 1.2.0` knows it implements OpenAPI 1.2.0.
 #
 # Usage:
 #   scripts/check-sdk-versions.sh          # verify

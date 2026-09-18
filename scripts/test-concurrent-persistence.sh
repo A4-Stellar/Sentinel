@@ -35,7 +35,7 @@ error: no database URL.
 
 Set TEST_DATABASE_URL (or DATABASE_URL), or pass --database-url. Example:
 
-  export TEST_DATABASE_URL=postgres://postgres:trident@localhost:5432/trident_test
+  export TEST_DATABASE_URL=postgres://postgres:sentinel@localhost:5432/sentinel_test
 EOF
   exit 1
 fi
@@ -56,7 +56,7 @@ echo
 echo "==> Running concurrency integration tests"
 TEST_DATABASE_URL="$DATABASE_URL" \
 REQUIRE_TEST_SERVICES=1 \
-cargo test -p trident-indexer \
+cargo test -p sentinel-indexer \
   concurrent_indexers_persist_each_event_exactly_once \
   cursor_never_rewinds_under_concurrent_writers \
   concurrent_cursor_advances_converge_on_maximum \
@@ -123,7 +123,7 @@ echo
 echo "PASS: exactly-once event persistence holds under concurrent indexers."
 echo
 echo "Note: the supported deployment is a single indexer replica. See"
-echo "docs/deployment.md and helm/trident/templates/indexer-deployment.yaml —"
+echo "docs/deployment.md and helm/sentinel/templates/indexer-deployment.yaml —"
 echo "the chart enforces replicas: 1 with a Recreate strategy. The guarantees"
 echo "checked here are what make an accidental double-deploy survivable, not"
 echo "an endorsement of scaling the indexer out."

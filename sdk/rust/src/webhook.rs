@@ -1,4 +1,4 @@
-//! Webhook signature verification helpers for Trident (issue #452).
+//! Webhook signature verification helpers for Sentinel (issue #452).
 //!
 //! Receivers call [`verify_signature`] on every incoming webhook request to
 //! confirm the delivery is authentic and within the replay-protection window.
@@ -11,14 +11,14 @@
 //! expected = format!("sha256={}", hex::encode(mac))
 //! ```
 //!
-//! The `X-Trident-Signature` header may contain two space-separated signatures
+//! The `X-Sentinel-Signature` header may contain two space-separated signatures
 //! during a secret rotation overlap window.  Pass your current active secret —
 //! [`verify_signature`] checks all tokens and succeeds if any one matches.
 //!
 //! # Example
 //!
 //! ```no_run
-//! use trident_sdk::webhook::{verify_signature, DEFAULT_TOLERANCE_SECONDS};
+//! use sentinel_sdk::webhook::{verify_signature, DEFAULT_TOLERANCE_SECONDS};
 //!
 //! fn handle_webhook(
 //!     body: &[u8],
@@ -69,13 +69,13 @@ pub fn compute_signature(timestamp: i64, body: &[u8], secret: &str) -> String {
     format!("sha256={}", hex::encode(mac.finalize().into_bytes()))
 }
 
-/// Verify an incoming Trident webhook delivery.
+/// Verify an incoming Sentinel webhook delivery.
 ///
 /// # Arguments
 ///
 /// * `body`             — raw request body bytes (read before parsing JSON)
-/// * `signature`        — value of the `X-Trident-Signature` header
-/// * `timestamp`        — value of the `X-Trident-Timestamp` header (Unix seconds)
+/// * `signature`        — value of the `X-Sentinel-Signature` header
+/// * `timestamp`        — value of the `X-Sentinel-Timestamp` header (Unix seconds)
 /// * `secret`           — your webhook subscription secret (`whsec_…`)
 /// * `tolerance_secs`   — maximum delivery age in seconds; pass
 ///   [`DEFAULT_TOLERANCE_SECONDS`] (300) for the recommended window, or `0`
@@ -94,11 +94,11 @@ pub fn verify_signature(
         .trim()
         .parse()
         .map_err(|_| WebhookVerificationError {
-            reason: "X-Trident-Timestamp is missing or not a valid Unix second".into(),
+            reason: "X-Sentinel-Timestamp is missing or not a valid Unix second".into(),
         })?;
     if ts <= 0 {
         return Err(WebhookVerificationError {
-            reason: "X-Trident-Timestamp must be a positive Unix second".into(),
+            reason: "X-Sentinel-Timestamp must be a positive Unix second".into(),
         });
     }
     if tolerance_secs > 0 {

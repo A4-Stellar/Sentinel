@@ -14,7 +14,7 @@ use stellar_xdr::curr::{
     ScVal, SequenceNumber, Transaction, TransactionEnvelope, TransactionExt, TransactionV1Envelope,
     Uint256, VecM, WriteXdr,
 };
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 use crate::rpc::RpcClient;
 
@@ -44,7 +44,7 @@ pub enum TokenMetadataResolution {
 pub async fn resolve(
     rpc: &RpcClient,
     contract_id: &str,
-) -> Result<TokenMetadataResolution, TridentError> {
+) -> Result<TokenMetadataResolution, SentinelError> {
     let Some(name) = simulate_string_call(rpc, contract_id, "name").await? else {
         return Ok(TokenMetadataResolution::NotAToken);
     };
@@ -67,7 +67,7 @@ async fn simulate_string_call(
     rpc: &RpcClient,
     contract_id: &str,
     function_name: &str,
-) -> Result<Option<String>, TridentError> {
+) -> Result<Option<String>, SentinelError> {
     match simulate_read_call(rpc, contract_id, function_name).await? {
         Some(ScVal::String(s)) => Ok(Some(s.to_utf8_string_lossy())),
         Some(_) | None => Ok(None),
@@ -79,7 +79,7 @@ async fn simulate_u32_call(
     rpc: &RpcClient,
     contract_id: &str,
     function_name: &str,
-) -> Result<Option<u32>, TridentError> {
+) -> Result<Option<u32>, SentinelError> {
     match simulate_read_call(rpc, contract_id, function_name).await? {
         Some(ScVal::U32(n)) => Ok(Some(n)),
         Some(_) | None => Ok(None),
@@ -97,7 +97,7 @@ async fn simulate_read_call(
     rpc: &RpcClient,
     contract_id: &str,
     function_name: &str,
-) -> Result<Option<ScVal>, TridentError> {
+) -> Result<Option<ScVal>, SentinelError> {
     let envelope_xdr = build_invoke_envelope(contract_id, function_name)?;
     let result = rpc.simulate_transaction(&envelope_xdr).await?;
 
@@ -136,15 +136,15 @@ async fn simulate_read_call(
 /// 0). `simulateTransaction` only runs the host function against current
 /// ledger state — it does not require the source account to exist or the
 /// envelope to be signed, since nothing is submitted to the network.
-fn build_invoke_envelope(contract_id: &str, function_name: &str) -> Result<String, TridentError> {
+fn build_invoke_envelope(contract_id: &str, function_name: &str) -> Result<String, SentinelError> {
     let contract = Contract::from_string(contract_id).map_err(|e| {
-        TridentError::parse(anyhow::anyhow!(
+        SentinelError::parse(anyhow::anyhow!(
             "invalid contract address {contract_id}: {e}"
         ))
     })?;
     let contract_address = ScAddress::Contract(ContractId(XdrHash(contract.0)));
     let function_name = ScSymbol::try_from(function_name.to_string()).map_err(|_| {
-        TridentError::parse(anyhow::anyhow!("invalid function name {function_name:?}"))
+        SentinelError::parse(anyhow::anyhow!("invalid function name {function_name:?}"))
     })?;
 
     let host_function = HostFunction::InvokeContract(InvokeContractArgs {
@@ -168,7 +168,7 @@ fn build_invoke_envelope(contract_id: &str, function_name: &str) -> Result<Strin
         cond: Preconditions::None,
         memo: Memo::None,
         operations: VecM::try_from(vec![op])
-            .map_err(|e| TridentError::parse(anyhow::anyhow!("build operations: {e}")))?,
+            .map_err(|e| SentinelError::parse(anyhow::anyhow!("build operations: {e}")))?,
         ext: TransactionExt::V0,
     };
 
@@ -181,7 +181,7 @@ fn build_invoke_envelope(contract_id: &str, function_name: &str) -> Result<Strin
     envelope
         .write_xdr(&mut Limited::new(&mut buf, Limits::none()))
         .map_err(|e| {
-            TridentError::parse(anyhow::Error::new(e).context("encode simulate envelope"))
+            SentinelError::parse(anyhow::Error::new(e).context("encode simulate envelope"))
         })?;
     Ok(STANDARD.encode(buf))
 }

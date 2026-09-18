@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Trident Testnet Ingestion Gap Detection & Backfill Verification Drill (Issue #505)
+# Sentinel Testnet Ingestion Gap Detection & Backfill Verification Drill (Issue #505)
 # ==============================================================================
 # Verifies that when indexer ingestion is halted, gaps in ledger_metadata and
-# soroban_events are automatically detected, backfilled via trident-backfill,
+# soroban_events are automatically detected, backfilled via sentinel-backfill,
 # and reconciled with zero holes and zero duplicate records.
 # ==============================================================================
 set -euo pipefail
 
-DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/trident_testnet}"
+DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/sentinel_testnet}"
 STELLAR_RPC_URL="${STELLAR_RPC_URL:-https://soroban-testnet.stellar.org}"
 OUTAGE_DURATION_SEC="${OUTAGE_DURATION_SEC:-10}"
 
@@ -38,11 +38,11 @@ FROM (
 ")
 echo "Missing ledger gap count: ${GAPS_FOUND}"
 
-echo "=== [4/5] Executing trident-backfill CLI ==="
+echo "=== [4/5] Executing sentinel-backfill CLI ==="
 TARGET_MAX=$(psql "$DATABASE_URL" -t -A -c "SELECT COALESCE(MAX(ledger_sequence), 0) FROM ledger_metadata;")
 if [ "$BASELINE_LEDGER" -lt "$TARGET_MAX" ]; then
     echo "Running backfill from ${BASELINE_LEDGER} to ${TARGET_MAX}..."
-    cargo run --bin trident-backfill -- \
+    cargo run --bin sentinel-backfill -- \
         --from-ledger "$BASELINE_LEDGER" \
         --to-ledger "$TARGET_MAX" \
         --workers 4 \

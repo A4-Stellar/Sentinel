@@ -16,9 +16,9 @@ import (
 // so other consumers of the same stream (e.g. middleware.StartCacheInvalidator,
 // issue #221) have one source of truth for the name rather than a second
 // copy of the literal that could drift from this one.
-const StreamKey = "trident:events"
+const StreamKey = "sentinel:events"
 
-const groupName = "trident-api"
+const groupName = "sentinel-api"
 
 // streamKey is a private alias for StreamKey, kept so this file's many
 // internal references don't all need renaming.

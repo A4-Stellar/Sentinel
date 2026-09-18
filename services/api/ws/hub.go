@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/Depo-dev/trident/services/api/internal/logsampling"
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/logsampling"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
 )
 
 // maxConsecutiveDrops is the fill policy threshold (issue #224): a subscriber

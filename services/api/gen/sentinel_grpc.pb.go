@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: trident.proto
+// source: sentinel.proto
 
 package gen
 
@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	Events_ListEvents_FullMethodName   = "/trident.Events/ListEvents"
-	Events_GetEvent_FullMethodName     = "/trident.Events/GetEvent"
-	Events_StreamEvents_FullMethodName = "/trident.Events/StreamEvents"
+	Events_ListEvents_FullMethodName   = "/sentinel.Events/ListEvents"
+	Events_GetEvent_FullMethodName     = "/sentinel.Events/GetEvent"
+	Events_StreamEvents_FullMethodName = "/sentinel.Events/StreamEvents"
 )
 
 type EventsClient interface {
@@ -169,7 +169,7 @@ func (x *eventsStreamEventsServer) Send(m *Event) error {
 }
 
 var Events_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "trident.Events",
+	ServiceName: "sentinel.Events",
 	HandlerType: (*EventsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -188,5 +188,5 @@ var Events_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "trident.proto",
+	Metadata: "sentinel.proto",
 }

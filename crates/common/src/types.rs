@@ -143,7 +143,7 @@ pub struct SorobanEvent {
 // Issue #252 — network as a typed value
 // ---------------------------------------------------------------------------
 
-/// Known Stellar networks supported by Trident.
+/// Known Stellar networks supported by Sentinel.
 ///
 /// The string forms are the values stored in the `network` column and enforced
 /// by the CHECK constraints added in migration 0031. Keep the two in sync: a

@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from trident_indexer import AsyncTridentClient, TridentApiError, TridentClient
-from trident_indexer.retry import RetryConfig
+from sentinel_indexer import AsyncSentinelClient, SentinelApiError, SentinelClient
+from sentinel_indexer.retry import RetryConfig
 from tests.conftest import API_URL, API_KEY, LIST_RESPONSE
 
 
@@ -20,8 +20,8 @@ def make_response(status_code: int, json_body: dict, retry_after: str = None) ->
     return resp
 
 
-def make_sync_client(**retry_kwargs) -> TridentClient:
-    return TridentClient(
+def make_sync_client(**retry_kwargs) -> SentinelClient:
+    return SentinelClient(
         api_url=API_URL,
         api_key=API_KEY,
         retry=RetryConfig(jitter=False, **retry_kwargs),
@@ -37,7 +37,7 @@ class TestSyncRetry:
             make_response(200, LIST_RESPONSE),
         ]
         with patch.object(client._session, "get", side_effect=responses) as mock_get, \
-                patch("trident_indexer.client.time.sleep") as mock_sleep:
+                patch("sentinel_indexer.client.time.sleep") as mock_sleep:
             result = client.query_events()
 
         assert result.cursor == "cursor123"
@@ -55,7 +55,7 @@ class TestSyncRetry:
             make_response(200, LIST_RESPONSE),
         ]
         with patch.object(client._session, "get", side_effect=responses), \
-                patch("trident_indexer.client.time.sleep") as mock_sleep:
+                patch("sentinel_indexer.client.time.sleep") as mock_sleep:
             client.query_events()
 
         # Retry-After (2s) must be honoured instead of the 100s base backoff.
@@ -65,8 +65,8 @@ class TestSyncRetry:
         client = make_sync_client(max_attempts=3, base_delay=0.001)
         response = make_response(503, {"error": {"code": "INTERNAL", "message": "still down"}})
         with patch.object(client._session, "get", return_value=response) as mock_get, \
-                patch("trident_indexer.client.time.sleep"):
-            with pytest.raises(TridentApiError) as exc_info:
+                patch("sentinel_indexer.client.time.sleep"):
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.query_events()
 
         assert exc_info.value.status == 503
@@ -77,8 +77,8 @@ class TestSyncRetry:
         client = make_sync_client(max_attempts=5, base_delay=0.001)
         response = make_response(401, {"error": {"code": "UNAUTHORIZED", "message": "bad key"}})
         with patch.object(client._session, "get", return_value=response) as mock_get, \
-                patch("trident_indexer.client.time.sleep") as mock_sleep:
-            with pytest.raises(TridentApiError) as exc_info:
+                patch("sentinel_indexer.client.time.sleep") as mock_sleep:
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.query_events()
 
         assert exc_info.value.attempts == 1
@@ -86,10 +86,10 @@ class TestSyncRetry:
         mock_sleep.assert_not_called()
 
     def test_retries_disabled_at_client_level(self):
-        client = TridentClient(api_url=API_URL, api_key=API_KEY, retry=False)
+        client = SentinelClient(api_url=API_URL, api_key=API_KEY, retry=False)
         response = make_response(503, {"error": {"code": "INTERNAL", "message": "down"}})
         with patch.object(client._session, "get", return_value=response) as mock_get:
-            with pytest.raises(TridentApiError) as exc_info:
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.query_events()
 
         assert exc_info.value.attempts == 1
@@ -99,7 +99,7 @@ class TestSyncRetry:
         client = make_sync_client(max_attempts=5, base_delay=0.001)
         response = make_response(503, {"error": {"code": "INTERNAL", "message": "down"}})
         with patch.object(client._session, "get", return_value=response) as mock_get:
-            with pytest.raises(TridentApiError) as exc_info:
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.query_events(retry=False)
 
         assert exc_info.value.attempts == 1
@@ -112,7 +112,7 @@ class TestSyncRetry:
             make_response(200, {"event": {**LIST_RESPONSE["events"][0]}}),
         ]
         with patch.object(client._session, "get", side_effect=responses) as mock_get, \
-                patch("trident_indexer.client.time.sleep"):
+                patch("sentinel_indexer.client.time.sleep"):
             event = client.get_event_by_id(LIST_RESPONSE["events"][0]["id"])
 
         assert event.id == LIST_RESPONSE["events"][0]["id"]
@@ -131,8 +131,8 @@ def make_aiohttp_response(status: int, body: dict, retry_after: str = None) -> M
     return resp
 
 
-def make_async_client(**retry_kwargs) -> AsyncTridentClient:
-    return AsyncTridentClient(
+def make_async_client(**retry_kwargs) -> AsyncSentinelClient:
+    return AsyncSentinelClient(
         api_url=API_URL,
         api_key=API_KEY,
         retry=RetryConfig(jitter=False, **retry_kwargs),
@@ -149,7 +149,7 @@ class TestAsyncRetry:
             make_aiohttp_response(200, LIST_RESPONSE),
         ]
         with patch("aiohttp.ClientSession.get", side_effect=responses) as mock_get, \
-                patch("trident_indexer.async_client.asyncio.sleep", new=AsyncMock()) as mock_sleep:
+                patch("sentinel_indexer.async_client.asyncio.sleep", new=AsyncMock()) as mock_sleep:
             async with client:
                 result = await client.query_events()
 
@@ -169,7 +169,7 @@ class TestAsyncRetry:
             make_aiohttp_response(200, LIST_RESPONSE),
         ]
         with patch("aiohttp.ClientSession.get", side_effect=responses), \
-                patch("trident_indexer.async_client.asyncio.sleep", new=AsyncMock()) as mock_sleep:
+                patch("sentinel_indexer.async_client.asyncio.sleep", new=AsyncMock()) as mock_sleep:
             async with client:
                 await client.query_events()
 
@@ -180,9 +180,9 @@ class TestAsyncRetry:
         client = make_async_client(max_attempts=3, base_delay=0.001)
         response = make_aiohttp_response(503, {"error": {"code": "INTERNAL", "message": "still down"}})
         with patch("aiohttp.ClientSession.get", return_value=response) as mock_get, \
-                patch("trident_indexer.async_client.asyncio.sleep", new=AsyncMock()):
+                patch("sentinel_indexer.async_client.asyncio.sleep", new=AsyncMock()):
             async with client:
-                with pytest.raises(TridentApiError) as exc_info:
+                with pytest.raises(SentinelApiError) as exc_info:
                     await client.query_events()
 
         assert exc_info.value.status == 503
@@ -194,9 +194,9 @@ class TestAsyncRetry:
         client = make_async_client(max_attempts=5, base_delay=0.001)
         response = make_aiohttp_response(401, {"error": {"code": "UNAUTHORIZED", "message": "bad key"}})
         with patch("aiohttp.ClientSession.get", return_value=response) as mock_get, \
-                patch("trident_indexer.async_client.asyncio.sleep", new=AsyncMock()) as mock_sleep:
+                patch("sentinel_indexer.async_client.asyncio.sleep", new=AsyncMock()) as mock_sleep:
             async with client:
-                with pytest.raises(TridentApiError) as exc_info:
+                with pytest.raises(SentinelApiError) as exc_info:
                     await client.query_events()
 
         assert exc_info.value.attempts == 1
@@ -205,11 +205,11 @@ class TestAsyncRetry:
 
     @pytest.mark.asyncio
     async def test_retries_disabled_at_client_level(self):
-        client = AsyncTridentClient(api_url=API_URL, api_key=API_KEY, retry=False)
+        client = AsyncSentinelClient(api_url=API_URL, api_key=API_KEY, retry=False)
         response = make_aiohttp_response(503, {"error": {"code": "INTERNAL", "message": "down"}})
         with patch("aiohttp.ClientSession.get", return_value=response) as mock_get:
             async with client:
-                with pytest.raises(TridentApiError) as exc_info:
+                with pytest.raises(SentinelApiError) as exc_info:
                     await client.query_events()
 
         assert exc_info.value.attempts == 1

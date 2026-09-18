@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/cursor"
+	"github.com/Depo-dev/sentinel/services/api/cursor"
 )
 
 const validContractID = "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"

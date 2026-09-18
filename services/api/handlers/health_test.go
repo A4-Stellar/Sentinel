@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/gen"
-	"github.com/Depo-dev/trident/services/api/internal/contracttest"
+	"github.com/Depo-dev/sentinel/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/internal/contracttest"
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"

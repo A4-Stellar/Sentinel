@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ func TestConfigPrecedenceExplicitOverEnv(t *testing.T) {
 	t.Setenv(EnvAPIKey, "env-key")
 	t.Setenv(EnvBaseURL, "https://env.example.com")
 
-	cfg := TridentClientConfig{
+	cfg := SentinelClientConfig{
 		APIKey:  "explicit-key",
 		BaseURL: "https://explicit.example.com",
 	}.resolve()
@@ -27,7 +27,7 @@ func TestConfigPrecedenceFallsBackToEnv(t *testing.T) {
 	t.Setenv(EnvAPIKey, "env-key")
 	t.Setenv(EnvBaseURL, "https://env.example.com")
 
-	cfg := TridentClientConfig{}.resolve()
+	cfg := SentinelClientConfig{}.resolve()
 
 	if cfg.APIKey != "env-key" {
 		t.Errorf("expected APIKey from env, got %q", cfg.APIKey)
@@ -50,19 +50,19 @@ func TestConfigMissingAPIKeyReturnsClearError(t *testing.T) {
 	// the SSE implementation in stream.go. Whether the client should refuse
 	// keyless calls up front is a real policy question, but it is a behaviour
 	// change across every request path, not a test fix.
-	cfg := TridentClientConfig{BaseURL: "https://api.example.com"}.resolve()
+	cfg := SentinelClientConfig{BaseURL: "https://api.example.com"}.resolve()
 	if err := cfg.requireAPIKey(); !errors.Is(err, ErrMissingAPIKey) {
 		t.Fatalf("expected ErrMissingAPIKey, got %v", err)
 	}
 
-	withKey := TridentClientConfig{BaseURL: "https://api.example.com", APIKey: "k"}.resolve()
+	withKey := SentinelClientConfig{BaseURL: "https://api.example.com", APIKey: "k"}.resolve()
 	if err := withKey.requireAPIKey(); err != nil {
 		t.Fatalf("expected no error when a key is configured, got %v", err)
 	}
 }
 
 func TestConfigRedactsAPIKeyInString(t *testing.T) {
-	cfg := TridentClientConfig{
+	cfg := SentinelClientConfig{
 		BaseURL: "https://api.example.com",
 		APIKey:  "super-secret-value",
 	}

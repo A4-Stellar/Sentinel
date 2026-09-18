@@ -1,10 +1,10 @@
 # API Key Management & Security Model
 
-This document describes the API key lifecycle in Trident: key generation, configuration, runtime validation, and zero-downtime rotation.
+This document describes the API key lifecycle in Sentinel: key generation, configuration, runtime validation, and zero-downtime rotation.
 
 ## Overview & Security Model
 
-Trident validates incoming client API keys via the `X-API-Key` HTTP request header on protected endpoints.
+Sentinel validates incoming client API keys via the `X-API-Key` HTTP request header on protected endpoints.
 
 ### Key Security Principles
 
@@ -29,7 +29,7 @@ go run ./services/api/cmd/keygen -salt "your-deployment-salt"
 ### Example Output
 
 ```
-=== Trident API Key Generator ===
+=== Sentinel API Key Generator ===
 Raw API Key (client X-API-Key): 8f3a9b... (64 hex characters)
 HMAC-SHA256 Hash (server config): c4e17... (64 hex characters)
 Salt used:                       your-deployment-salt

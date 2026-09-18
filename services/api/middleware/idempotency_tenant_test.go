@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 )
 
 // Regression tests for the four idempotency defects found reviewing #225.

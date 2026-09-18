@@ -83,7 +83,7 @@ export function createSubscription(
     } catch (err) {
       params.onError?.(
         new Error(
-          "WebSocket is not defined. If you are running in Node.js < 21, you must install the 'ws' package or provide a webSocketImpl in TridentClientConfig.",
+          "WebSocket is not defined. If you are running in Node.js < 21, you must install the 'ws' package or provide a webSocketImpl in SentinelClientConfig.",
         ),
       );
       return;

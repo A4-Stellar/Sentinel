@@ -1,6 +1,6 @@
 # Security Policy
 
-Trident indexes on-chain Soroban event data and issues API keys that gate
+Sentinel indexes on-chain Soroban event data and issues API keys that gate
 access to it. We take reports of security issues seriously and appreciate
 the effort of anyone who helps us find and fix them responsibly.
 
@@ -9,14 +9,12 @@ the effort of anyone who helps us find and fix them responsibly.
 **Please do not open a public GitHub issue for a security vulnerability.**
 
 Report it privately via
-[GitHub Security Advisories](https://github.com/Telocel-Labs/Trident/security/advisories/new)
+[GitHub Security Advisories](https://github.com/A4-Stellar/Sentinel/security/advisories/new)
 for this repository — this opens a private draft advisory visible only to
 the maintainers until it's ready to be disclosed. This is the preferred and
 fastest path for us to triage a report.
 
-If you cannot use GitHub Security Advisories for some reason, open a regular
-issue asking a maintainer to reach out over a private channel and omit
-exploit details from the public issue itself.
+If you cannot use GitHub Security Advisories for some reason, email **Afolabi** directly at [afolabiaderonke1995@gmail.com](mailto:afolabiaderonke1995@gmail.com) or open a regular issue asking a maintainer to reach out over a private channel.
 
 When reporting, please include as much of the following as you can:
 
@@ -54,7 +52,7 @@ When reporting, please include as much of the following as you can:
   or database credentials (that's the trust boundary, not a vulnerability
   in it — see `docs/threat-model.md`).
 - Social engineering, physical access, or attacks against GitHub/CI
-  infrastructure itself rather than the Trident codebase.
+  infrastructure itself rather than the Sentinel codebase.
 - A full penetration test or automated scanner report with no manual
   triage — we welcome these as informal input but they don't need a private
   advisory unless a specific, validated finding is included.
@@ -74,11 +72,11 @@ When reporting, please include as much of the following as you can:
 This is a small, MVP-stage open-source project without a dedicated security
 team or a bug bounty program at this time. We will do our best to meet the
 timelines above, but please be patient — and thank you for helping keep
-Trident and its users safe.
+Sentinel and its users safe.
 
 ## Supported Versions
 
-Trident does not yet have a stable release line (see the pre-alpha status in
+Sentinel does not yet have a stable release line (see the pre-alpha status in
 [`README.md`](./README.md)). Security fixes land on the `dev` branch and are
 included in the next release; there is no separate backport policy at this
 stage.

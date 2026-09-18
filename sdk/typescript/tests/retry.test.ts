@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TridentApiError, TridentClient, TridentError } from "../src/index.js";
+import { SentinelApiError, SentinelClient, SentinelError } from "../src/index.js";
 
 const BASE_URL = "http://localhost:3000";
 const API_KEY = "test-key";
@@ -60,7 +60,7 @@ describe("retry behaviour", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -85,7 +85,7 @@ describe("retry behaviour", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -110,7 +110,7 @@ describe("retry behaviour", () => {
       .mockResolvedValue(errorResponse(503, "INTERNAL", "still down"));
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -121,9 +121,9 @@ describe("retry behaviour", () => {
     await vi.runAllTimersAsync();
     const err = await resultPromise;
 
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(503);
-    expect((err as TridentApiError).attempts).toBe(3);
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(503);
+    expect((err as SentinelApiError).attempts).toBe(3);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
@@ -133,7 +133,7 @@ describe("retry behaviour", () => {
       .mockResolvedValue(errorResponse(401, "UNAUTHORIZED", "bad key"));
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -142,9 +142,9 @@ describe("retry behaviour", () => {
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
 
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).status).toBe(401);
-    expect((err as TridentApiError).attempts).toBe(1);
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).status).toBe(401);
+    expect((err as SentinelApiError).attempts).toBe(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -154,7 +154,7 @@ describe("retry behaviour", () => {
       .mockResolvedValue(errorResponse(503, "INTERNAL", "down"));
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -163,8 +163,8 @@ describe("retry behaviour", () => {
 
     const err = await client.queryEvents({}).catch((e: unknown) => e);
 
-    expect(err).toBeInstanceOf(TridentApiError);
-    expect((err as TridentApiError).attempts).toBe(1);
+    expect(err).toBeInstanceOf(SentinelApiError);
+    expect((err as SentinelApiError).attempts).toBe(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -174,7 +174,7 @@ describe("retry behaviour", () => {
       .mockResolvedValue(errorResponse(503, "INTERNAL", "down"));
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -186,16 +186,16 @@ describe("retry behaviour", () => {
       .queryEvents({}, { retry: false })
       .catch((e: unknown) => e);
 
-    expect((err as TridentApiError).attempts).toBe(1);
+    expect((err as SentinelApiError).attempts).toBe(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("wraps a persistently failing network error in a RETRY_EXHAUSTED TridentError", async () => {
+  it("wraps a persistently failing network error in a RETRY_EXHAUSTED SentinelError", async () => {
     vi.useFakeTimers();
     const fetchMock = vi.fn().mockRejectedValue(new Error("ECONNRESET"));
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",
@@ -206,9 +206,9 @@ describe("retry behaviour", () => {
     await vi.runAllTimersAsync();
     const err = await resultPromise;
 
-    expect(err).toBeInstanceOf(TridentError);
-    expect((err as TridentError).code).toBe("RETRY_EXHAUSTED");
-    expect((err as TridentError).attempts).toBe(2);
+    expect(err).toBeInstanceOf(SentinelError);
+    expect((err as SentinelError).code).toBe("RETRY_EXHAUSTED");
+    expect((err as SentinelError).attempts).toBe(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -220,7 +220,7 @@ describe("retry behaviour", () => {
       .mockResolvedValueOnce(jsonResponse(mockEvent));
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: BASE_URL,
       apiKey: API_KEY,
       network: "testnet",

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	"github.com/stellar/go/strkey"
 	"github.com/stellar/go/txnbuild"
 	"github.com/stellar/go/xdr"

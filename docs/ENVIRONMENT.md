@@ -1,7 +1,7 @@
 # Environment variable reference
 
 This is the canonical list of every environment variable actually read by
-Trident's services. It exists to keep `.env.example` (local dev) and
+Sentinel's services. It exists to keep `.env.example` (local dev) and
 `.env.ci` (CI smoke tests) honest — see the enforcement mechanism below
 (issue #312).
 
@@ -117,7 +117,7 @@ description is accurate. Keep this file honest by hand.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `API_GRPC_ADDR` | Required | — | Address of the upstream Rust gRPC API, as validated by `services/api/config`. **Known inconsistency**: `services/api/main.go` currently dials the gRPC backend using a *different*, directly-read var, `GRPC_ADDR` (falling back to `localhost:5000`), not `config.APIGrpcAddr`. `helm/trident/values.yaml`'s `goApi.env` sets `GRPC_ADDR` (matching what `main.go` actually uses); `.env.example` documents `API_GRPC_ADDR` (matching `config.go`, which is validated at startup but whose value is otherwise unused by `main.go`). Until this is unified, set both to the same value locally and in any custom Helm overrides. |
+| `API_GRPC_ADDR` | Required | — | Address of the upstream Rust gRPC API, as validated by `services/api/config`. **Known inconsistency**: `services/api/main.go` currently dials the gRPC backend using a *different*, directly-read var, `GRPC_ADDR` (falling back to `localhost:5000`), not `config.APIGrpcAddr`. `helm/sentinel/values.yaml`'s `goApi.env` sets `GRPC_ADDR` (matching what `main.go` actually uses); `.env.example` documents `API_GRPC_ADDR` (matching `config.go`, which is validated at startup but whose value is otherwise unused by `main.go`). Until this is unified, set both to the same value locally and in any custom Helm overrides. |
 | `PORT` | Optional | `3000` | HTTP listen port. |
 | `GO_API_DB_POOL_SIZE` | Optional | `5` | Postgres pool size for this service (per replica). |
 | `PGBOUNCER_ADMIN_URL` | Optional | — | PgBouncer admin console connection for `GET /v1/admin/db`. |
@@ -129,8 +129,8 @@ description is accurate. Keep this file honest by hand.
 | `ALLOWED_ORIGINS` | Required in production | — (dev mode allows any origin) | Comma-separated CORS allow-list (`https://` origins, or `http://localhost*`). |
 | `REQUEST_TIMEOUT_MS` | Optional | `30000` | Per-request timeout middleware; excludes `/ws` and `/v1/events/stream`. |
 | `MAX_WS_CONNECTIONS` | Optional | `1000` | Max concurrent WebSocket connections before new ones are rejected. |
-| `REDIS_STREAM_KEY` | Optional | `trident:events` | Redis stream key used for event pub/sub and webhook consumption; must match the indexer's stream. |
-| `WEBHOOK_CONSUMER_GROUP` | Optional | `trident-webhooks` | Redis Stream consumer-group name for the webhook delivery worker. |
+| `REDIS_STREAM_KEY` | Optional | `sentinel:events` | Redis stream key used for event pub/sub and webhook consumption; must match the indexer's stream. |
+| `WEBHOOK_CONSUMER_GROUP` | Optional | `sentinel-webhooks` | Redis Stream consumer-group name for the webhook delivery worker. |
 | `WEBHOOK_CONSUMER_NAME` | Optional | `webhook-worker` | Redis Stream consumer name for the webhook delivery worker. |
 | `WEBHOOK_SECRET_OVERLAP_HOURS` | Optional | `24` | Hours a rotated webhook secret stays valid after `POST /v1/webhooks/{id}/rotate-secret`. The hourly cleanup job clears `secondary_secret` once this window passes, so a rotated secret is actually revoked. Values that are non-positive or unparseable fall back to the default. |
 | `RATE_LIMIT_FREE_RPS` | Optional | `10` | Requests/sec limit, free tier. |
@@ -153,7 +153,7 @@ description is accurate. Keep this file honest by hand.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Optional (compose only) | `trident` / `password` / `trident` | Postgres container bootstrap credentials. |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Optional (compose only) | `sentinel` / `password` / `sentinel` | Postgres container bootstrap credentials. |
 | `LOG_LEVEL` | Optional | `info` | Go API log verbosity (`.env.ci`/compose convenience; not read directly by Rust services, which use `RUST_LOG`). |
 | `APP_ENV` | Optional | unset | Go API log *format*, not verbosity. `production` emits JSON for log aggregation; anything else (including unset) emits human-readable text. Pair with `LOG_LEVEL`, which controls the threshold. |
 
@@ -180,7 +180,7 @@ passed as Docker build arguments, or printed in logs.
 | `INTERNAL_SERVER_KEY` / `INTERNAL_CLIENT_KEY` | Required when internal gRPC mTLS is enabled. | Unencrypted PKCS#8 PEM private keys, readable only by the workload identity. | External Secrets backend or cert-manager-managed Kubernetes Secret | Security/PKI owner |
 | `INTERNAL_CA_CERT`, `INTERNAL_SERVER_CERT`, `INTERNAL_CLIENT_CERT` | Required with internal gRPC mTLS. Certificates are public material but are managed with their private keys. | PEM-encoded X.509 certificate/bundle with SANs matching service DNS names. | External Secrets backend or cert-manager-managed Kubernetes Secret | Security/PKI owner |
 | `STAGING_KUBECONFIG` | Required for the staging deployment workflow. | Base64 of a minimal kubeconfig scoped to the staging namespace. | GitHub `staging` Environment secret | Platform/SRE owner |
-| `NPM_TOKEN` | Required by SDK publishing workflows. | npm automation or granular access token limited to the Trident package scope. | GitHub release Environment secret | Release engineering owner |
+| `NPM_TOKEN` | Required by SDK publishing workflows. | npm automation or granular access token limited to the Sentinel package scope. | GitHub release Environment secret | Release engineering owner |
 | `GITHUB_TOKEN` | Required for GHCR, releases, and security tooling; issued automatically per job. | GitHub-generated ephemeral token with job-minimal permissions. | GitHub Actions automatic token | Repository administrators |
 
 Helm workloads read secrets only from `global.existingSecret`. Production

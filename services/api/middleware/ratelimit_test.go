@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -162,7 +162,7 @@ func TestTieredRateLimit_Rejects_Returns429WithHeaders(t *testing.T) {
 }
 
 // TestTieredRateLimit_Rejects_RecordsPrometheusMetric verifies a 429 from the
-// per-key tiered limiter increments trident_ratelimit_rejections_total{limiter="per_key"}
+// per-key tiered limiter increments sentinel_ratelimit_rejections_total{limiter="per_key"}
 // (issue #58).
 func TestTieredRateLimit_Rejects_RecordsPrometheusMetric(t *testing.T) {
 	resetCounters()

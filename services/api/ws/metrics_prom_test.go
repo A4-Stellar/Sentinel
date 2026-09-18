@@ -3,7 +3,7 @@ package ws
 import (
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
@@ -44,7 +44,7 @@ func TestHub_RegisterUnregisterUpdatesPrometheusMetrics(t *testing.T) {
 }
 
 // TestHub_BroadcastUpdatesMessageCounters verifies sent/dropped outcomes are
-// recorded on trident_ws_messages_total.
+// recorded on sentinel_ws_messages_total.
 func TestHub_BroadcastUpdatesMessageCounters(t *testing.T) {
 	h := NewHub()
 	c := &client{contractID: "contract-msg", send: make(chan []byte, 1)}

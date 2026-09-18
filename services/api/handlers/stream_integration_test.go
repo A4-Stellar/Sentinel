@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -165,7 +165,7 @@ func publishStreamEvent(t *testing.T, rdb *redis.Client, contractID, topic0, dat
 	t.Helper()
 
 	err := rdb.XAdd(context.Background(), &redis.XAddArgs{
-		Stream: "trident:events",
+		Stream: "sentinel:events",
 		Values: map[string]any{
 			"contract_id":      contractID,
 			"ledger_sequence":  "42",

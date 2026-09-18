@@ -1,11 +1,11 @@
 [package]
-name = "trident-sdk"
+name = "sentinel-sdk"
 version = "1.0.0"
 edition = "2021"
-description = "Rust client for the Trident Soroban event indexer"
+description = "Rust client for the Sentinel Soroban event indexer"
 license = "MIT"
-repository = "https://github.com/Telocel-Labs/Trident"
-documentation = "https://docs.rs/trident-sdk"
+repository = "https://github.com/A4-Stellar/Sentinel"
+documentation = "https://docs.rs/sentinel-sdk"
 keywords = ["stellar", "soroban", "blockchain", "indexer", "events"]
 categories = ["api-bindings", "web-programming::http-client"]
 

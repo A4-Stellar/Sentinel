@@ -5,7 +5,7 @@
 
 ## Selected Production Target
 
-The official production deployment target for Trident is **Kubernetes via Helm** (`helm/trident/`).
+The official production deployment target for Sentinel is **Kubernetes via Helm** (`helm/sentinel/`).
 
 ### Decision Rationale:
 1. **High Availability & Autoscaling**: Kubernetes Horizontal Pod Autoscaler (`HPA`) allows independent scaling of Go REST API and gRPC API replicas based on CPU and memory utilization.

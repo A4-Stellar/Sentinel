@@ -2,8 +2,8 @@
 # Verify that killing the indexer actually fires a silence-based alert,
 # not just a lag-based one (issue #526).
 #
-# alerts.yml's TridentIndexerHeartbeatStale/TridentIndexerMetricsMissing/
-# TridentIndexerProcessDown rules already exist and, on paper, cover this —
+# alerts.yml's SentinelIndexerHeartbeatStale/SentinelIndexerMetricsMissing/
+# SentinelIndexerProcessDown rules already exist and, on paper, cover this —
 # but nothing had ever run them against a real Prometheus and proven the
 # state transition actually happens within the "for:" window. This script
 # runs a real Prometheus instance against a synthetic metrics target
@@ -24,7 +24,7 @@
 #   - python3 (stdlib only, to run a throwaway /metrics HTTP server)
 #
 # Staging mode: set PROMETHEUS_URL to an already-running Prometheus that
-# scrapes a real trident-indexer job, then kill the real indexer process
+# scrapes a real sentinel-indexer job, then kill the real indexer process
 # yourself and re-run this script with SKIP_LOCAL_PROMETHEUS=1 — it will
 # only do the polling/assertion part against your real Prometheus.
 #
@@ -34,7 +34,7 @@
 #   2 - usage/setup error
 #
 # Verification note: this script ran successfully end to end once in local
-# development (TridentIndexerMetricsMissing reaching state=firing within
+# development (SentinelIndexerMetricsMissing reaching state=firing within
 # ~5s of killing the synthetic target), proving the mechanism is sound. It
 # could not be re-run repeatedly in the sandboxed environment this PR was
 # authored in, which blocks new outbound listeners on arbitrary ports
@@ -51,7 +51,7 @@ PROMETHEUS_BIN="${1:-prometheus}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-SILENCE_ALERTS=("TridentIndexerHeartbeatStale" "TridentIndexerMetricsMissing" "TridentIndexerProcessDown")
+SILENCE_ALERTS=("SentinelIndexerHeartbeatStale" "SentinelIndexerMetricsMissing" "SentinelIndexerProcessDown")
 
 cleanup() {
   [ -n "${METRICS_SERVER_PID:-}" ] && kill "$METRICS_SERVER_PID" 2>/dev/null || true
@@ -127,9 +127,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         body = (
-            "# HELP trident_indexer_last_poll_timestamp_seconds Unix time of the last poll loop iteration.\n"
-            "# TYPE trident_indexer_last_poll_timestamp_seconds gauge\n"
-            f"trident_indexer_last_poll_timestamp_seconds {time.time()}\n"
+            "# HELP sentinel_indexer_last_poll_timestamp_seconds Unix time of the last poll loop iteration.\n"
+            "# TYPE sentinel_indexer_last_poll_timestamp_seconds gauge\n"
+            f"sentinel_indexer_last_poll_timestamp_seconds {time.time()}\n"
         ).encode()
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
@@ -161,13 +161,13 @@ global:
 rule_files:
   - "${REPO_ROOT}/monitoring/alerts.yml"
 scrape_configs:
-  - job_name: trident-indexer
+  - job_name: sentinel-indexer
     static_configs:
       - targets: ["127.0.0.1:${METRICS_PORT}"]
 EOF
 
-# Prometheus's TridentIndexerHeartbeatStale/TridentIndexerMetricsMissing/
-# TridentIndexerProcessDown "for:" durations are minutes, tuned for
+# Prometheus's SentinelIndexerHeartbeatStale/SentinelIndexerMetricsMissing/
+# SentinelIndexerProcessDown "for:" durations are minutes, tuned for
 # production noise tolerance. Running the real "for:" windows here would
 # make this script take 3-5 minutes to prove the same state-machine
 # transition a much shorter window already demonstrates — so this harness

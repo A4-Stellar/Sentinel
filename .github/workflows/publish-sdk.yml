@@ -82,8 +82,8 @@ jobs:
           npm install "$TARBALL" >/dev/null
 
           cat > smoke-cjs.cjs <<'EOF'
-          const sdk = require("@trident-indexer/sdk");
-          const required = ["TridentClient", "TridentError", "TridentApiError", "iterEvents", "DEFAULT_MAX_PAGES"];
+          const sdk = require("@sentinel-indexer/sdk");
+          const required = ["SentinelClient", "SentinelError", "SentinelApiError", "iterEvents", "DEFAULT_MAX_PAGES"];
           for (const name of required) {
             if (typeof sdk[name] === "undefined") {
               throw new Error(`CJS: missing export ${name}`);
@@ -93,8 +93,8 @@ jobs:
           EOF
 
           cat > smoke-esm.mjs <<'EOF'
-          import { TridentClient, TridentError, TridentApiError, iterEvents, DEFAULT_MAX_PAGES } from "@trident-indexer/sdk";
-          const required = { TridentClient, TridentError, TridentApiError, iterEvents, DEFAULT_MAX_PAGES };
+          import { SentinelClient, SentinelError, SentinelApiError, iterEvents, DEFAULT_MAX_PAGES } from "@sentinel-indexer/sdk";
+          const required = { SentinelClient, SentinelError, SentinelApiError, iterEvents, DEFAULT_MAX_PAGES };
           for (const [name, value] of Object.entries(required)) {
             if (typeof value === "undefined") {
               throw new Error(`ESM: missing export ${name}`);
@@ -141,7 +141,7 @@ jobs:
         working-directory: sdk/python
     environment:
       name: testpypi
-      url: https://test.pypi.org/project/trident-indexer/
+      url: https://test.pypi.org/project/sentinel-indexer/
     permissions:
       contents: read
       id-token: write
@@ -185,16 +185,16 @@ jobs:
       - name: Smoke test installed wheel
         run: |
           set -euo pipefail
-          python -m venv /tmp/trident-sdk-smoke
-          /tmp/trident-sdk-smoke/bin/pip install dist/*.whl
-          /tmp/trident-sdk-smoke/bin/python -c "
+          python -m venv /tmp/sentinel-sdk-smoke
+          /tmp/sentinel-sdk-smoke/bin/pip install dist/*.whl
+          /tmp/sentinel-sdk-smoke/bin/python -c "
           import pathlib
-          import trident_indexer as sdk
+          import sentinel_indexer as sdk
 
           assert sdk.__version__ == '${{ inputs.version }}', f'unexpected __version__: {sdk.__version__}'
 
           required = [
-              'TridentClient', 'AsyncTridentClient', 'TridentApiError',
+              'SentinelClient', 'AsyncSentinelClient', 'SentinelApiError',
               'SorobanEvent', 'PaginatedEvents', 'Network',
               'RetryConfig', 'DEFAULT_RETRY_CONFIG',
           ]
@@ -223,7 +223,7 @@ jobs:
         working-directory: sdk/python
     environment:
       name: pypi
-      url: https://pypi.org/project/trident-indexer/
+      url: https://pypi.org/project/sentinel-indexer/
     permissions:
       contents: read
       id-token: write
@@ -366,7 +366,7 @@ jobs:
       - name: Warm the module proxy
         if: ${{ !inputs.dry_run }}
         run: |
-          module="github.com/Telocel-Labs/Trident/sdk/go"
+          module="github.com/A4-Stellar/Sentinel/sdk/go"
           for _ in $(seq 1 10); do
             if curl -fsS "https://proxy.golang.org/${module}/@v/v${{ inputs.version }}.info"; then
               echo "proxy is serving v${{ inputs.version }}"
@@ -435,7 +435,7 @@ jobs:
           node <<'NODE'
           const fs = require("fs");
           const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-          const name = "@trident-indexer/sdk";
+          const name = "@sentinel-indexer/sdk";
           const range = "^" + process.env.TARGET_VERSION;
           for (const field of ["dependencies", "peerDependencies"]) {
             const dep = pkg[field] && pkg[field][name];

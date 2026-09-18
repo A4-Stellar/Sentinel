@@ -4,8 +4,8 @@
 # observability/burn-rate-alerts.yml, which fire on the downstream symptom
 # (lag) rather than the RPC-layer cause.
 #
-# Metrics: trident_indexer_rpc_call_duration_seconds{method,endpoint} and
-# trident_indexer_rpc_errors_total{method,error_type} — see
+# Metrics: sentinel_indexer_rpc_call_duration_seconds{method,endpoint} and
+# sentinel_indexer_rpc_errors_total{method,error_type} — see
 # crates/indexer/src/metrics.rs and docs/observability/event-delivery.md.
 #
 # Validate with: promtool check rules observability/rpc-alerts.yml
@@ -13,13 +13,13 @@
 # environment this was authored in).
 
 groups:
-  - name: trident-rpc-health
+  - name: sentinel-rpc-health
     rules:
-      - alert: TridentRPCHighErrorRate
+      - alert: SentinelRPCHighErrorRate
         expr: |
-          sum(rate(trident_indexer_rpc_errors_total[5m]))
+          sum(rate(sentinel_indexer_rpc_errors_total[5m]))
           /
-          sum(rate(trident_indexer_rpc_call_duration_seconds_count[5m]))
+          sum(rate(sentinel_indexer_rpc_call_duration_seconds_count[5m]))
           > 0.1
         for: 5m
         labels:
@@ -29,15 +29,15 @@ groups:
           description: >-
             More than 10% of Stellar RPC calls have failed over the last 5
             minutes. Break down by error_type on
-            trident_indexer_rpc_errors_total to tell a rate-limited or
+            sentinel_indexer_rpc_errors_total to tell a rate-limited or
             timing-out provider apart from bad request shape
-            (invalid_cursor). Check trident_indexer_rpc_active_endpoint for
+            (invalid_cursor). Check sentinel_indexer_rpc_active_endpoint for
             whether failover has already kicked in.
 
-      - alert: TridentRPCHighLatency
+      - alert: SentinelRPCHighLatency
         expr: |
           histogram_quantile(0.95,
-            sum(rate(trident_indexer_rpc_call_duration_seconds_bucket[5m])) by (le, method)
+            sum(rate(sentinel_indexer_rpc_call_duration_seconds_bucket[5m])) by (le, method)
           ) > 5
         for: 10m
         labels:
@@ -47,32 +47,32 @@ groups:
           description: >-
             p95 latency for {{ $labels.method }} has exceeded 5s for 10
             minutes — a degraded-but-still-responding provider, distinct from
-            outright timeouts (trident_indexer_rpc_timeouts_total). Left
+            outright timeouts (sentinel_indexer_rpc_timeouts_total). Left
             unaddressed this typically turns into ingest lag
-            (trident_indexer_ledger_lag).
+            (sentinel_indexer_ledger_lag).
 
-      - alert: TridentRPCFailoverActive
-        expr: trident_indexer_rpc_active_endpoint > 0
+      - alert: SentinelRPCFailoverActive
+        expr: sentinel_indexer_rpc_active_endpoint > 0
         for: 5m
         labels:
           severity: ticket
         annotations:
           summary: "Indexer has been running on a fallback RPC endpoint for 5m+"
           description: >-
-            trident_indexer_rpc_active_endpoint has been non-zero (not the
+            sentinel_indexer_rpc_active_endpoint has been non-zero (not the
             primary) for at least 5 minutes — the primary RPC endpoint has
-            not recovered. Check trident_indexer_rpc_failovers_total for how
+            not recovered. Check sentinel_indexer_rpc_failovers_total for how
             often this pool has been flapping between endpoints.
 
-      - alert: TridentRPCRateLimited
-        expr: sum(rate(trident_indexer_rpc_errors_total{error_type="rate_limited"}[5m])) > 0
+      - alert: SentinelRPCRateLimited
+        expr: sum(rate(sentinel_indexer_rpc_errors_total{error_type="rate_limited"}[5m])) > 0
         for: 5m
         labels:
           severity: ticket
         annotations:
           summary: "Stellar RPC provider is rate-limiting the indexer"
           description: >-
-            trident_indexer_rpc_errors_total{error_type="rate_limited"} has
+            sentinel_indexer_rpc_errors_total{error_type="rate_limited"} has
             been climbing for 5m+. Sustained rate-limiting degrades ingest
             freshness the same way an outage does; consider raising the
             provider's quota or adding a secondary endpoint to the pool

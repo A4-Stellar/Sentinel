@@ -1,14 +1,14 @@
-//! Async Rust client for the Trident Soroban event indexer.
+//! Async Rust client for the Sentinel Soroban event indexer.
 //!
 //! # Examples
 //!
 //! ```no_run
 //! # tokio_test::block_on(async {
 //! use futures::StreamExt;
-//! use trident_sdk::{ContractStatsQuery, QueryParams, TridentClient, TridentConfig};
+//! use sentinel_sdk::{ContractStatsQuery, QueryParams, SentinelClient, SentinelConfig};
 //!
-//! let client = TridentClient::new(TridentConfig {
-//!     api_url: "https://trident-api.fly.dev".into(),
+//! let client = SentinelClient::new(SentinelConfig {
+//!     api_url: "https://sentinel-api.fly.dev".into(),
 //!     api_key: "tk_your_key".into(),
 //!     ..Default::default()
 //! })?;
@@ -35,7 +35,7 @@
 //! while let Some(event) = events.next().await {
 //!     println!("{}", event?.id);
 //! }
-//! # Ok::<(), trident_sdk::TridentError>(())
+//! # Ok::<(), sentinel_sdk::SentinelError>(())
 //! # });
 //! ```
 
@@ -47,15 +47,15 @@ mod subscription;
 mod types;
 pub mod webhook;
 
-pub use client::TridentClient;
-pub use errors::TridentError;
+pub use client::SentinelClient;
+pub use errors::SentinelError;
 pub use openapi_models_gen::OpenApiModels as OpenAPIModels;
 pub use retry::RetryConfig;
 pub use subscription::Subscription;
 pub use types::{
     ContractStats, ContractStatsQuery, ContractStatsResponse, EventType, HealthChecks,
     HealthResponse, IndexerStatsResponse, Network, PaginatedEvents, QueryParams, SorobanEvent,
-    TridentConfig,
+    SentinelConfig,
 };
 pub use webhook::{
     compute_signature, verify_signature, WebhookVerificationError, DEFAULT_TOLERANCE_SECONDS,

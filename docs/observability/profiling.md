@@ -60,9 +60,9 @@ cfg:
 
 ```bash
 RUSTFLAGS="--cfg tokio_unstable" \
-  cargo build -p trident-indexer --features tokio-console
+  cargo build -p sentinel-indexer --features tokio-console
 
-TOKIO_CONSOLE_ENABLED=true ./trident-indexer
+TOKIO_CONSOLE_ENABLED=true ./sentinel-indexer
 # In another terminal:
 tokio-console   # connects to 127.0.0.1:6669
 ```

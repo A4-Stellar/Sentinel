@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/config"
+	"github.com/Depo-dev/sentinel/services/api/config"
 )
 
 func setEnv(t *testing.T, pairs map[string]string) {

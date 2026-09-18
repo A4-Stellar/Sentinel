@@ -52,7 +52,7 @@ export const GET: APIRoute = async ({ url }) => {
     if (result.events.length > 0 || cursor) return json(base);
 
     // Empty result for the contract itself: decide between "no events yet"
-    // (quiet but known) and "not indexed" (emitting on-chain but Trident has
+    // (quiet but known) and "not indexed" (emitting on-chain but Sentinel has
     // nothing). Only probe when the visitor is browsing the contract without
     // filters, where the distinction actually matters.
     if (contractId && !filtered) {
@@ -62,7 +62,7 @@ export const GET: APIRoute = async ({ url }) => {
           ...base,
           status: "not_indexed",
           message:
-            "This contract is emitting events on the Stellar network, but Trident has not indexed any of them yet.",
+            "This contract is emitting events on the Stellar network, but Sentinel has not indexed any of them yet.",
         } satisfies ExplorerEventsResponse);
       }
       if (probe.status === "invalid_contract") {
@@ -82,7 +82,7 @@ export const GET: APIRoute = async ({ url }) => {
       filtered,
       message: filtered
         ? "No events match the active filters for this contract."
-        : "Trident has not recorded any events for this contract yet.",
+        : "Sentinel has not recorded any events for this contract yet.",
     } satisfies ExplorerEventsResponse);
   } catch (err) {
     if (!(err instanceof ApiError)) {
@@ -92,7 +92,7 @@ export const GET: APIRoute = async ({ url }) => {
         events: [],
         has_more: false,
         next_cursor: null,
-        message: "Could not reach the Trident indexer. Please retry.",
+        message: "Could not reach the Sentinel indexer. Please retry.",
       } satisfies ExplorerEventsResponse, 502);
     }
 
@@ -128,9 +128,9 @@ export const GET: APIRoute = async ({ url }) => {
       unauthorized:
         "The explorer's server key is not configured. This is on us, not you.",
       network:
-        "Could not reach the Trident indexer. Please check your connection and retry.",
-      timeout: "The Trident indexer took too long to answer. Please retry.",
-      down: "The Trident indexer is temporarily unavailable. Please try again shortly.",
+        "Could not reach the Sentinel indexer. Please check your connection and retry.",
+      timeout: "The Sentinel indexer took too long to answer. Please retry.",
+      down: "The Sentinel indexer is temporarily unavailable. Please try again shortly.",
     };
 
     const httpStatus =

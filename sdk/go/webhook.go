@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"crypto/hmac"
@@ -12,7 +12,7 @@ import (
 )
 
 // DefaultWebhookToleranceSeconds is the recommended replay-protection window.
-// Reject any webhook whose X-Trident-Timestamp differs from the current wall
+// Reject any webhook whose X-Sentinel-Timestamp differs from the current wall
 // clock by more than this value. Five minutes matches Stripe's convention and
 // is wide enough to absorb normal network and clock-skew jitter while keeping
 // the replay window short.
@@ -34,8 +34,8 @@ func (e *WebhookVerificationError) Error() string {
 //
 // Parameters:
 //   - body:      the raw request body bytes (do not parse before verifying)
-//   - signature: the value of the X-Trident-Signature header
-//   - timestamp: the value of the X-Trident-Timestamp header (Unix seconds, as a string)
+//   - signature: the value of the X-Sentinel-Signature header
+//   - timestamp: the value of the X-Sentinel-Timestamp header (Unix seconds, as a string)
 //   - secret:    your webhook subscription secret (starts with "whsec_")
 //   - toleranceSecs: maximum age of the delivery in seconds; pass
 //     DefaultWebhookToleranceSeconds (300) for the recommended window, or 0
@@ -49,7 +49,7 @@ func (e *WebhookVerificationError) Error() string {
 //	mac      = HMAC-SHA256(key=secret, message=message)
 //	expected = "sha256=" + hex.EncodeToString(mac)
 //
-// The X-Trident-Signature header may contain two space-separated signatures
+// The X-Sentinel-Signature header may contain two space-separated signatures
 // during a secret rotation overlap window; verification passes if either one
 // matches. Always verify against your current active secret — the server sends
 // both during rotation so you have time to swap your key.
@@ -60,7 +60,7 @@ func VerifyWebhookSignature(body []byte, signature, timestamp, secret string, to
 	// SDKs reject trailing garbage, and this one must agree with them.
 	ts, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil || ts <= 0 {
-		return &WebhookVerificationError{Reason: "X-Trident-Timestamp is missing or not a valid Unix second"}
+		return &WebhookVerificationError{Reason: "X-Sentinel-Timestamp is missing or not a valid Unix second"}
 	}
 	if toleranceSecs > 0 {
 		age := time.Now().Unix() - ts

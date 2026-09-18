@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_MAX_PAGES,
   iterEvents,
-  TridentClient,
-  TridentError,
+  SentinelClient,
+  SentinelError,
   type PaginatedEvents,
   type QueryEventsParams,
   type SorobanEvent,
@@ -78,11 +78,11 @@ describe("iterEvents", () => {
     expect(calls).toEqual([undefined, "cursor-1", "cursor-2"]);
   });
 
-  it("propagates a TridentError thrown on page 2 out of the iterator", async () => {
+  it("propagates a SentinelError thrown on page 2 out of the iterator", async () => {
     const query = vi.fn(
       async (params: QueryEventsParams): Promise<PaginatedEvents> => {
         if (params.after === "cursor-1") {
-          throw new TridentError("INTERNAL", "boom on page 2");
+          throw new SentinelError("INTERNAL", "boom on page 2");
         }
         return {
           events: [makeEvent(0)],
@@ -107,7 +107,7 @@ describe("iterEvents", () => {
     expect(collected).toHaveLength(1);
   });
 
-  it("throws TridentError(ITERATION_LIMIT) when maxPages is exceeded", async () => {
+  it("throws SentinelError(ITERATION_LIMIT) when maxPages is exceeded", async () => {
     // Never-ending stream: every page reports hasMore.
     const query = vi.fn(
       async (): Promise<PaginatedEvents> => ({
@@ -176,7 +176,7 @@ describe("client.iterEvents", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "k",
       network: "testnet",

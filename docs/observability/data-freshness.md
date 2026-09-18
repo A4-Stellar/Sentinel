@@ -1,6 +1,6 @@
 # Data freshness: ingest lag as a public contract
 
-Consumers of the Trident API need to answer one question before trusting
+Consumers of the Sentinel API need to answer one question before trusting
 anything else it returns: **is this data caught up with the chain?** This
 document defines "freshness" precisely — the metric, the public API field,
 and how the two relate — so the answer is a documented contract rather than
@@ -27,8 +27,8 @@ failed — see below) or the indexer has not indexed anything yet.
 
 | Surface | Fields | Notes |
 |---|---|---|
-| Indexer Prometheus metrics (`crates/indexer/src/metrics.rs`, port 9090) | `trident_indexer_ledger_lag`, `trident_indexer_ledger_lag_seconds_estimated` | Set together by `metrics::set_ledger_lag`, computed every poll cycle from the RPC's `latestLedger` vs. the indexer's own cursor — no separate chain-tip lookup needed. |
-| API service Prometheus metrics (`services/api/handlers/stats.go`, `GET /metrics`) | `trident_indexer_lag_ledgers`, `trident_indexer_lag_seconds_estimated` | Set on each `GET /v1/stats/indexer` request from the same computation the JSON response uses (see below) — not scraped independently from the indexer process. |
+| Indexer Prometheus metrics (`crates/indexer/src/metrics.rs`, port 9090) | `sentinel_indexer_ledger_lag`, `sentinel_indexer_ledger_lag_seconds_estimated` | Set together by `metrics::set_ledger_lag`, computed every poll cycle from the RPC's `latestLedger` vs. the indexer's own cursor — no separate chain-tip lookup needed. |
+| API service Prometheus metrics (`services/api/handlers/stats.go`, `GET /metrics`) | `sentinel_indexer_lag_ledgers`, `sentinel_indexer_lag_seconds_estimated` | Set on each `GET /v1/stats/indexer` request from the same computation the JSON response uses (see below) — not scraped independently from the indexer process. |
 | Public REST API | `GET /v1/stats/indexer` → `lag_ledgers`, `lag_seconds_estimated`, `last_ledger_indexed`, `chain_tip_ledger`, `status` | The stable, documented contract external consumers should build against — see `api/openapi.yaml`. No API key required. |
 
 The indexer's own gauge and the API's `/v1/stats/indexer` figure are computed
@@ -62,7 +62,7 @@ situation for a consumer than "the indexer isn't running."
 ## Alerting
 
 See `docs/slo.md` (SLO 1 — Ingest freshness) for the burn-rate-based alerting
-built on `trident_indexer_ledger_lag`, and `observability/burn-rate-alerts.yml`
-for the rule definitions, including `TridentIngestLagSustainedHigh`, a direct
+built on `sentinel_indexer_ledger_lag`, and `observability/burn-rate-alerts.yml`
+for the rule definitions, including `SentinelIngestLagSustainedHigh`, a direct
 threshold alert on sustained high lag independent of the SLO error-budget
 calculation (issue #293).

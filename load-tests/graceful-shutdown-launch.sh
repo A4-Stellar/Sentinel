@@ -117,7 +117,7 @@ terminate_service() {
 }
 
 echo "timestamp,label,status" > "${OUT_DIR}/ready.csv"
-echo "Trident rolling shutdown run ${RUN_ID}" > "${OUT_DIR}/summary.txt"
+echo "Sentinel rolling shutdown run ${RUN_ID}" > "${OUT_DIR}/summary.txt"
 echo "BASE_URL=${BASE_URL}" >> "${OUT_DIR}/summary.txt"
 echo "COMPOSE_FILE=${COMPOSE_FILE}" >> "${OUT_DIR}/summary.txt"
 

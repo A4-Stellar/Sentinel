@@ -1,5 +1,5 @@
 [package]
-name = "trident-indexer"
+name = "sentinel-indexer"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,10 +11,10 @@ edition = "2021"
 tokio-console = ["dep:console-subscriber"]
 
 [dependencies]
-trident-common = { path = "../common" }
+sentinel-common = { path = "../common" }
 anyhow = "1"
 
-# CLI subcommands (issue #574: `trident-indexer replay ...`). The daemon
+# CLI subcommands (issue #574: `sentinel-indexer replay ...`). The daemon
 # entrypoint (no subcommand) is unaffected.
 clap = { version = "4", features = ["derive"] }
 

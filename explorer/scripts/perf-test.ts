@@ -3,7 +3,7 @@
  * Measures API latency, server response time, and page render metrics.
  * 
  * Usage:
- *   npm run perf-test -- --api-url https://api.testnet.trident.dev --api-key YOUR_KEY
+ *   npm run perf-test -- --api-url https://api.testnet.sentinel.dev --api-key YOUR_KEY
  */
 
 import { performance } from 'perf_hooks';
@@ -21,7 +21,7 @@ const results: PerfResult[] = [];
 
 // Parse CLI args
 const args = process.argv.slice(2);
-const apiUrl = args[args.indexOf('--api-url') + 1] || 'https://api.testnet.trident.dev';
+const apiUrl = args[args.indexOf('--api-url') + 1] || 'https://api.testnet.sentinel.dev';
 const apiKey = args[args.indexOf('--api-key') + 1] || '';
 const testContractId = args[args.indexOf('--contract-id') + 1] || 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4';
 

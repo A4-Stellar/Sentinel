@@ -1,4 +1,4 @@
-"""Domain types for the Trident Python SDK."""
+"""Domain types for the Sentinel Python SDK."""
 
 from __future__ import annotations
 

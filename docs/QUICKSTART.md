@@ -1,4 +1,4 @@
-# ⚡ Trident 10-Minute Developer Quickstart
+# ⚡ Sentinel 10-Minute Developer Quickstart
 
 Get from **zero** to your **first live Soroban indexed event query on Stellar Testnet in under 10 minutes**.
 
@@ -28,11 +28,11 @@ You only need **Docker** with Compose v2 installed. No Rust, Go, or compiler too
 
 ## 🚀 Step 1: Clone the Repository (1 Minute)
 
-Clone the Trident repository and navigate to the project root:
+Clone the Sentinel repository and navigate to the project root:
 
 ```bash
-git clone https://github.com/Telocel-Labs/Trident.git
-cd Trident
+git clone https://github.com/A4-Stellar/Sentinel.git
+cd Sentinel
 ```
 
 ---
@@ -49,7 +49,7 @@ For a local Testnet developer setup, the default values work immediately out of 
 
 ```ini
 # Core Storage & Ingestion
-DATABASE_URL=postgresql://trident:password@postgres:5432/trident
+DATABASE_URL=postgresql://sentinel:password@postgres:5432/sentinel
 REDIS_URL=redis://redis:6379
 
 # Stellar Soroban Testnet RPC
@@ -58,10 +58,10 @@ NETWORK=testnet
 NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 
 # Security & Ports
-POSTGRES_USER=trident
+POSTGRES_USER=sentinel
 POSTGRES_PASSWORD=password
-POSTGRES_DB=trident
-API_KEY_SALT=trident-dev-salt-12345
+POSTGRES_DB=sentinel
+API_KEY_SALT=sentinel-dev-salt-12345
 ```
 
 ---
@@ -77,8 +77,8 @@ docker compose -f docker/docker-compose.yml up -d
 ### What is running?
 1. 🐘 **PostgreSQL** (`port 5432`): Persistent storage for all historical contract events, topics, and metrics.
 2. ⚡ **Redis Streams** (`port 6379`): Real-time pub/sub bus for sub-second event streaming.
-3. 🦀 **Trident Indexer** (Rust Core): Polls Stellar Testnet RPC, decodes XDR events natively, and persists ledger batches.
-4. 🐹 **Trident API** (Go REST/WebSocket, `port 3000`): Serves high-speed filtered queries and WebSocket subscriptions.
+3. 🦀 **Sentinel Indexer** (Rust Core): Polls Stellar Testnet RPC, decodes XDR events natively, and persists ledger batches.
+4. 🐹 **Sentinel API** (Go REST/WebSocket, `port 3000`): Serves high-speed filtered queries and WebSocket subscriptions.
 
 Check container status:
 ```bash
@@ -120,7 +120,7 @@ docker compose -f docker/docker-compose.yml logs -f indexer
 
 ## 🔍 Step 5: Query Your First Events! (3 Minutes)
 
-Now that Trident is actively indexing Stellar Testnet, query events using REST or WebSocket.
+Now that Sentinel is actively indexing Stellar Testnet, query events using REST or WebSocket.
 
 ### 5.1 Query Latest Contract Events
 
@@ -228,6 +228,6 @@ docker compose -f docker/docker-compose.yml down -v
 ## 📚 Next Steps
 
 - 📖 [REST API Reference](docs/site/api-reference/events-list.mdx) — Detailed query parameters and filters.
-- 🔌 [TypeScript / React SDK](docs/site/sdk/client.mdx) — Integrate Trident into your Web3 frontend.
+- 🔌 [TypeScript / React SDK](docs/site/sdk/client.mdx) — Integrate Sentinel into your Web3 frontend.
 - 🛡️ [API Key Lifecycle & Auth](docs/runbooks/api-key-lifecycle.md) — Production authentication and rate limiting.
 - 📊 [Metrics & Monitoring](docs/metrics-catalog.md) — Prometheus and Grafana dashboards.

@@ -1,8 +1,8 @@
-package trident
+package sentinel
 
-// TridentClientConfig configurations for the Trident Go Client.
-type TridentClientConfig struct {
-	// BaseURL is the HTTP address of the Trident API (e.g., "http://localhost:3000")
+// SentinelClientConfig configurations for the Sentinel Go Client.
+type SentinelClientConfig struct {
+	// BaseURL is the HTTP address of the Sentinel API (e.g., "http://localhost:3000")
 	BaseURL string
 	// APIKey is the API Key used for authentication (sent via X-API-Key header)
 	APIKey string
@@ -33,7 +33,7 @@ type PaginatedEvents struct {
 	NextCursor string          `json:"next_cursor"`
 }
 
-// SorobanEvent represents a single Soroban contract event indexed by Trident.
+// SorobanEvent represents a single Soroban contract event indexed by Sentinel.
 type SorobanEvent struct {
 	ID              string   `json:"id"`
 	ContractID      string   `json:"contract_id"`

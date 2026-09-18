@@ -46,7 +46,7 @@ func TestPollDBPool_ReportsStatImmediately(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	if got := testutil.ToFloat64(DBPoolMaxConns); got != 4 {
-		t.Errorf("trident_db_pool_max_conns: want 4, got %v", got)
+		t.Errorf("sentinel_db_pool_max_conns: want 4, got %v", got)
 	}
 
 	cancel()

@@ -1,6 +1,6 @@
 # 💾 PostgreSQL Backup & Restore Drill Runbook
 
-This runbook defines the standard operating procedures, measured recovery metrics (**RPO / RTO**), and drill execution steps for backing up and restoring the **Trident PostgreSQL database cluster**.
+This runbook defines the standard operating procedures, measured recovery metrics (**RPO / RTO**), and drill execution steps for backing up and restoring the **Sentinel PostgreSQL database cluster**.
 
 ---
 
@@ -21,13 +21,13 @@ Automated backups run periodically and produce compressed, checksummed `.dump` a
 
 ```bash
 # Execute the backup script:
-DATABASE_URL="postgresql://trident:password@localhost:5432/trident" ./scripts/backup.sh ./backups
+DATABASE_URL="postgresql://sentinel:password@localhost:5432/sentinel" ./scripts/backup.sh ./backups
 ```
 
 ### 2.2 Output Verification
 The backup script produces:
-1. `trident_db_backup_<TIMESTAMP>.dump` (Custom format `-Fc`, zlib compressed)
-2. `trident_db_backup_<TIMESTAMP>.dump.sha256` (Cryptographic integrity checksum)
+1. `sentinel_db_backup_<TIMESTAMP>.dump` (Custom format `-Fc`, zlib compressed)
+2. `sentinel_db_backup_<TIMESTAMP>.dump.sha256` (Cryptographic integrity checksum)
 
 ---
 
@@ -37,7 +37,7 @@ To restore a backup into a clean target database:
 
 ### Step 1: Verify Checksum and Unpack
 ```bash
-./scripts/restore.sh ./backups/trident_db_backup_20260829_000000Z.dump "$TARGET_DATABASE_URL"
+./scripts/restore.sh ./backups/sentinel_db_backup_20260829_000000Z.dump "$TARGET_DATABASE_URL"
 ```
 
 ### Step 2: Verify Partition Definitions on `soroban_events`
@@ -61,14 +61,14 @@ SELECT last_ledger_sequence FROM indexer_state;
 ```
 
 ### Step 4: Resume Indexer and Confirm Zero-Gap Ingestion
-1. Start the `trident-indexer` service pointing to the restored database.
+1. Start the `sentinel-indexer` service pointing to the restored database.
 2. Verify in logs:
    ```
    [INFO] Indexer resumed from ledger <latest_event_ledger + 1>
    ```
 3. Check Prometheus metric:
    ```bash
-   curl -s http://localhost:9090/metrics | grep trident_indexer_last_ledger_sequence
+   curl -s http://localhost:9090/metrics | grep sentinel_indexer_last_ledger_sequence
    ```
 
 ---

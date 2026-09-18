@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef } from "react";
-import type { PaginatedEvents, QueryEventsParams, SorobanEvent } from "@trident-indexer/sdk";
-import { useTridentClient } from "./context.js";
+import type { PaginatedEvents, QueryEventsParams, SorobanEvent } from "@sentinel-indexer/sdk";
+import { useSentinelClient } from "./context.js";
 
 export interface UseContractEventsParams extends QueryEventsParams {
   /** Refresh interval in milliseconds. Default: no auto-refresh. */
@@ -63,7 +63,7 @@ const initialState: State = {
 export function useContractEvents(
   params: UseContractEventsParams,
 ): UseContractEventsResult {
-  const client = useTridentClient();
+  const client = useSentinelClient();
   const [state, dispatch] = useReducer(reducer, initialState);
   const paramsRef = useRef(params);
   paramsRef.current = params;

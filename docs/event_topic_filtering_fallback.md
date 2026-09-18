@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the architecture and rationale for the client-side event filtering mechanism within Trident (`crates/indexer/src/streamer/mod.rs`). It acts as a safety boundary for edge cases where server-side RPC pushdown filtering is bypassed, degraded, or ignored.
+This document outlines the architecture and rationale for the client-side event filtering mechanism within Sentinel (`crates/indexer/src/streamer/mod.rs`). It acts as a safety boundary for edge cases where server-side RPC pushdown filtering is bypassed, degraded, or ignored.
 
 ---
 
@@ -15,7 +15,7 @@ Under standard operational conditions, filtering is offloaded entirely to the So
 3. The `FilterPlan` is serialized into the `filters` array within the `getEvents` RPC payload.
 4. The RPC node processes the request, returning only the targeted events.
 
-In this scenario, Trident receives a minimal, pre-filtered payload, meaning that extensive in-memory filtering scans are structurally avoided on the hot path.
+In this scenario, Sentinel receives a minimal, pre-filtered payload, meaning that extensive in-memory filtering scans are structurally avoided on the hot path.
 
 ---
 

@@ -1,4 +1,4 @@
-module github.com/Depo-dev/trident/services/api
+module github.com/Depo-dev/sentinel/services/api
 
 go 1.25.0
 

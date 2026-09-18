@@ -40,13 +40,13 @@ jobs:
         include:
           - name: go-api
             dockerfile: services/api/Dockerfile
-            tag: trident-go-api:scan
+            tag: sentinel-go-api:scan
           - name: grpc-api
             dockerfile: crates/api/Dockerfile
-            tag: trident-grpc-api:scan
+            tag: sentinel-grpc-api:scan
           - name: indexer
             dockerfile: crates/indexer/Dockerfile
-            tag: trident-indexer:scan
+            tag: sentinel-indexer:scan
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -121,12 +121,12 @@ jobs:
           file: database/Dockerfile
           push: false
           load: true
-          tags: trident-migrate:secret-audit
+          tags: sentinel-migrate:secret-audit
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Verify no secret is baked into an image layer
-        run: bash scripts/check-image-history.sh trident-migrate:secret-audit
+        run: bash scripts/check-image-history.sh sentinel-migrate:secret-audit
 
   # ---------------------------------------------------------------------------
   # Dependency vulnerability audits — one step per ecosystem actually

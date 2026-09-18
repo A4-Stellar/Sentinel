@@ -9,9 +9,9 @@ use std::net::SocketAddr;
 
 use metrics::{counter, describe_counter, describe_gauge, describe_histogram, gauge, histogram};
 use metrics_exporter_prometheus::PrometheusBuilder;
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
-pub const LEDGER_LAG: &str = "trident_indexer_ledger_lag";
+pub const LEDGER_LAG: &str = "sentinel_indexer_ledger_lag";
 /// Target Stellar ledger close time, used to convert ledger-count lag into an
 /// estimated wall-clock staleness figure (issue #294). Not measured
 /// per-deployment — the indexer does not retain per-ledger close timing once
@@ -19,95 +19,95 @@ pub const LEDGER_LAG: &str = "trident_indexer_ledger_lag";
 /// rather than a rolling average. Documented alongside the metric in
 /// docs/observability/data-freshness.md; keep both in sync if this changes.
 pub const AVG_LEDGER_CLOSE_SECONDS: f64 = 5.0;
-/// Estimated wall-clock staleness: `trident_indexer_ledger_lag *
+/// Estimated wall-clock staleness: `sentinel_indexer_ledger_lag *
 /// AVG_LEDGER_CLOSE_SECONDS` (issue #294). A derived convenience gauge, not
 /// an independent measurement — see [`AVG_LEDGER_CLOSE_SECONDS`].
-pub const LEDGER_LAG_SECONDS_ESTIMATED: &str = "trident_indexer_ledger_lag_seconds_estimated";
-pub const EVENTS_TOTAL: &str = "trident_indexer_events_total";
-pub const EVENTS_SKIPPED_TOTAL: &str = "trident_indexer_events_skipped_total";
-pub const PARSE_ERRORS_TOTAL: &str = "trident_indexer_parse_errors_total";
+pub const LEDGER_LAG_SECONDS_ESTIMATED: &str = "sentinel_indexer_ledger_lag_seconds_estimated";
+pub const EVENTS_TOTAL: &str = "sentinel_indexer_events_total";
+pub const EVENTS_SKIPPED_TOTAL: &str = "sentinel_indexer_events_skipped_total";
+pub const PARSE_ERRORS_TOTAL: &str = "sentinel_indexer_parse_errors_total";
 
 /// Incremented when an event exhausts its retry budget and is written to the
 /// parse-error (dead-letter) table so the poll can advance past it (issue
 /// #414). Distinct from PARSE_ERRORS_TOTAL, which counts every parse failure
 /// including ones that later succeed on retry: this counter only moves when an
 /// event is actually abandoned, which is what an alert should fire on.
-pub const DEAD_LETTERED_TOTAL: &str = "trident_indexer_dead_lettered_total";
+pub const DEAD_LETTERED_TOTAL: &str = "sentinel_indexer_dead_lettered_total";
 /// Deliberately separate from DEAD_LETTERED_TOTAL above: that one counts
 /// undecodable events captured in `parse_errors` (a poison message — retry
 /// never helps), while this counts well-formed events whose database commit
 /// failed after the retry budget and landed in `failed_events` for replay
 /// (issue #508). Conflating them made one number answer two different
 /// operational questions.
-pub const PERSIST_DEAD_LETTERED_TOTAL: &str = "trident_indexer_persist_dead_lettered_total";
+pub const PERSIST_DEAD_LETTERED_TOTAL: &str = "sentinel_indexer_persist_dead_lettered_total";
 /// Current number of `failed_events` rows awaiting replay. Non-empty pages
-/// via TridentIndexerPersistDeadLetterBacklog (monitoring/alerts.yml).
-pub const PERSIST_DEAD_LETTER_BACKLOG: &str = "trident_indexer_persist_dead_letter_backlog";
-pub const POLL_DURATION_SECONDS: &str = "trident_indexer_poll_duration_seconds";
-pub const POLL_ERRORS_TOTAL: &str = "trident_indexer_poll_errors_total";
-pub const RPC_RETRIES_TOTAL: &str = "trident_indexer_rpc_retries_total";
-pub const EFFECTIVE_POLL_INTERVAL_MS: &str = "trident_indexer_effective_poll_interval_ms";
-pub const RPC_TIMEOUTS_TOTAL: &str = "trident_indexer_rpc_timeouts_total";
-pub const RPC_ACTIVE_ENDPOINT: &str = "trident_indexer_rpc_active_endpoint";
-pub const RPC_FAILOVERS_TOTAL: &str = "trident_indexer_rpc_failovers_total";
+/// via SentinelIndexerPersistDeadLetterBacklog (monitoring/alerts.yml).
+pub const PERSIST_DEAD_LETTER_BACKLOG: &str = "sentinel_indexer_persist_dead_letter_backlog";
+pub const POLL_DURATION_SECONDS: &str = "sentinel_indexer_poll_duration_seconds";
+pub const POLL_ERRORS_TOTAL: &str = "sentinel_indexer_poll_errors_total";
+pub const RPC_RETRIES_TOTAL: &str = "sentinel_indexer_rpc_retries_total";
+pub const EFFECTIVE_POLL_INTERVAL_MS: &str = "sentinel_indexer_effective_poll_interval_ms";
+pub const RPC_TIMEOUTS_TOTAL: &str = "sentinel_indexer_rpc_timeouts_total";
+pub const RPC_ACTIVE_ENDPOINT: &str = "sentinel_indexer_rpc_active_endpoint";
+pub const RPC_FAILOVERS_TOTAL: &str = "sentinel_indexer_rpc_failovers_total";
 /// Circuit breaker state (issue #197): 0 = Closed, 1 = Open, 2 = HalfOpen.
 /// See `streamer::circuit_breaker` for the state machine.
-pub const RPC_BREAKER_STATE: &str = "trident_indexer_rpc_breaker_state";
+pub const RPC_BREAKER_STATE: &str = "sentinel_indexer_rpc_breaker_state";
 /// Consecutive RPC-layer poll failures since the last success (issue #197).
 /// Resets to 0 on any successful poll; feeds the breaker's own threshold.
-pub const RPC_CONSECUTIVE_FAILURES: &str = "trident_indexer_rpc_consecutive_failures";
+pub const RPC_CONSECUTIVE_FAILURES: &str = "sentinel_indexer_rpc_consecutive_failures";
 /// Count of structurally valid ScVal variants decoded from event payloads
 /// where they should never legitimately appear (`ContractInstance`,
 /// `LedgerKeyContractInstance`, `LedgerKeyNonce`). Emitted by the shared
-/// decoder in `trident_common::scval` (issue #506, superseding the #415
+/// decoder in `sentinel_common::scval` (issue #506, superseding the #415
 /// debug-fallback counter: the decoder no longer has a fallback — matches
 /// are exhaustive, so a new XDR variant fails compilation instead).
 pub const UNEXPECTED_SCVAL_VARIANT_TOTAL: &str =
-    trident_common::scval::UNEXPECTED_SCVAL_VARIANT_TOTAL;
-pub const OUTBOX_BACKLOG: &str = "trident_indexer_outbox_backlog";
+    sentinel_common::scval::UNEXPECTED_SCVAL_VARIANT_TOTAL;
+pub const OUTBOX_BACKLOG: &str = "sentinel_indexer_outbox_backlog";
 
 /// Reconciliation loop (issue #511): passes that completed a full compare of
 /// a settled ledger window against the RPC source.
-pub const RECONCILE_PASSES_TOTAL: &str = "trident_indexer_reconcile_passes_total";
+pub const RECONCILE_PASSES_TOTAL: &str = "sentinel_indexer_reconcile_passes_total";
 /// Passes that aborted before producing a report (RPC or DB failure). A
 /// failing reconciler reports nothing — which must never read as clean.
-pub const RECONCILE_PASS_FAILURES_TOTAL: &str = "trident_indexer_reconcile_pass_failures_total";
+pub const RECONCILE_PASS_FAILURES_TOTAL: &str = "sentinel_indexer_reconcile_pass_failures_total";
 /// Events the RPC reports for reconciled windows that the database does not
 /// account for — the silent-under-indexing signal this loop exists to catch.
-pub const RECONCILE_MISSING_EVENTS_TOTAL: &str = "trident_indexer_reconcile_missing_events_total";
+pub const RECONCILE_MISSING_EVENTS_TOTAL: &str = "sentinel_indexer_reconcile_missing_events_total";
 /// Events the database holds that the RPC does not report for the window —
 /// over-indexing, as wrong as under-indexing.
-pub const RECONCILE_EXTRA_EVENTS_TOTAL: &str = "trident_indexer_reconcile_extra_events_total";
+pub const RECONCILE_EXTRA_EVENTS_TOTAL: &str = "sentinel_indexer_reconcile_extra_events_total";
 /// Ledgers in the most recent pass whose counts disagreed. Stays non-zero on
 /// every pass until the discrepancy is resolved, which is what the alert
 /// fires on.
-pub const RECONCILE_DISCREPANT_LEDGERS: &str = "trident_indexer_reconcile_discrepant_ledgers";
+pub const RECONCILE_DISCREPANT_LEDGERS: &str = "sentinel_indexer_reconcile_discrepant_ledgers";
 /// Highest ledger covered by the most recent completed pass.
-pub const RECONCILE_WINDOW_END_LEDGER: &str = "trident_indexer_reconcile_window_end_ledger";
-pub const OUTBOX_PUBLISHED_TOTAL: &str = "trident_indexer_outbox_published_total";
-pub const OUTBOX_PUBLISH_FAILURES_TOTAL: &str = "trident_indexer_outbox_publish_failures_total";
+pub const RECONCILE_WINDOW_END_LEDGER: &str = "sentinel_indexer_reconcile_window_end_ledger";
+pub const OUTBOX_PUBLISHED_TOTAL: &str = "sentinel_indexer_outbox_published_total";
+pub const OUTBOX_PUBLISH_FAILURES_TOTAL: &str = "sentinel_indexer_outbox_publish_failures_total";
 /// RPC call latency in seconds, labelled by `method` (e.g. `getEvents`) and
 /// `endpoint` (the pool index serving the call, `0` = primary). Covers every
 /// call regardless of outcome, so `_count` doubles as a per-method,
 /// per-endpoint call-volume counter (issue #294).
-pub const RPC_CALL_DURATION_SECONDS: &str = "trident_indexer_rpc_call_duration_seconds";
+pub const RPC_CALL_DURATION_SECONDS: &str = "sentinel_indexer_rpc_call_duration_seconds";
 /// RPC call failures labelled by `method` and a coarse `error_type`: one of
 /// `timeout`, `rate_limited`, `http_4xx`, `http_5xx`, `invalid_cursor`,
 /// `rpc_error`, `empty_result`, or `transport` (issue #294).
-pub const RPC_ERRORS_TOTAL: &str = "trident_indexer_rpc_errors_total";
+pub const RPC_ERRORS_TOTAL: &str = "sentinel_indexer_rpc_errors_total";
 /// Unix timestamp (seconds) of the most recent completed poll cycle. Use
-/// `time() - trident_indexer_last_poll_timestamp_seconds > N` as a
+/// `time() - sentinel_indexer_last_poll_timestamp_seconds > N` as a
 /// dead-man's-switch alert for a stalled indexer (#218).
-pub const HEARTBEAT_TIMESTAMP: &str = "trident_indexer_last_poll_timestamp_seconds";
+pub const HEARTBEAT_TIMESTAMP: &str = "sentinel_indexer_last_poll_timestamp_seconds";
 /// Bounded per-contract event counter. Labels: `contract` (allowlisted contract ID or `"other"`).
 /// Cardinality: |allowlist| + 1. In index-all mode (no allowlist) all events land in `"other"`.
-pub const EVENTS_BY_CONTRACT_TOTAL: &str = "trident_indexer_events_by_contract_total";
-pub const EVENT_DECODE_DURATION_SECONDS: &str = "trident_indexer_event_decode_duration_seconds";
+pub const EVENTS_BY_CONTRACT_TOTAL: &str = "sentinel_indexer_events_by_contract_total";
+pub const EVENT_DECODE_DURATION_SECONDS: &str = "sentinel_indexer_event_decode_duration_seconds";
 /// Health score (0-100) for each RPC endpoint. Label: `endpoint` (URL).
-pub const RPC_HEALTH_SCORE: &str = "trident_rpc_health_score";
+pub const RPC_HEALTH_SCORE: &str = "sentinel_rpc_health_score";
 /// Indexer's own Postgres pool, documented in docs/metrics-catalog.md.
-pub const DB_POOL_SIZE: &str = "trident_indexer_db_pool_size";
-pub const DB_POOL_IDLE_CONNECTIONS: &str = "trident_indexer_db_pool_idle_connections";
+pub const DB_POOL_SIZE: &str = "sentinel_indexer_db_pool_size";
+pub const DB_POOL_IDLE_CONNECTIONS: &str = "sentinel_indexer_db_pool_idle_connections";
 /// Backfill rate in ledgers per second, measured over each poll cycle that
 /// made forward progress while behind the chain tip (issue #420).
 ///
@@ -117,11 +117,11 @@ pub const DB_POOL_IDLE_CONNECTIONS: &str = "trident_indexer_db_pool_idle_connect
 /// [`set_catchup_rates`] — so a caught-up indexer polling one ledger every few
 /// seconds does not drag the reported rate toward zero and make a healthy
 /// indexer look slow.
-pub const CATCHUP_LEDGERS_PER_SECOND: &str = "trident_indexer_catchup_ledgers_per_second";
+pub const CATCHUP_LEDGERS_PER_SECOND: &str = "sentinel_indexer_catchup_ledgers_per_second";
 /// Backfill rate in events per second, measured over the same window as
 /// [`CATCHUP_LEDGERS_PER_SECOND`] (issue #420). Ledgers/sec alone hides the
 /// binding constraint: a sparse range moves fast in ledgers and slow in events.
-pub const CATCHUP_EVENTS_PER_SECOND: &str = "trident_indexer_catchup_events_per_second";
+pub const CATCHUP_EVENTS_PER_SECOND: &str = "sentinel_indexer_catchup_events_per_second";
 
 /// Distance (in ledgers) between the current ingest cursor and the upper bound
 /// of the last named `soroban_events` partition (issue #525).
@@ -133,37 +133,37 @@ pub const CATCHUP_EVENTS_PER_SECOND: &str = "trident_indexer_catchup_events_per_
 ///
 /// Updated once per poll cycle. The alert thresholds in `monitoring/alerts.yml`
 /// are:
-///   - warning  (TridentPartitionExhaustionWarning): < 5_000_000 ledgers (~289 days)
-///   - critical (TridentPartitionExhausted):          <= 0        ledgers (already past)
-pub const PARTITION_LOOKAHEAD_LEDGERS: &str = "trident_indexer_partition_lookahead_ledgers";
+///   - warning  (SentinelPartitionExhaustionWarning): < 5_000_000 ledgers (~289 days)
+///   - critical (SentinelPartitionExhausted):          <= 0        ledgers (already past)
+pub const PARTITION_LOOKAHEAD_LEDGERS: &str = "sentinel_indexer_partition_lookahead_ledgers";
 /// Ledger reorganisations detected and repaired (issue #196): a divergence
 /// between the RPC's current history and what was already persisted,
 /// resolved by deleting the affected rows and rewinding the cursor.
-pub const REORGS_TOTAL: &str = "trident_indexer_reorgs_total";
+pub const REORGS_TOTAL: &str = "sentinel_indexer_reorgs_total";
 /// Gaps found in the processed ledger range by the periodic scan of
 /// `ledger_metadata` (issue #216). Each gap is one contiguous run of missing
 /// sequences, regardless of how many ledgers it spans. A gap still open on a
 /// later scan increments this again — the counter reflects scan findings,
 /// not distinct gaps, so a persistently-gappy table shows a climbing rate
 /// rather than going silent after the first detection.
-pub const LEDGER_GAPS_DETECTED_TOTAL: &str = "trident_indexer_ledger_gaps_detected_total";
+pub const LEDGER_GAPS_DETECTED_TOTAL: &str = "sentinel_indexer_ledger_gaps_detected_total";
 /// Previously-enqueued backfill jobs the scan confirmed are no longer gaps
 /// (issue #216): on each run, any pending/running `backfill_jobs` row whose
 /// range no longer appears in the freshly-scanned gap list has been filled
 /// (by the backfill worker, or by the live poll loop catching back up), and
 /// is marked `done` here.
-pub const LEDGER_GAPS_CLOSED_TOTAL: &str = "trident_indexer_ledger_gaps_closed_total";
+pub const LEDGER_GAPS_CLOSED_TOTAL: &str = "sentinel_indexer_ledger_gaps_closed_total";
 
 /// Install the global Prometheus recorder and start serving `/metrics` on
 /// `port`. Must be called once, before the streamer starts recording.
-pub fn install(port: u16) -> Result<(), TridentError> {
+pub fn install(port: u16) -> Result<(), SentinelError> {
     let addr: SocketAddr = ([0, 0, 0, 0], port).into();
 
     PrometheusBuilder::new()
         .with_http_listener(addr)
         .install()
         .map_err(|e| {
-            TridentError::config(anyhow::Error::new(e).context("failed to start metrics exporter"))
+            SentinelError::config(anyhow::Error::new(e).context("failed to start metrics exporter"))
         })?;
 
     describe_gauge!(
@@ -190,7 +190,7 @@ pub fn install(port: u16) -> Result<(), TridentError> {
     );
     describe_gauge!(
         PERSIST_DEAD_LETTER_BACKLOG,
-        "failed_events rows awaiting replay; non-empty pages via TridentIndexerPersistDeadLetterBacklog (issue #508)"
+        "failed_events rows awaiting replay; non-empty pages via SentinelIndexerPersistDeadLetterBacklog (issue #508)"
     );
     describe_histogram!(
         POLL_DURATION_SECONDS,
@@ -361,7 +361,7 @@ pub fn install(port: u16) -> Result<(), TridentError> {
 
     // Histograms render nothing at all until they observe a value — not even
     // a HELP/TYPE header — so an indexer that has not yet made an RPC call
-    // exports no `trident_indexer_rpc_call_duration_seconds_*` series. Any
+    // exports no `sentinel_indexer_rpc_call_duration_seconds_*` series. Any
     // alert dividing by `..._count` then evaluates against an empty vector
     // and silently never fires, which is exactly the class of dead alert the
     // metric-name check exists to catch. Seeding a zero observation makes the
@@ -617,8 +617,8 @@ pub fn set_rpc_health_score(endpoint: &str, score: u8) {
 /// A negative value means the cursor has already passed the boundary and rows
 /// are falling into the DEFAULT catch-all partition. Two Prometheus alerts in
 /// `monitoring/alerts.yml` fire on this gauge:
-///   - TridentPartitionExhaustionWarning  (< 5_000_000, warning severity)
-///   - TridentPartitionExhausted          (<= 0,        critical severity + Fatal poll error)
+///   - SentinelPartitionExhaustionWarning  (< 5_000_000, warning severity)
+///   - SentinelPartitionExhausted          (<= 0,        critical severity + Fatal poll error)
 pub fn set_partition_lookahead(lookahead: i64) {
     gauge!(PARTITION_LOOKAHEAD_LEDGERS).set(lookahead as f64);
 }

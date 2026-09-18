@@ -1,6 +1,6 @@
 use crate::parser::RawEvent;
 use serde::{Deserialize, Serialize};
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 #[derive(Serialize)]
 struct JsonRpcRequest<'a, P: Serialize> {
@@ -61,7 +61,7 @@ impl RpcClient {
         &self,
         start_ledger: Option<u64>,
         cursor: Option<String>,
-    ) -> Result<crate::parser::EventsPage, TridentError> {
+    ) -> Result<crate::parser::EventsPage, SentinelError> {
         let params = GetEventsParams {
             start_ledger,
             filters: vec![],
@@ -81,14 +81,14 @@ impl RpcClient {
             .json(&req)
             .send()
             .await
-            .map_err(|e| TridentError::rpc(anyhow::Error::new(e).context("HTTP request failed")))?;
+            .map_err(|e| SentinelError::rpc(anyhow::Error::new(e).context("HTTP request failed")))?;
 
         let body: JsonRpcResponse<GetEventsResult> = resp.json().await.map_err(|e| {
-            TridentError::rpc(anyhow::Error::new(e).context("Failed to decode RPC response"))
+            SentinelError::rpc(anyhow::Error::new(e).context("Failed to decode RPC response"))
         })?;
 
         if let Some(err) = body.error {
-            return Err(TridentError::rpc(anyhow::anyhow!(
+            return Err(SentinelError::rpc(anyhow::anyhow!(
                 "RPC error {}: {}",
                 err.code,
                 err.message
@@ -97,7 +97,7 @@ impl RpcClient {
 
         let result = body
             .result
-            .ok_or_else(|| TridentError::rpc(anyhow::anyhow!("Empty result in RPC response")))?;
+            .ok_or_else(|| SentinelError::rpc(anyhow::anyhow!("Empty result in RPC response")))?;
 
         Ok(crate::parser::EventsPage {
             events: result.events,

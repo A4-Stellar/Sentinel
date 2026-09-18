@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 )
 
 func TestInternalStatus_NotConfigured_Returns401(t *testing.T) {
@@ -64,7 +64,7 @@ func TestInternalStatus_ValidKey_Returns200(t *testing.T) {
 // one on a 200 response) and asserts the raw key string never appears
 // anywhere in the response body.
 func TestInternalStatus_NoRawKeyLeakage(t *testing.T) {
-	const rawInternalKey = "trident-internal-status-super-secret-value"
+	const rawInternalKey = "sentinel-internal-status-super-secret-value"
 	t.Setenv("INTERNAL_API_KEY", rawInternalKey)
 
 	t.Run("wrong key on 401", func(t *testing.T) {

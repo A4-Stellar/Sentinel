@@ -3,9 +3,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "trident.fullname" . }}-nginx-config
+  name: {{ include "sentinel.fullname" . }}-nginx-config
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: nginx
 data:
   nginx.conf: |
@@ -13,7 +13,7 @@ data:
     events { worker_connections 1024; }
     http {
       upstream go_api {
-        server {{ include "trident.fullname" . }}-go-api:{{ .Values.goApi.service.port }};
+        server {{ include "sentinel.fullname" . }}-go-api:{{ .Values.goApi.service.port }};
       }
       server {
         listen 80;
@@ -31,29 +31,29 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "trident.fullname" . }}-nginx
+  name: {{ include "sentinel.fullname" . }}-nginx
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: nginx
 spec:
   replicas: {{ .Values.nginx.replicaCount }}
   selector:
     matchLabels:
-      {{- include "trident.selectorLabels" (dict "root" . "component" "nginx") | nindent 6 }}
+      {{- include "sentinel.selectorLabels" (dict "root" . "component" "nginx") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "trident.selectorLabels" (dict "root" . "component" "nginx") | nindent 8 }}
+        {{- include "sentinel.selectorLabels" (dict "root" . "component" "nginx") | nindent 8 }}
     spec:
-      {{- include "trident.imagePullSecrets" . | nindent 6 }}
+      {{- include "sentinel.imagePullSecrets" . | nindent 6 }}
       securityContext:
-        {{- include "trident.podSecurityContext" (dict "uid" .Values.nginx.securityContextUid) | nindent 8 }}
+        {{- include "sentinel.podSecurityContext" (dict "uid" .Values.nginx.securityContextUid) | nindent 8 }}
       containers:
         - name: nginx
           image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           securityContext:
-            {{- include "trident.containerSecurityContext" . | nindent 12 }}
+            {{- include "sentinel.containerSecurityContext" . | nindent 12 }}
           ports:
             - name: http
               containerPort: 80
@@ -80,7 +80,7 @@ spec:
       volumes:
         - name: nginx-config
           configMap:
-            name: {{ include "trident.fullname" . }}-nginx-config
+            name: {{ include "sentinel.fullname" . }}-nginx-config
         - name: var-run
           emptyDir: {}
         - name: var-cache-nginx
@@ -103,14 +103,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "trident.fullname" . }}-nginx
+  name: {{ include "sentinel.fullname" . }}-nginx
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: nginx
 spec:
   type: {{ .Values.nginx.service.type }}
   selector:
-    {{- include "trident.selectorLabels" (dict "root" . "component" "nginx") | nindent 4 }}
+    {{- include "sentinel.selectorLabels" (dict "root" . "component" "nginx") | nindent 4 }}
   ports:
     - name: http
       port: {{ .Values.nginx.service.port }}
@@ -121,14 +121,14 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "trident.fullname" . }}-nginx
+  name: {{ include "sentinel.fullname" . }}-nginx
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: nginx
 spec:
   minAvailable: {{ .Values.nginx.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      {{- include "trident.selectorLabels" (dict "root" . "component" "nginx") | nindent 6 }}
+      {{- include "sentinel.selectorLabels" (dict "root" . "component" "nginx") | nindent 6 }}
 {{- end }}
 {{- end }}

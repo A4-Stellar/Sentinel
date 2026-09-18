@@ -11,15 +11,15 @@ rotation, revocation, and compromise response. `ADMIN_API_KEY` and legacy
 
 | Property | Contract |
 | --- | --- |
-| Plaintext format | `trident_` followed by 64 lowercase hexadecimal characters |
+| Plaintext format | `sentinel_` followed by 64 lowercase hexadecimal characters |
 | Length | 72 characters |
 | Entropy | 32 bytes (256 bits) read from Go's `crypto/rand` CSPRNG |
 | Stored credential | Lowercase hexadecimal SHA-256 digest of the complete plaintext key |
-| Display prefix | First 16 plaintext characters: `trident_` plus the first 8 random hex characters |
+| Display prefix | First 16 plaintext characters: `sentinel_` plus the first 8 random hex characters |
 | Plaintext availability | Returned once in the create response; never stored in the database or returned by list operations |
 | Active state | `api_keys.revoked_at IS NULL` |
 
-The `trident_` marker makes the credential recognizable to secret scanners.
+The `sentinel_` marker makes the credential recognizable to secret scanners.
 The non-secret `key_prefix` is the greppable identifier to use in inventories,
 structured logs, and operational records without logging the full credential.
 Operators may search the admin key list or database by prefix, resolve it to
@@ -49,7 +49,7 @@ Use a descriptive label that identifies the consumer and purpose. Keep the
 network and rate-limit tier identical to the key being replaced when rotating.
 
 ```bash
-curl --fail-with-body -X POST "$TRIDENT_URL/v1/api-keys" \
+curl --fail-with-body -X POST "$SENTINEL_URL/v1/api-keys" \
   -H "X-Admin-Key: $ADMIN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -77,12 +77,12 @@ old row, so both credentials remain valid during the overlap window.
 
 ### Option A: Dedicated Rotate Endpoint (`POST /v1/api-keys/{id}/rotate`)
 
-Trident provides a native atomic rotation endpoint that clones the old key's network,
+Sentinel provides a native atomic rotation endpoint that clones the old key's network,
 rate-limit tier, and metadata, creating a new plaintext credential in one operation:
 
 ```bash
 curl --fail-with-body -X POST \
-  "$TRIDENT_URL/v1/api-keys/$OLD_KEY_ID/rotate" \
+  "$SENTINEL_URL/v1/api-keys/$OLD_KEY_ID/rotate" \
   -H "X-Admin-Key: $ADMIN_API_KEY"
 ```
 
@@ -106,7 +106,7 @@ The response returns the new plaintext key and prefix while the old key remains 
 
    ```bash
    curl --fail-with-body -X DELETE \
-     "$TRIDENT_URL/v1/api-keys/$OLD_KEY_ID" \
+     "$SENTINEL_URL/v1/api-keys/$OLD_KEY_ID" \
      -H "X-Admin-Key: $ADMIN_API_KEY"
    ```
 
@@ -135,7 +135,7 @@ The admin usage endpoint provides an aggregate by endpoint:
 
 ```bash
 curl --fail-with-body \
-  "$TRIDENT_URL/v1/admin/keys/$KEY_ID/usage?from=$FROM_RFC3339&to=$TO_RFC3339" \
+  "$SENTINEL_URL/v1/admin/keys/$KEY_ID/usage?from=$FROM_RFC3339&to=$TO_RFC3339" \
   -H "X-Admin-Key: $ADMIN_API_KEY"
 ```
 

@@ -73,7 +73,7 @@ TESTNET_RPC_URL="$RPC_URL" \
 TESTNET_CONTRACT_ID="$CONTRACT_ID" \
 TESTNET_LEDGER_SPAN="$LEDGER_SPAN" \
 REQUIRE_TESTNET_CORRECTNESS=1 \
-cargo test -p trident-indexer testnet_correctness -- \
+cargo test -p sentinel-indexer testnet_correctness -- \
   --test-threads=1 --nocapture
 
 echo

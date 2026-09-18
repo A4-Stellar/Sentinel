@@ -1,17 +1,17 @@
-# @trident-indexer/sdk
+# @sentinel-indexer/sdk
 
-TypeScript client SDK for the [Trident](https://github.com/Telocel-Labs/Trident) Soroban event indexer.
+TypeScript client SDK for the [Sentinel](https://github.com/A4-Stellar/Sentinel) Soroban event indexer.
 
 Query historical Soroban contract events and subscribe to real-time updates without running your own infrastructure.
 
 ## Installation
 
 ```bash
-npm install @trident-indexer/sdk
+npm install @sentinel-indexer/sdk
 # or
-yarn add @trident-indexer/sdk
+yarn add @sentinel-indexer/sdk
 # or
-pnpm add @trident-indexer/sdk
+pnpm add @sentinel-indexer/sdk
 ```
 
 The package ships pre-built CJS + ESM bundles and a `dist/index.d.ts` declaration file for full autocomplete out of the box.
@@ -21,10 +21,10 @@ The package ships pre-built CJS + ESM bundles and a `dist/index.d.ts` declaratio
 ## Quick Start
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.io",
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.io",
   apiKey: "your-api-key",
   network: "mainnet",
 });
@@ -56,7 +56,7 @@ for await (const event of client.iterEvents({
 }
 
 // A safety valve caps the number of pages fetched (default 100). If the limit
-// is hit while more results remain, a TridentError(code: "ITERATION_LIMIT")
+// is hit while more results remain, a SentinelError(code: "ITERATION_LIMIT")
 // is thrown; raise it for very large backfills:
 for await (const event of client.iterEvents(
   { contractId: "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM" },
@@ -91,19 +91,19 @@ sub.unsubscribe();
 
 ## Configuration
 
-Pass a `TridentClientConfig` object to the `TridentClient` constructor.
+Pass a `SentinelClientConfig` object to the `SentinelClient` constructor.
 
 | Field     | Type                                    | Required | Description                                                                                     |
 |-----------|-----------------------------------------|----------|-------------------------------------------------------------------------------------------------|
-| `apiUrl`  | `string`                                | See below | Base URL of the Trident REST API (e.g. `https://api.trident.telocel.io`). No trailing slash.   |
+| `apiUrl`  | `string`                                | See below | Base URL of the Sentinel REST API (e.g. `https://api.sentinel.a4stellar.io`). No trailing slash.   |
 | `apiKey`  | `string`                                | See below | API key sent as the `X-API-Key` header on every request.                                        |
 | `network` | `"mainnet" \| "testnet" \| "futurenet"` | ✅       | Stellar network to query. Included in WebSocket subscription frames for server-side routing.    |
 
 `apiUrl` and `apiKey` may be omitted from the config object; an explicit
 value always takes precedence, but the SDK falls back to the
-`TRIDENT_BASE_URL` / `TRIDENT_API_KEY` environment variables (Node.js only —
+`SENTINEL_BASE_URL` / `SENTINEL_API_KEY` environment variables (Node.js only —
 `process.env` is not read in browser bundles). If neither source provides a
-value, the constructor throws a `TridentError` with `code: "CONFIG"`. The
+value, the constructor throws a `SentinelError` with `code: "CONFIG"`. The
 API key is never logged: `client.toString()` and Node's `util.inspect`
 output redact it (e.g. `***a1b2`).
 
@@ -135,7 +135,7 @@ queryEvents(params: QueryEventsParams): Promise<PaginatedEvents>
 
 **Returns:** `Promise<PaginatedEvents>`
 
-**Throws:** `TridentError` on network failure, auth failure, or server error.
+**Throws:** `SentinelError` on network failure, auth failure, or server error.
 
 ---
 
@@ -157,7 +157,7 @@ getEventById(params: GetEventByIdParams): Promise<SorobanEvent>
 
 **Returns:** `Promise<SorobanEvent>`
 
-**Throws:** `TridentError` with `code: "NOT_FOUND"` if the event does not exist.
+**Throws:** `SentinelError` with `code: "NOT_FOUND"` if the event does not exist.
 
 ---
 
@@ -188,17 +188,17 @@ subscribeToContract(params: SubscribeToContractParams): Subscription
 
 ## Error Handling
 
-All methods throw `TridentError` on failure. Branch on `error.code` to handle specific cases:
+All methods throw `SentinelError` on failure. Branch on `error.code` to handle specific cases:
 
 ```typescript
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({ apiUrl: "...", apiKey: "...", network: "testnet" });
+const client = new SentinelClient({ apiUrl: "...", apiKey: "...", network: "testnet" });
 
 try {
   const event = await client.getEventById({ id: "550e8400-e29b-41d4-a716-446655440000" });
 } catch (err) {
-  if (err instanceof TridentError) {
+  if (err instanceof SentinelError) {
     switch (err.code) {
       case "NOT_FOUND":
         console.error("Event not found");
@@ -240,18 +240,18 @@ import type {
   EventType,
   PaginatedEvents,
   Subscription,
-  TridentClientConfig,
+  SentinelClientConfig,
   QueryEventsParams,
   GetEventByIdParams,
   SubscribeToContractParams,
-  TridentErrorCode,
-} from "@trident-indexer/sdk";
+  SentinelErrorCode,
+} from "@sentinel-indexer/sdk";
 ```
 
 The client also exposes `iterEvents(params, options?)`, an auto-paginating
 `AsyncIterable<SorobanEvent>` that follows the server cursor until
 `hasMore === false`. It fetches at most `options.maxPages` pages (default `100`),
-throwing `TridentError(code: "ITERATION_LIMIT")` if exceeded; `TridentError`s
+throwing `SentinelError(code: "ITERATION_LIMIT")` if exceeded; `SentinelError`s
 from page requests propagate out of the `for await` loop unchanged. Also
 exported standalone as `iterEvents(queryEvents, params, options?)`.
 
@@ -326,14 +326,14 @@ The SDK works seamlessly in both browser and Node.js environments.
 
 ### Custom WebSocket Implementation
 
-If you want to provide a specific custom WebSocket implementation (e.g., for unit testing or to force a specific client), you can pass it to the `TridentClient` constructor via the `webSocketImpl` option:
+If you want to provide a specific custom WebSocket implementation (e.g., for unit testing or to force a specific client), you can pass it to the `SentinelClient` constructor via the `webSocketImpl` option:
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 import CustomWebSocket from "ws";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.io",
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.io",
   apiKey: "your-api-key",
   network: "mainnet",
   webSocketImpl: CustomWebSocket,
@@ -377,7 +377,7 @@ dist/
 1. Fork the repo and create a branch from `main`.
 2. Add or update tests in `tests/` for any changed behaviour.
 3. Run `npm test` and `npm run lint` — both must pass before opening a PR.
-4. Open a pull request against `Telocel-Labs/Trident` and link any relevant issues.
+4. Open a pull request against `A4-Stellar/Sentinel` and link any relevant issues.
 
 ---
 

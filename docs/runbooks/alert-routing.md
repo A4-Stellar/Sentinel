@@ -84,7 +84,7 @@ receivers:
     # --- Slack ---
     slack_configs:
       - api_url: "<SLACK_WEBHOOK_URL>"
-        channel: "#trident-alerts"
+        channel: "#sentinel-alerts"
         title: '[{{ .Status | toUpper }}] {{ .CommonAnnotations.summary }}'
         text: '{{ .CommonAnnotations.description }}'
         send_resolved: true
@@ -97,24 +97,24 @@ inhibit_rules:
   # Suppress the warning-level lag alert when the critical one is already firing
   # for the same instance — reduces duplicate noise.
   - source_match:
-      alertname: TridentIndexerLagCritical
+      alertname: SentinelIndexerLagCritical
     target_match:
-      alertname: TridentIndexerLagWarning
+      alertname: SentinelIndexerLagWarning
     equal: ["instance"]
 
   # Suppress dependency and pool alerts when the API process is already down —
   # the process-down alert is the signal; the rest is noise.
   - source_match:
-      alertname: TridentAPIProcessDown
+      alertname: SentinelAPIProcessDown
     target_match_re:
-      alertname: "^(TridentAPIDependencyUnhealthy|TridentAPIDBPoolSaturated|TridentAPIHTTP5xxRate.*)$"
+      alertname: "^(SentinelAPIDependencyUnhealthy|SentinelAPIDBPoolSaturated|SentinelAPIHTTP5xxRate.*)$"
     equal: ["job"]
 
   # Same for the indexer: suppress heartbeat/metrics alerts when process is down.
   - source_match:
-      alertname: TridentIndexerProcessDown
+      alertname: SentinelIndexerProcessDown
     target_match_re:
-      alertname: "^(TridentIndexerHeartbeatStale|TridentIndexerMetricsMissing|TridentIndexerLag.*)$"
+      alertname: "^(SentinelIndexerHeartbeatStale|SentinelIndexerMetricsMissing|SentinelIndexerLag.*)$"
     equal: ["job"]
 ```
 
@@ -206,7 +206,7 @@ team notification channel (Slack / Discord) but does **not** produce a page.
 
 ### Step 4 — confirm inhibit rules
 
-Fire `TridentIndexerProcessDown` and `TridentIndexerLagWarning` simultaneously
+Fire `SentinelIndexerProcessDown` and `SentinelIndexerLagWarning` simultaneously
 and confirm only the process-down alert appears in the pager — the lag warning
 should be suppressed by the inhibit rule.
 

@@ -7,8 +7,8 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::EnvFilter;
 
-pub mod trident {
-    tonic::include_proto!("trident");
+pub mod sentinel {
+    tonic::include_proto!("sentinel");
 }
 
 mod config;
@@ -41,7 +41,7 @@ fn init_tracer() -> Option<opentelemetry_sdk::trace::Tracer> {
                     sampling_ratio,
                 ))
                 .with_resource(opentelemetry_sdk::Resource::new(vec![
-                    opentelemetry::KeyValue::new("service.name", "trident-grpc-api"),
+                    opentelemetry::KeyValue::new("service.name", "sentinel-grpc-api"),
                 ])),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
@@ -92,7 +92,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let addr: SocketAddr = cfg.grpc_addr.parse()?;
 
-    tracing::info!(%addr, "Trident gRPC server listening");
+    tracing::info!(%addr, "Sentinel gRPC server listening");
 
     let events_service = services::events::EventsServiceImpl::new(db_pool, redis_manager);
 
@@ -120,7 +120,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     server_builder
-        .add_service(trident::events_server::EventsServer::new(events_service))
+        .add_service(sentinel::events_server::EventsServer::new(events_service))
         .serve(addr)
         .await?;
 

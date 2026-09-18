@@ -12,8 +12,8 @@
 #
 # Example (staging):
 #   ./scripts/verify-alert-metrics.sh \
-#     https://api-staging.trident.example/metrics \
-#     https://indexer-staging.trident.example/metrics
+#     https://api-staging.sentinel.example/metrics \
+#     https://indexer-staging.sentinel.example/metrics
 #
 # Exit codes:
 #   0 - all referenced metrics exist
@@ -61,7 +61,7 @@ echo "✓ Fetched indexer metrics ($(echo "$INDEXER_METRICS" | wc -l) lines)"
 # A counter or histogram with no observations yet prints its HELP/TYPE header
 # and no samples, so sample lines alone would report a perfectly good metric
 # as missing purely because nothing had exercised it — which is the normal
-# state for `trident_api_http_requests_total` on a freshly started API. We
+# state for `sentinel_api_http_requests_total` on a freshly started API. We
 # are checking that a name exists, not that traffic has happened, so a
 # declaration counts.
 #
@@ -100,7 +100,7 @@ echo "=== Extracting metric names from alert rules ==="
 # keywords and functions, anything inside a `{...}` label selector (label keys
 # and values), and any bare token with no `_` or `:` in it. That last rule is
 # what keeps `GET`, `api`, `v1`, `up`, `job` and friends out — every metric we
-# emit is namespaced (`trident_*`) or a recording rule (`trident:*`).
+# emit is namespaced (`sentinel_*`) or a recording rule (`sentinel:*`).
 extract_metrics_from_alerts() {
   python3 - "$1" <<'PYEOF'
 import re, sys, yaml
@@ -118,8 +118,8 @@ FUNCS = {
     "sort_desc","timestamp","year","month","day_of_month","days_in_month",
 }
 
-# Prefixes owned by exporters we deploy alongside Trident rather than by
-# Trident itself. A metric under one of these is verified by that exporter
+# Prefixes owned by exporters we deploy alongside Sentinel rather than by
+# Sentinel itself. A metric under one of these is verified by that exporter
 # being present in the deployment, which is a different check from this one.
 EXTERNAL_EXPORTER_PREFIXES = ("node_", "pg_", "redis_", "container_")
 
@@ -146,7 +146,7 @@ for group in doc.get("groups") or []:
             # own inputs are checked when its `record:` rule is scanned.
             if ":" in tok:
                 continue
-            # Metrics exported by a different agent, not by Trident. Disk
+            # Metrics exported by a different agent, not by Sentinel. Disk
             # capacity alerts (issue #432) read node_exporter's filesystem
             # series, which will never appear on the API or indexer /metrics
             # endpoints — the indexer does not, and should not, report the

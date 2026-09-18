@@ -1,6 +1,6 @@
 {
-  "title": "Trident Indexer — RPC Provider Health",
-  "uid": "trident-rpc-health",
+  "title": "Sentinel Indexer — RPC Provider Health",
+  "uid": "sentinel-rpc-health",
   "description": "RPC call latency, error rate, and active-endpoint/failover status for the Stellar RPC pool the indexer depends on (issue #294). Pairs with docs/observability/event-delivery.md.",
   "schemaVersion": 39,
   "version": 1,
@@ -8,7 +8,7 @@
   "timezone": "utc",
   "time": { "from": "now-6h", "to": "now" },
   "refresh": "30s",
-  "tags": ["trident", "indexer", "rpc"],
+  "tags": ["sentinel", "indexer", "rpc"],
   "templating": {
     "list": [
       {
@@ -23,7 +23,7 @@
         "type": "query",
         "label": "RPC method",
         "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "query": "label_values(trident_indexer_rpc_call_duration_seconds_count, method)",
+        "query": "label_values(sentinel_indexer_rpc_call_duration_seconds_count, method)",
         "includeAll": true,
         "multi": true,
         "current": { "text": "All", "value": "$__all" },
@@ -45,17 +45,17 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.50, sum(rate(trident_indexer_rpc_call_duration_seconds_bucket{method=~\"$method\"}[5m])) by (le, method))",
+          "expr": "histogram_quantile(0.50, sum(rate(sentinel_indexer_rpc_call_duration_seconds_bucket{method=~\"$method\"}[5m])) by (le, method))",
           "legendFormat": "p50 {{method}}"
         },
         {
           "refId": "B",
-          "expr": "histogram_quantile(0.95, sum(rate(trident_indexer_rpc_call_duration_seconds_bucket{method=~\"$method\"}[5m])) by (le, method))",
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_indexer_rpc_call_duration_seconds_bucket{method=~\"$method\"}[5m])) by (le, method))",
           "legendFormat": "p95 {{method}}"
         },
         {
           "refId": "C",
-          "expr": "histogram_quantile(0.99, sum(rate(trident_indexer_rpc_call_duration_seconds_bucket{method=~\"$method\"}[5m])) by (le, method))",
+          "expr": "histogram_quantile(0.99, sum(rate(sentinel_indexer_rpc_call_duration_seconds_bucket{method=~\"$method\"}[5m])) by (le, method))",
           "legendFormat": "p99 {{method}}"
         }
       ]
@@ -73,7 +73,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(trident_indexer_rpc_call_duration_seconds_count{method=~\"$method\"}[5m])) by (method, endpoint)",
+          "expr": "sum(rate(sentinel_indexer_rpc_call_duration_seconds_count{method=~\"$method\"}[5m])) by (method, endpoint)",
           "legendFormat": "{{method}} (endpoint {{endpoint}})"
         }
       ]
@@ -91,7 +91,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(trident_indexer_rpc_errors_total{method=~\"$method\"}[5m])) by (error_type)",
+          "expr": "sum(rate(sentinel_indexer_rpc_errors_total{method=~\"$method\"}[5m])) by (error_type)",
           "legendFormat": "{{error_type}}"
         }
       ]
@@ -109,7 +109,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(trident_indexer_rpc_errors_total{method=~\"$method\"}[5m])) / sum(rate(trident_indexer_rpc_call_duration_seconds_count{method=~\"$method\"}[5m]))",
+          "expr": "sum(rate(sentinel_indexer_rpc_errors_total{method=~\"$method\"}[5m])) / sum(rate(sentinel_indexer_rpc_call_duration_seconds_count{method=~\"$method\"}[5m]))",
           "legendFormat": "error ratio"
         }
       ]
@@ -133,7 +133,7 @@
         "overrides": []
       },
       "targets": [
-        { "refId": "A", "expr": "trident_indexer_rpc_active_endpoint", "legendFormat": "endpoint index" }
+        { "refId": "A", "expr": "sentinel_indexer_rpc_active_endpoint", "legendFormat": "endpoint index" }
       ]
     },
     {
@@ -155,7 +155,7 @@
         "overrides": []
       },
       "targets": [
-        { "refId": "A", "expr": "increase(trident_indexer_rpc_failovers_total[1h])", "legendFormat": "failovers" }
+        { "refId": "A", "expr": "increase(sentinel_indexer_rpc_failovers_total[1h])", "legendFormat": "failovers" }
       ]
     },
     {
@@ -178,7 +178,7 @@
         "overrides": []
       },
       "targets": [
-        { "refId": "A", "expr": "sum(rate(trident_indexer_rpc_timeouts_total[5m]))", "legendFormat": "timeouts/s" }
+        { "refId": "A", "expr": "sum(rate(sentinel_indexer_rpc_timeouts_total[5m]))", "legendFormat": "timeouts/s" }
       ]
     },
     {
@@ -201,7 +201,7 @@
         "overrides": []
       },
       "targets": [
-        { "refId": "A", "expr": "sum(rate(trident_indexer_rpc_retries_total[5m]))", "legendFormat": "retries/s" }
+        { "refId": "A", "expr": "sum(rate(sentinel_indexer_rpc_retries_total[5m]))", "legendFormat": "retries/s" }
       ]
     }
   ]

@@ -1,6 +1,6 @@
 # Webhook Signature Test Vectors
 
-Published test vectors for the Trident webhook signing scheme (issue #452).
+Published test vectors for the Sentinel webhook signing scheme (issue #452).
 Use these to validate your receiver implementation offline before wiring it
 up to a live subscription.
 
@@ -10,8 +10,8 @@ Every delivery POSTs a JSON body and two headers:
 
 | Header | Description |
 |---|---|
-| `X-Trident-Timestamp` | Unix seconds (integer, decimal string) when the delivery was issued |
-| `X-Trident-Signature` | `sha256=<lowercase hex>` — HMAC-SHA256 of the signed message (see below) |
+| `X-Sentinel-Timestamp` | Unix seconds (integer, decimal string) when the delivery was issued |
+| `X-Sentinel-Signature` | `sha256=<lowercase hex>` — HMAC-SHA256 of the signed message (see below) |
 
 **Signed message:** the timestamp and raw body bytes, concatenated:
 
@@ -19,7 +19,7 @@ Every delivery POSTs a JSON body and two headers:
 message = "<timestamp>.<raw_body>"
 ```
 
-where `<timestamp>` is the decimal integer from `X-Trident-Timestamp`, `.` is
+where `<timestamp>` is the decimal integer from `X-Sentinel-Timestamp`, `.` is
 a literal ASCII period, and `<raw_body>` is the exact bytes of the HTTP
 request body — not re-serialised, not pretty-printed.
 
@@ -39,7 +39,7 @@ def compute_signature(timestamp: int, body: bytes, secret: str) -> str:
 
 ## Replay protection
 
-The `X-Trident-Timestamp` header is bound into the signature, so an old
+The `X-Sentinel-Timestamp` header is bound into the signature, so an old
 delivery cannot be replayed with a different timestamp. Receivers **must**
 reject deliveries where the timestamp differs from the current wall clock by
 more than the tolerance window. The recommended window is **300 seconds**
@@ -48,10 +48,10 @@ more than the tolerance window. The recommended window is **300 seconds**
 ## Secret rotation
 
 During an overlap window after `POST /v1/webhooks/{id}/rotate-secret`,
-the `X-Trident-Signature` header contains **two** space-separated signatures:
+the `X-Sentinel-Signature` header contains **two** space-separated signatures:
 
 ```
-X-Trident-Signature: sha256=<new_sig> sha256=<old_sig>
+X-Sentinel-Signature: sha256=<new_sig> sha256=<old_sig>
 ```
 
 Receivers **must** accept a delivery if either token matches their active
@@ -62,16 +62,16 @@ secret and they check all tokens.
 ## Verification procedure
 
 1. **Read the raw body bytes** before any JSON parsing.
-2. **Parse `X-Trident-Timestamp`** as a decimal integer. Reject if missing
+2. **Parse `X-Sentinel-Timestamp`** as a decimal integer. Reject if missing
    or non-numeric.
 3. **Check the timestamp age.** `abs(now_unix - timestamp) > 300` → reject
    as a potential replay.
 4. **Compute the expected signature:**
    `sha256=HMAC-SHA256(key=secret, message=f"{timestamp}.{raw_body}")`
-5. **Compare** each space-separated token in `X-Trident-Signature` against
+5. **Compare** each space-separated token in `X-Sentinel-Signature` against
    the expected value using a **constant-time** comparison. Accept if any
    token matches.
-6. **Return 2xx** on success; return 4xx (not 5xx) on rejection so Trident
+6. **Return 2xx** on success; return 4xx (not 5xx) on rejection so Sentinel
    does not retry a rejected delivery.
 
 ## Test vectors
@@ -128,7 +128,7 @@ tolerance window. All four include the test vectors above as test cases.
 | SDK | Module | Function |
 |---|---|---|
 | Go | `sdk/go/webhook.go` | `VerifyWebhookSignature` |
-| Python | `sdk/python/src/trident_indexer/webhook.py` | `verify_signature` |
+| Python | `sdk/python/src/sentinel_indexer/webhook.py` | `verify_signature` |
 | TypeScript | `sdk/typescript/src/webhook.ts` | `verifySignature` |
 | Rust | `sdk/rust/src/webhook.rs` | `verify_signature` |
 

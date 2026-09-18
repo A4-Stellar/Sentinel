@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 )
 
 // defaultMaxBodyBytes is the default cap applied to request bodies on

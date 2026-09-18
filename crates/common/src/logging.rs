@@ -1,11 +1,11 @@
-//! Shared structured-logging setup for all Trident Rust services.
+//! Shared structured-logging setup for all Sentinel Rust services.
 //!
 //! Emits one JSON object per log line with a schema that matches the Go API's
 //! `slog` output, so a log aggregator can parse both stacks identically:
 //!
 //! ```json
-//! {"service":"trident-indexer","level":"info","timestamp":"2024-01-01T00:00:00Z",
-//!  "target":"trident_indexer","message":"...","request_id":"...","trace_id":"..."}
+//! {"service":"sentinel-indexer","level":"info","timestamp":"2024-01-01T00:00:00Z",
+//!  "target":"sentinel_indexer","message":"...","request_id":"...","trace_id":"..."}
 //! ```
 //!
 //! `request_id` / `trace_id` are pulled from the surrounding `tracing` span, so
@@ -39,7 +39,7 @@ pub fn init(service: &'static str) {
 }
 
 /// A `tracing` layer that serialises each event to a single JSON line using the
-/// shared Trident log schema, writing through the supplied `MakeWriter`.
+/// shared Sentinel log schema, writing through the supplied `MakeWriter`.
 pub struct JsonLayer<W> {
     service: &'static str,
     make_writer: W,
@@ -210,7 +210,7 @@ mod tests {
     fn event_line_has_shared_schema_fields() {
         let buf = SharedBuffer::new();
         let subscriber =
-            tracing_subscriber::registry().with(JsonLayer::new("trident-test", buf.clone()));
+            tracing_subscriber::registry().with(JsonLayer::new("sentinel-test", buf.clone()));
 
         tracing::subscriber::with_default(subscriber, || {
             tracing::info!(answer = 42, "hello");
@@ -218,7 +218,7 @@ mod tests {
 
         let line = buf.contents();
         let v: serde_json::Value = serde_json::from_str(line.trim()).expect("valid JSON line");
-        assert_eq!(v["service"], "trident-test");
+        assert_eq!(v["service"], "sentinel-test");
         assert_eq!(v["level"], "info");
         assert_eq!(v["message"], "hello");
         assert_eq!(v["answer"], 42);
@@ -229,7 +229,7 @@ mod tests {
     fn request_scoped_log_carries_correlation_ids() {
         let buf = SharedBuffer::new();
         let subscriber =
-            tracing_subscriber::registry().with(JsonLayer::new("trident-test", buf.clone()));
+            tracing_subscriber::registry().with(JsonLayer::new("sentinel-test", buf.clone()));
 
         tracing::subscriber::with_default(subscriber, || {
             let span =

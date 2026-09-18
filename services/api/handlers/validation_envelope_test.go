@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 	"github.com/jackc/pgx/v5"
 )
 

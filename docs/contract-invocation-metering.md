@@ -23,7 +23,7 @@ unavailable for the majority of deployments.
 
 ## Decision for the MVP
 
-Trident persists the fields that are **unconditionally available** from
+Sentinel persists the fields that are **unconditionally available** from
 `getTransaction` — `feeCharged` (exact) and the declared `SorobanResources`
 (instructions / disk_read_bytes / write_bytes, an accurate upper bound rather
 than a measured value) — and records this in a `provenance` column

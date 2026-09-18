@@ -8,13 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 )
 
 func okStats(context.Context) (*handlers.DBStats, error) {
 	return &handlers.DBStats{
-		Pools: []map[string]any{{"database": "trident", "cl_active": int64(3)}},
-		Stats: []map[string]any{{"database": "trident", "total_query_count": int64(42)}},
+		Pools: []map[string]any{{"database": "sentinel", "cl_active": int64(3)}},
+		Stats: []map[string]any{{"database": "sentinel", "total_query_count": int64(42)}},
 	}, nil
 }
 
@@ -76,8 +76,8 @@ func TestAdminDB_ValidKey_Returns200WithStats(t *testing.T) {
 	if len(body.Pools) != 1 || len(body.Stats) != 1 {
 		t.Errorf("want 1 pool and 1 stat row, got %d pools / %d stats", len(body.Pools), len(body.Stats))
 	}
-	if body.Pools[0]["database"] != "trident" {
-		t.Errorf("want pools[0].database=trident, got %v", body.Pools[0]["database"])
+	if body.Pools[0]["database"] != "sentinel" {
+		t.Errorf("want pools[0].database=sentinel, got %v", body.Pools[0]["database"])
 	}
 }
 

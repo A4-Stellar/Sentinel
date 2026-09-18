@@ -12,7 +12,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  ORG: telocel-labs
+  ORG: a4-stellar
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -55,8 +55,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-indexer:${{ github.ref_name }}
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-indexer:latest
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-indexer:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-indexer:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -93,8 +93,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-grpc-api:${{ github.ref_name }}
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-grpc-api:latest
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-grpc-api:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-grpc-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -135,8 +135,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-go-api:${{ github.ref_name }}
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-go-api:latest
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-go-api:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-go-api:latest
           build-args: |
             VERSION=${{ github.ref_name }}
             COMMIT_SHA=${{ github.sha }}
@@ -177,8 +177,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-migrate:${{ github.ref_name }}
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-migrate:latest
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-migrate:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-migrate:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -242,10 +242,10 @@ jobs:
 
           | Image | Digest |
           |-------|--------|
-          | trident-indexer | ${{ needs.build-indexer.outputs.digest }} |
-          | trident-grpc-api | ${{ needs.build-grpc-api.outputs.digest }} |
-          | trident-go-api | ${{ needs.build-go-api.outputs.digest }} |
-          | trident-migrate | ${{ needs.build-migrate.outputs.digest }} |
+          | sentinel-indexer | ${{ needs.build-indexer.outputs.digest }} |
+          | sentinel-grpc-api | ${{ needs.build-grpc-api.outputs.digest }} |
+          | sentinel-go-api | ${{ needs.build-go-api.outputs.digest }} |
+          | sentinel-migrate | ${{ needs.build-migrate.outputs.digest }} |
           EOF
 
       - name: Create GitHub Release
@@ -259,16 +259,16 @@ jobs:
             Pull the images for this release:
 
             ```bash
-            docker pull ghcr.io/${{ env.ORG }}/trident-indexer:${{ github.ref_name }}
-            docker pull ghcr.io/${{ env.ORG }}/trident-grpc-api:${{ github.ref_name }}
-            docker pull ghcr.io/${{ env.ORG }}/trident-go-api:${{ github.ref_name }}
-            docker pull ghcr.io/${{ env.ORG }}/trident-migrate:${{ github.ref_name }}
+            docker pull ghcr.io/${{ env.ORG }}/sentinel-indexer:${{ github.ref_name }}
+            docker pull ghcr.io/${{ env.ORG }}/sentinel-grpc-api:${{ github.ref_name }}
+            docker pull ghcr.io/${{ env.ORG }}/sentinel-go-api:${{ github.ref_name }}
+            docker pull ghcr.io/${{ env.ORG }}/sentinel-migrate:${{ github.ref_name }}
             ```
 
             ## TypeScript SDK
 
             ```bash
-            npm install @trident-indexer/sdk@${{ github.ref_name }}
+            npm install @sentinel-indexer/sdk@${{ github.ref_name }}
             ```
 
             ---

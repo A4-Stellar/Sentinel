@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 )
 
 // Resolver and transport tests for GraphQL query parity (issue #223).

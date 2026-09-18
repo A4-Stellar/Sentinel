@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
@@ -64,7 +64,7 @@ func TestPerIPRateLimit_ExceedingIPBlocked_OtherIPUnaffected(t *testing.T) {
 }
 
 // TestPerIPRateLimit_RejectionRecordsPrometheusMetric verifies a 429 from the
-// per-IP limiter increments trident_ratelimit_rejections_total{limiter="per_ip"}
+// per-IP limiter increments sentinel_ratelimit_rejections_total{limiter="per_ip"}
 // (issue #58).
 func TestPerIPRateLimit_RejectionRecordsPrometheusMetric(t *testing.T) {
 	handler := PerIPRateLimit(PerIPRateLimitConfig{
@@ -96,7 +96,7 @@ func TestPerIPRateLimit_RejectionRecordsPrometheusMetric(t *testing.T) {
 }
 
 // TestGlobalConcurrencyLimit_RejectionRecordsPrometheusMetric verifies a shed
-// request increments trident_ratelimit_rejections_total{limiter="global_concurrency"}.
+// request increments sentinel_ratelimit_rejections_total{limiter="global_concurrency"}.
 func TestGlobalConcurrencyLimit_RejectionRecordsPrometheusMetric(t *testing.T) {
 	release := make(chan struct{})
 	started := make(chan struct{}, 1)

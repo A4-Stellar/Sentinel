@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 )
 
 // withCapturedLogs installs a JSON slog handler writing into buf as the
@@ -137,7 +137,7 @@ func TestStructuredLogging_OmitsAPIKeyIDWhenUnauthenticated(t *testing.T) {
 func TestStructuredLogging_NeverLogsTheRawAPIKey(t *testing.T) {
 	buf := withCapturedLogs(t)
 
-	const rawKey = "trident_super-secret-key-value-do-not-log"
+	const rawKey = "sentinel_super-secret-key-value-do-not-log"
 	final := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only the opaque, non-secret key id belongs in logs.
 		middleware.SetLogAPIKeyID(r.Context(), "key-id-not-the-raw-key")

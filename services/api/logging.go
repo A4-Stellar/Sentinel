@@ -39,7 +39,7 @@ func initLogger() {
 	// line, including ones StructuredLogging never sees (a slog.Error inside
 	// a handler, a background job, a websocket debug log), not just the
 	// per-request summary line.
-	slog.SetDefault(slog.New(handler).With(slog.String("service", "trident-api")))
+	slog.SetDefault(slog.New(handler).With(slog.String("service", "sentinel-api")))
 }
 
 func parseLogLevel(s string) (slog.Level, error) {

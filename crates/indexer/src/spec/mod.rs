@@ -19,7 +19,7 @@ use stellar_xdr::curr::{
     LedgerKeyContractCode, LedgerKeyContractData, Limited, Limits, ReadXdr, ScAddress,
     ScContractInstance, ScSpecEntry, ScVal, WriteXdr,
 };
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 use crate::rpc::RpcClient;
 
@@ -57,27 +57,27 @@ impl SpecCache {
 }
 
 /// Build the `ScAddress` for a contract strkey (`C...`).
-pub(crate) fn contract_address(contract_id: &str) -> Result<ScAddress, TridentError> {
+pub(crate) fn contract_address(contract_id: &str) -> Result<ScAddress, SentinelError> {
     let strkey = stellar_strkey::Contract::from_string(contract_id).map_err(|e| {
-        TridentError::parse(anyhow::anyhow!("invalid contract id {contract_id}: {e}"))
+        SentinelError::parse(anyhow::anyhow!("invalid contract id {contract_id}: {e}"))
     })?;
     Ok(ScAddress::Contract(ContractId(Hash(strkey.0))))
 }
 
-fn encode_key(key: &LedgerKey) -> Result<String, TridentError> {
+fn encode_key(key: &LedgerKey) -> Result<String, SentinelError> {
     let mut buf = Vec::new();
     key.write_xdr(&mut Limited::new(&mut buf, Limits::none()))
-        .map_err(|e| TridentError::parse(anyhow::Error::new(e).context("encode LedgerKey")))?;
+        .map_err(|e| SentinelError::parse(anyhow::Error::new(e).context("encode LedgerKey")))?;
     Ok(STANDARD.encode(buf))
 }
 
-fn decode_entry(xdr_b64: &str) -> Result<LedgerEntryData, TridentError> {
+fn decode_entry(xdr_b64: &str) -> Result<LedgerEntryData, SentinelError> {
     let bytes = STANDARD.decode(xdr_b64).map_err(|e| {
-        TridentError::parse(anyhow::Error::new(e).context("base64 decode ledger entry"))
+        SentinelError::parse(anyhow::Error::new(e).context("base64 decode ledger entry"))
     })?;
     let mut cursor = std::io::Cursor::new(bytes);
     LedgerEntryData::read_xdr(&mut Limited::new(&mut cursor, Limits::none())).map_err(|e| {
-        TridentError::parse(anyhow::Error::new(e).context("XDR decode LedgerEntryData"))
+        SentinelError::parse(anyhow::Error::new(e).context("XDR decode LedgerEntryData"))
     })
 }
 
@@ -85,7 +85,7 @@ fn decode_entry(xdr_b64: &str) -> Result<LedgerEntryData, TridentError> {
 /// contract-instance ledger entry. `Ok(None)` covers every "no spec
 /// available" case: no instance entry (not a Soroban contract / archived),
 /// or a Stellar Asset Contract (built-in, no WASM).
-async fn fetch_code_hash(rpc: &RpcClient, contract_id: &str) -> Result<Option<Hash>, TridentError> {
+async fn fetch_code_hash(rpc: &RpcClient, contract_id: &str) -> Result<Option<Hash>, SentinelError> {
     let instance_key = LedgerKey::ContractData(LedgerKeyContractData {
         contract: contract_address(contract_id)?,
         key: ScVal::LedgerKeyContractInstance,
@@ -114,7 +114,7 @@ async fn fetch_code_hash(rpc: &RpcClient, contract_id: &str) -> Result<Option<Ha
 
 /// Fetch the WASM bytecode for a given code hash via its contract-code
 /// ledger entry.
-async fn fetch_wasm(rpc: &RpcClient, hash: &Hash) -> Result<Vec<u8>, TridentError> {
+async fn fetch_wasm(rpc: &RpcClient, hash: &Hash) -> Result<Vec<u8>, SentinelError> {
     let code_key = LedgerKey::ContractCode(LedgerKeyContractCode { hash: hash.clone() });
     let entries = rpc.get_ledger_entries(&[encode_key(&code_key)?]).await?;
     let Some(entry) = entries.first() else {
@@ -226,7 +226,7 @@ pub async fn fetch_contract_spec(
     rpc: &RpcClient,
     cache: &SpecCache,
     contract_id: &str,
-) -> Result<Option<ContractSpec>, TridentError> {
+) -> Result<Option<ContractSpec>, SentinelError> {
     let Some(hash) = fetch_code_hash(rpc, contract_id).await? else {
         return Ok(None);
     };

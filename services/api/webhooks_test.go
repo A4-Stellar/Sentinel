@@ -58,8 +58,8 @@ func TestDeliverWebhookSendsTimestampAndSignedPayload(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotCT = r.Header.Get("Content-Type")
-		gotSignature = r.Header.Get("X-Trident-Signature")
-		gotTimestamp = r.Header.Get("X-Trident-Timestamp")
+		gotSignature = r.Header.Get("X-Sentinel-Signature")
+		gotTimestamp = r.Header.Get("X-Sentinel-Timestamp")
 		var err error
 		gotBody, err = io.ReadAll(r.Body)
 		if err != nil {
@@ -92,14 +92,14 @@ func TestDeliverWebhookSendsTimestampAndSignedPayload(t *testing.T) {
 		t.Fatalf("unexpected Content-Type: %q", gotCT)
 	}
 	if gotTimestamp == "" {
-		t.Fatal("expected X-Trident-Timestamp header")
+		t.Fatal("expected X-Sentinel-Timestamp header")
 	}
 	ts, err := strconv.ParseInt(gotTimestamp, 10, 64)
 	if err != nil || ts <= 0 {
-		t.Fatalf("X-Trident-Timestamp is not a valid unix second: %q", gotTimestamp)
+		t.Fatalf("X-Sentinel-Timestamp is not a valid unix second: %q", gotTimestamp)
 	}
 	if gotSignature == "" {
-		t.Fatal("expected X-Trident-Signature header")
+		t.Fatal("expected X-Sentinel-Signature header")
 	}
 	expected := "sha256=" + signWebhookPayload(ts, string(gotBody), sub.Secret)
 	if gotSignature != expected {

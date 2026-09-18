@@ -1,4 +1,4 @@
-# Default values for the Trident Helm chart.
+# Default values for the Sentinel Helm chart.
 # Sensitive environment variables (DATABASE_URL, REDIS_URL, API keys) must be
 # placed in a Kubernetes Secret referenced by global.existingSecret — raw
 # values should never appear in values.yaml or be committed to version control.
@@ -13,7 +13,7 @@ global:
   # true below — the operator writes/syncs into a Secret with this same
   # name, so every deployment's secretKeyRef keeps working unmodified
   # regardless of which provisioning method populates it.
-  existingSecret: trident-secrets
+  existingSecret: sentinel-secrets
   imagePullPolicy: IfNotPresent
   # Optional: imagePullSecrets for private registries
   imagePullSecrets: []
@@ -33,34 +33,34 @@ global:
     # backend (Vault, AWS Secrets Manager, GCP Secret Manager, etc.) — see
     # https://external-secrets.io/latest/api/secretstore/ for how to create one.
     secretStoreRef:
-      name: trident-secret-store
+      name: sentinel-secret-store
       kind: ClusterSecretStore
     refreshInterval: 1h
     # Maps each key the chart's Secret needs (DATABASE_URL, REDIS_URL,
     # ADMIN_API_KEY, API_KEY_SALT, STELLAR_RPC_URL) to its path in the backend.
     # Defaults assume a
-    # single JSON/KV secret at "trident/prod" with matching keys —
+    # single JSON/KV secret at "sentinel/prod" with matching keys —
     # override remoteRef.key / .property per backend layout.
     data:
       - secretKey: DATABASE_URL
         remoteRef:
-          key: trident/prod
+          key: sentinel/prod
           property: DATABASE_URL
       - secretKey: REDIS_URL
         remoteRef:
-          key: trident/prod
+          key: sentinel/prod
           property: REDIS_URL
       - secretKey: ADMIN_API_KEY
         remoteRef:
-          key: trident/prod
+          key: sentinel/prod
           property: ADMIN_API_KEY
       - secretKey: API_KEY_SALT
         remoteRef:
-          key: trident/prod
+          key: sentinel/prod
           property: API_KEY_SALT
       - secretKey: STELLAR_RPC_URL
         remoteRef:
-          key: trident/prod
+          key: sentinel/prod
           property: STELLAR_RPC_URL
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ global:
 migrations:
   enabled: true
   image:
-    repository: ghcr.io/telocel-labs/trident-migrate
+    repository: ghcr.io/a4-stellar/sentinel-migrate
     tag: latest
   resources:
     requests:
@@ -95,7 +95,7 @@ migrations:
 # ---------------------------------------------------------------------------
 indexer:
   image:
-    repository: ghcr.io/telocel-labs/trident-indexer
+    repository: ghcr.io/a4-stellar/sentinel-indexer
     tag: latest
   replicaCount: 1
   resources:
@@ -107,7 +107,7 @@ indexer:
       memory: "512Mi"
   env:
     # GRPC_ADDR of the Rust gRPC service (in-cluster DNS)
-    GRPC_ADDR: "trident-grpc-api:5000"
+    GRPC_ADDR: "sentinel-grpc-api:5000"
     # Rows per batched INSERT when a page is committed. The page is always one
     # transaction; this caps statement size, not transaction scope.
     DB_BATCH_SIZE: "1000"
@@ -137,7 +137,7 @@ indexer:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  # Matches the `USER trident` (uid 1001) added to crates/indexer/Dockerfile.
+  # Matches the `USER sentinel` (uid 1001) added to crates/indexer/Dockerfile.
   securityContextUid: 1001
 
 # ---------------------------------------------------------------------------
@@ -145,7 +145,7 @@ indexer:
 # ---------------------------------------------------------------------------
 grpcApi:
   image:
-    repository: ghcr.io/telocel-labs/trident-grpc-api
+    repository: ghcr.io/a4-stellar/sentinel-grpc-api
     tag: latest
   replicaCount: 1
   service:
@@ -181,7 +181,7 @@ grpcApi:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  # Matches the `USER trident` (uid 1001) added to crates/api/Dockerfile.
+  # Matches the `USER sentinel` (uid 1001) added to crates/api/Dockerfile.
   securityContextUid: 1001
 
 # ---------------------------------------------------------------------------
@@ -189,14 +189,14 @@ grpcApi:
 # ---------------------------------------------------------------------------
 goApi:
   image:
-    repository: ghcr.io/telocel-labs/trident-go-api
+    repository: ghcr.io/a4-stellar/sentinel-go-api
     tag: latest
   replicaCount: 2
   service:
     port: 3000
   env:
     PORT: "3000"
-    GRPC_ADDR: "trident-grpc-api:5000"
+    GRPC_ADDR: "sentinel-grpc-api:5000"
   hpa:
     minReplicas: 2
     maxReplicas: 10
@@ -239,7 +239,7 @@ goApi:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  # Matches the `USER trident` (uid 1001) already set in services/api/Dockerfile.
+  # Matches the `USER sentinel` (uid 1001) already set in services/api/Dockerfile.
   securityContextUid: 1001
   # PodDisruptionBudget: keep at least this many Go API pods up through a
   # voluntary disruption (node drain, rollout). Multi-replica by default
@@ -325,11 +325,11 @@ ingress:
     # nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
     # nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
     # nginx.ingress.kubernetes.io/hsts-preload: "true"
-  host: trident.example.com
+  host: sentinel.example.com
   tls: []
-    # - secretName: trident-tls
+    # - secretName: sentinel-tls
     #   hosts:
-    #     - trident.example.com
+    #     - sentinel.example.com
 
 # ---------------------------------------------------------------------------
 # Internal mTLS between the Go API and the Rust gRPC service (issue #320).
@@ -337,7 +337,7 @@ ingress:
 # existing "TLS terminated at the edge" model. When enabled, both sides
 # authenticate each other using certs mounted from global.existingSecret
 # (never baked into images), reusing the secrets-externalization pattern from
-# issue #305 (see helm/trident/templates/external-secret.yaml). See
+# issue #305 (see helm/sentinel/templates/external-secret.yaml). See
 # docs/kubernetes.md#internal-mtls for the full setup and rotation notes.
 # ---------------------------------------------------------------------------
 internalMTLS:
@@ -349,4 +349,4 @@ internalMTLS:
   #   INTERNAL_SERVER_KEY   - gRPC server private key
   #   INTERNAL_CLIENT_CERT  - Go API client leaf cert
   #   INTERNAL_CLIENT_KEY   - Go API client private key
-  mountPath: /etc/trident/mtls
+  mountPath: /etc/sentinel/mtls

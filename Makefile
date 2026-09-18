@@ -11,7 +11,7 @@ all: dev
 
 help: ## Show this help message
 	@echo ""
-	@echo "Trident — Soroban Event Indexer for Stellar"
+	@echo "Sentinel — Soroban Event Indexer for Stellar"
 	@echo ""
 	@echo "Usage: make <target>"
 	@echo ""
@@ -34,8 +34,8 @@ help: ## Show this help message
 dev: db migrate
 	@echo "Starting indexer, grpc-api, and go-api..."
 	@trap 'kill 0' INT TERM EXIT; \
-	cargo run --bin trident-indexer 2>&1 | sed -e 's/^/[indexer] /' & \
-	cargo run --bin trident-api 2>&1 | sed -e 's/^/[grpc-api] /' & \
+	cargo run --bin sentinel-indexer 2>&1 | sed -e 's/^/[indexer] /' & \
+	cargo run --bin sentinel-api 2>&1 | sed -e 's/^/[grpc-api] /' & \
 	cd services/api && go run main.go 2>&1 | sed -e 's/^/[go-api] /' & \
 	wait
 
@@ -45,7 +45,7 @@ stop:
 db:
 	docker compose -f docker/docker-compose.dev.yml up -d
 	@echo "Waiting for PostgreSQL to be healthy..."
-	@until docker exec $$(docker compose -f docker/docker-compose.dev.yml ps -q postgres) pg_isready -U trident -d trident >/dev/null 2>&1; do \
+	@until docker exec $$(docker compose -f docker/docker-compose.dev.yml ps -q postgres) pg_isready -U sentinel -d sentinel >/dev/null 2>&1; do \
 		sleep 1; \
 	done
 	@echo "PostgreSQL is healthy!"
@@ -65,10 +65,10 @@ migrate:
 	fi
 
 indexer:
-	cargo run --bin trident-indexer
+	cargo run --bin sentinel-indexer
 
 grpc-api:
-	cargo run --bin trident-api
+	cargo run --bin sentinel-api
 
 go-api:
 	cd services/api && go run main.go

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

@@ -221,8 +221,8 @@ Two gauges are exported while the indexer is behind the chain tip:
 
 | Metric | Meaning |
 |---|---|
-| `trident_indexer_catchup_ledgers_per_second` | Backfill rate in ledgers/sec |
-| `trident_indexer_catchup_events_per_second` | Backfill rate in events/sec |
+| `sentinel_indexer_catchup_ledgers_per_second` | Backfill rate in ledgers/sec |
+| `sentinel_indexer_catchup_events_per_second` | Backfill rate in events/sec |
 
 Both are published **only** while the ledger lag exceeds
 `CATCHUP_LAG_THRESHOLD_LEDGERS` (10, in
@@ -243,7 +243,7 @@ in events.
 Catch-up figures are meaningless without the deployment shape that produced
 them. When recording a measurement here, state:
 
-- Indexer CPU/memory limits (`helm/trident/values.yaml`, `indexer.resources`)
+- Indexer CPU/memory limits (`helm/sentinel/values.yaml`, `indexer.resources`)
 - Postgres instance class and whether it is co-located
 - RPC endpoint (public testnet, or a dedicated node) and any rate limits
 - `MAX_EVENTS_PER_POLL` and the poll interval in force
@@ -264,12 +264,12 @@ distinguish them:
 
 | Suspected constraint | Evidence to look at |
 |---|---|
-| RPC page latency | `trident_indexer_rpc_call_duration_seconds{method="getEvents"}` dominates `trident_indexer_poll_duration_seconds` |
-| Decode CPU | `trident_indexer_event_decode_duration_seconds` sums to a large share of the poll cycle; indexer CPU at its limit |
-| DB insert throughput | Poll duration greatly exceeds RPC + decode time; `trident_indexer_db_pool_idle_connections` near zero |
+| RPC page latency | `sentinel_indexer_rpc_call_duration_seconds{method="getEvents"}` dominates `sentinel_indexer_poll_duration_seconds` |
+| Decode CPU | `sentinel_indexer_event_decode_duration_seconds` sums to a large share of the poll cycle; indexer CPU at its limit |
+| DB insert throughput | Poll duration greatly exceeds RPC + decode time; `sentinel_indexer_db_pool_idle_connections` near zero |
 
 Compare the per-cycle sum of RPC and decode time against
-`trident_indexer_poll_duration_seconds`: the unexplained remainder is
+`sentinel_indexer_poll_duration_seconds`: the unexplained remainder is
 predominantly database write time.
 
 ## Launch Soak Baseline
@@ -464,29 +464,29 @@ partition destroys those events irreversibly.
 
 ### Alerting
 
-Three rules in `monitoring/alerts.yml`, under `trident.storage.capacity`:
+Three rules in `monitoring/alerts.yml`, under `sentinel.storage.capacity`:
 
 | Alert | Fires when | Severity |
 |---|---|---|
-| `TridentDiskFillingWithin14Days` | 6h trend projects exhaustion in 14 days | warning |
-| `TridentDiskFillingWithin48Hours` | same projection, inside 48 hours | critical |
-| `TridentDiskSpaceLow` | under 15% free, regardless of trend | warning |
+| `SentinelDiskFillingWithin14Days` | 6h trend projects exhaustion in 14 days | warning |
+| `SentinelDiskFillingWithin48Hours` | same projection, inside 48 hours | critical |
+| `SentinelDiskSpaceLow` | under 15% free, regardless of trend | warning |
 
 The first two use `predict_linear` rather than a static percentage, because a
 "90% full" alert gives about a day of warning at the 10x rate — not enough to
 provision and migrate. Alerting on projected exhaustion buys the lead time that
 a level threshold cannot.
 
-`TridentDiskSpaceLow` is the backstop for what a 6-hour trend cannot see: a step
+`SentinelDiskSpaceLow` is the backstop for what a 6-hour trend cannot see: a step
 change from a backfill, or WAL pinned by a stalled replication slot. Runbooks
 for all three are in
-[`docs/runbooks/alerts.md`](runbooks/alerts.md#tridentdiskfillingwithin14days).
+[`docs/runbooks/alerts.md`](runbooks/alerts.md#sentineldiskfillingwithin14days).
 
 These rules read `node_filesystem_*` from node_exporter on the database host. On
 managed Postgres without those series, substitute the provider's disk metric —
 the thresholds carry over.
 
-Because those metrics come from node_exporter rather than from Trident, they are
+Because those metrics come from node_exporter rather than from Sentinel, they are
 exempt from `scripts/verify-alert-metrics.sh`, which checks that alert-referenced
 metrics exist on the API and indexer `/metrics` endpoints. The indexer does not,
 and should not, report the host's disk usage. That exemption is by prefix

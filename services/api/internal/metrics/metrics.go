@@ -32,23 +32,23 @@ var Registry = prometheus.NewRegistry()
 
 var (
 	HTTPRequestsTotal = promauto.With(Registry).NewCounterVec(prometheus.CounterOpts{
-		Name: "trident_http_requests_total",
+		Name: "sentinel_http_requests_total",
 		Help: "Total HTTP requests handled by the Go API, by method, route pattern, and status code.",
 	}, []string{"method", "path", "status"})
 
 	HTTPRequestDuration = promauto.With(Registry).NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "trident_http_request_duration_seconds",
+		Name:    "sentinel_http_request_duration_seconds",
 		Help:    "HTTP request duration in seconds, by method, route pattern, and status code.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method", "path", "status"})
 
 	WSActiveConnections = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_ws_active_connections",
+		Name: "sentinel_ws_active_connections",
 		Help: "Currently active WebSocket subscribers (REST WS + GraphQL subscriptions).",
 	})
 
 	WSConnectsTotal = promauto.With(Registry).NewCounter(prometheus.CounterOpts{
-		Name: "trident_ws_connects_total",
+		Name: "sentinel_ws_connects_total",
 		Help: "Total WebSocket subscriber registrations since startup.",
 	})
 
@@ -57,43 +57,43 @@ var (
 	// without these, a saturated delivery pool and a healthy one look
 	// identical from outside.
 	WebhookDeliveriesTotal = promauto.With(Registry).NewCounterVec(prometheus.CounterOpts{
-		Name: "trident_webhook_deliveries_total",
+		Name: "sentinel_webhook_deliveries_total",
 		Help: "Webhook delivery attempts by outcome.",
 	}, []string{"outcome"}) // outcome: success|failure|skipped_in_flight|blocked_url
 
 	WebhookDeliveriesInFlight = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_webhook_deliveries_in_flight",
+		Name: "sentinel_webhook_deliveries_in_flight",
 		Help: "Webhook deliveries currently executing, bounded by the global delivery semaphore.",
 	})
 
 	WSDisconnectsTotal = promauto.With(Registry).NewCounter(prometheus.CounterOpts{
-		Name: "trident_ws_disconnects_total",
+		Name: "sentinel_ws_disconnects_total",
 		Help: "Total WebSocket subscriber unregistrations since startup.",
 	})
 
 	WSMessagesTotal = promauto.With(Registry).NewCounterVec(prometheus.CounterOpts{
-		Name: "trident_ws_messages_total",
+		Name: "sentinel_ws_messages_total",
 		Help: "Total WebSocket broadcast messages, by outcome.",
 	}, []string{"result"}) // result: sent|dropped
 
 	GRPCClientRequestsTotal = promauto.With(Registry).NewCounterVec(prometheus.CounterOpts{
-		Name: "trident_grpc_client_requests_total",
+		Name: "sentinel_grpc_client_requests_total",
 		Help: "Total outbound gRPC client call attempts, by method and status code.",
 	}, []string{"method", "code"})
 
 	GRPCClientRequestDuration = promauto.With(Registry).NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "trident_grpc_client_request_duration_seconds",
+		Name:    "sentinel_grpc_client_request_duration_seconds",
 		Help:    "Outbound gRPC client call duration in seconds, by method and status code.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method", "code"})
 
 	RateLimitRejectionsTotal = promauto.With(Registry).NewCounterVec(prometheus.CounterOpts{
-		Name: "trident_ratelimit_rejections_total",
+		Name: "sentinel_ratelimit_rejections_total",
 		Help: "Total requests rejected by a rate limiter, by limiter.",
 	}, []string{"limiter"}) // limiter: per_key|per_ip|global_concurrency
 
 	RateLimitFailOpenTotal = promauto.With(Registry).NewCounterVec(prometheus.CounterOpts{
-		Name: "trident_ratelimit_fail_open_total",
+		Name: "sentinel_ratelimit_fail_open_total",
 		Help: "Total requests allowed because a rate-limit backend check failed, by limiter.",
 	}, []string{"limiter"}) // limiter: per_key
 
@@ -103,55 +103,55 @@ var (
 	// directly; Prometheus rate()/increase() work the same over a
 	// monotonically-increasing Gauge as over a Counter.
 	DBPoolMaxConns = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_max_conns",
+		Name: "sentinel_db_pool_max_conns",
 		Help: "Configured maximum size of the Postgres connection pool.",
 	})
 	DBPoolTotalConns = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_total_conns",
+		Name: "sentinel_db_pool_total_conns",
 		Help: "Current total connections in the Postgres pool (idle + in-use + being established).",
 	})
 	DBPoolAcquiredConns = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_acquired_conns",
+		Name: "sentinel_db_pool_acquired_conns",
 		Help: "Connections currently acquired (in use) from the Postgres pool.",
 	})
 	DBPoolIdleConns = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_idle_conns",
+		Name: "sentinel_db_pool_idle_conns",
 		Help: "Idle connections currently available in the Postgres pool.",
 	})
 	DBPoolConstructingConns = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_constructing_conns",
+		Name: "sentinel_db_pool_constructing_conns",
 		Help: "Connections currently being established for the Postgres pool.",
 	})
 	DBPoolAcquireCount = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_acquire_count",
+		Name: "sentinel_db_pool_acquire_count",
 		Help: "Cumulative number of successful connection acquisitions from the Postgres pool.",
 	})
 	DBPoolEmptyAcquireCount = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_empty_acquire_count",
+		Name: "sentinel_db_pool_empty_acquire_count",
 		Help: "Cumulative number of acquisitions that had to wait because the Postgres pool had no idle connection — a direct saturation signal.",
 	})
 	DBPoolCanceledAcquireCount = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_canceled_acquire_count",
+		Name: "sentinel_db_pool_canceled_acquire_count",
 		Help: "Cumulative number of connection acquisitions canceled before completion (e.g. caller's context expired while waiting).",
 	})
 	DBPoolAcquireDurationSeconds = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_acquire_duration_seconds",
+		Name: "sentinel_db_pool_acquire_duration_seconds",
 		Help: "Cumulative time spent acquiring connections from the Postgres pool, in seconds.",
 	})
 	DBPoolEmptyAcquireWaitSeconds = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_empty_acquire_wait_seconds",
+		Name: "sentinel_db_pool_empty_acquire_wait_seconds",
 		Help: "Cumulative time acquisitions spent waiting for a connection because the Postgres pool was empty, in seconds — a direct saturation signal.",
 	})
 	DBPoolNewConnsCount = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_new_conns_count",
+		Name: "sentinel_db_pool_new_conns_count",
 		Help: "Cumulative number of new connections established for the Postgres pool.",
 	})
 	DBPoolMaxIdleDestroyCount = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_max_idle_destroy_count",
+		Name: "sentinel_db_pool_max_idle_destroy_count",
 		Help: "Cumulative number of connections destroyed for exceeding MaxConnIdleTime.",
 	})
 	DBPoolMaxLifetimeDestroyCount = promauto.With(Registry).NewGauge(prometheus.GaugeOpts{
-		Name: "trident_db_pool_max_lifetime_destroy_count",
+		Name: "sentinel_db_pool_max_lifetime_destroy_count",
 		Help: "Cumulative number of connections destroyed for exceeding MaxConnLifetime.",
 	})
 )

@@ -1,18 +1,18 @@
-# trident-indexer
+# sentinel-indexer
 
-Python client SDK for the [Trident](https://github.com/Telocel-Labs/Trident) Soroban event indexer.
+Python client SDK for the [Sentinel](https://github.com/A4-Stellar/Sentinel) Soroban event indexer.
 
 ```
-pip install trident-indexer
+pip install sentinel-indexer
 ```
 
 ## Sync usage
 
 ```python
-from trident_indexer import TridentClient
+from sentinel_indexer import SentinelClient
 
-client = TridentClient(
-    api_url="https://api.trident.example.com",
+client = SentinelClient(
+    api_url="https://api.sentinel.example.com",
     api_key="your-api-key",
     network="mainnet",
 )
@@ -35,11 +35,11 @@ handle.close()
 
 ```python
 import asyncio
-from trident_indexer import AsyncTridentClient
+from sentinel_indexer import AsyncSentinelClient
 
 async def main():
-    async with AsyncTridentClient(
-        api_url="https://api.trident.example.com",
+    async with AsyncSentinelClient(
+        api_url="https://api.sentinel.example.com",
         api_key="your-api-key",
     ) as client:
         page = await client.query_events(contract_id="CABC...")
@@ -55,11 +55,11 @@ asyncio.run(main())
 ## Error handling
 
 ```python
-from trident_indexer import TridentApiError
+from sentinel_indexer import SentinelApiError
 
 try:
     event = client.get_event_by_id("missing-id")
-except TridentApiError as e:
+except SentinelApiError as e:
     print(e.status, e.code, str(e))  # 404 NOT_FOUND event not found
 ```
 
@@ -78,15 +78,15 @@ variables. An explicit constructor argument always takes precedence:
 
 | Argument  | Environment variable | 
 |-----------|-----------------------|
-| `api_url` | `TRIDENT_BASE_URL`     |
-| `api_key` | `TRIDENT_API_KEY`      |
+| `api_url` | `SENTINEL_BASE_URL`     |
+| `api_key` | `SENTINEL_API_KEY`      |
 
 ```python
-# Reads TRIDENT_API_KEY / TRIDENT_BASE_URL from the environment
-client = TridentClient()
+# Reads SENTINEL_API_KEY / SENTINEL_BASE_URL from the environment
+client = SentinelClient()
 ```
 
 If neither an explicit value nor the environment variable is set,
-construction raises `TridentConfigError` with a clear message. The API key
+construction raises `SentinelConfigError` with a clear message. The API key
 is never logged or included in `repr()`/error output — it is always
 redacted (e.g. `***a1b2`).

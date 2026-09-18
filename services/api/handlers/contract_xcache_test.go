@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/contracttest"
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/internal/contracttest"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"

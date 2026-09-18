@@ -2,7 +2,7 @@
 
 ## Overview
 
-This specification details unit testing guidelines and coverage standards for Stellar Asset Contract (SAC) event decoding within the Trident indexer engine (`crates/indexer/src/parser/sac.rs` and `crates/indexer/src/parser/token_events.rs`).
+This specification details unit testing guidelines and coverage standards for Stellar Asset Contract (SAC) event decoding within the Sentinel indexer engine (`crates/indexer/src/parser/sac.rs` and `crates/indexer/src/parser/token_events.rs`).
 
 ---
 
@@ -62,5 +62,5 @@ mod tests {
 Run unit tests via `cargo`:
 
 ```bash
-cargo test --package trident-indexer --lib parser::sac
+cargo test --package sentinel-indexer --lib parser::sac
 ```

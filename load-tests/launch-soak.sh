@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Combined launch soak harness for issue #440.
 #
-# Runs the existing Trident ingest, API read, batch, stats, and SSE stream load
+# Runs the existing Sentinel ingest, API read, batch, stats, and SSE stream load
 # scripts together for a projected-launch soak window. Defaults to 24 hours so
 # the command line matches the launch acceptance criteria, while still allowing
 # shorter dry runs through SOAK_DURATION.
 #
-# Required tools: bash, k6, docker, stellar CLI, and the local/staging Trident
+# Required tools: bash, k6, docker, stellar CLI, and the local/staging Sentinel
 # stack described in load-tests/README.md.
 
 set -euo pipefail
@@ -51,7 +51,7 @@ if ! [ "$SOAK_SECONDS" -gt 0 ] 2>/dev/null; then
 fi
 
 
-echo "Trident launch soak starting"
+echo "Sentinel launch soak starting"
 echo "  run id:              ${RUN_ID}"
 echo "  base url:            ${BASE_URL}"
 echo "  k6 duration:         ${SOAK_DURATION}"

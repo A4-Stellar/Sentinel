@@ -12,13 +12,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/grpc"
-	"github.com/Depo-dev/trident/services/api/handlers"
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
-	"github.com/Depo-dev/trident/services/api/internal/profiling"
-	"github.com/Depo-dev/trident/services/api/internal/sorobanrpc"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/ws"
+	"github.com/Depo-dev/sentinel/services/api/grpc"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/profiling"
+	"github.com/Depo-dev/sentinel/services/api/internal/sorobanrpc"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/ws"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -110,7 +110,7 @@ func initTracer(ctx context.Context) func() {
 	}
 
 	res, err := resource.New(ctx,
-		resource.WithAttributes(semconv.ServiceName("trident-go-api")),
+		resource.WithAttributes(semconv.ServiceName("sentinel-go-api")),
 	)
 	if err != nil {
 		slog.Warn("failed to create OTel resource", "err", err)
@@ -391,7 +391,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20, // 1 MiB
 	}
 	go func() {
-		slog.Info("Trident API server listening", "port", port)
+		slog.Info("Sentinel API server listening", "port", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server error", "err", err)
 			os.Exit(1)

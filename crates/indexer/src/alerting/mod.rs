@@ -23,7 +23,7 @@ use chrono::Utc;
 use reqwest::Client;
 use serde::Serialize;
 use std::time::Duration;
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 /// Webhook POST timeout.
 const WEBHOOK_TIMEOUT_SECS: u64 = 5;
@@ -321,11 +321,11 @@ impl AlertSink for PagerDuty {
         let pd = PDPayload {
             routing_key: self.routing_key.clone(),
             event_action: "resolve",
-            dedup_key: format!("trident-indexer-lag-{}", payload.lag_ledgers),
+            dedup_key: format!("sentinel-indexer-lag-{}", payload.lag_ledgers),
             payload: PDResolve {
                 r#type: "alert",
                 summary: payload.text.clone(),
-                source: "trident-indexer".to_string(),
+                source: "sentinel-indexer".to_string(),
                 timestamp: payload.timestamp.clone(),
             },
         };
@@ -396,7 +396,7 @@ impl Alerter {
         webhook_url: Option<String>,
         lag_threshold: u64,
         cooldown_minutes: u64,
-    ) -> Result<Self, TridentError> {
+    ) -> Result<Self, SentinelError> {
         let sinks = if webhook_url.is_some() {
             vec![Box::new(GenericWebhook) as Box<dyn AlertSink>]
         } else {
@@ -415,7 +415,7 @@ impl Alerter {
         urls: Vec<String>,
         lag_threshold: u64,
         cooldown_minutes: u64,
-    ) -> Result<Self, TridentError> {
+    ) -> Result<Self, SentinelError> {
         let http = if sinks.is_empty() {
             None
         } else {
@@ -424,7 +424,7 @@ impl Alerter {
                     .timeout(Duration::from_secs(WEBHOOK_TIMEOUT_SECS))
                     .build()
                     .map_err(|e| {
-                        TridentError::config(anyhow::Error::new(e).context("alerting HTTP client"))
+                        SentinelError::config(anyhow::Error::new(e).context("alerting HTTP client"))
                     })?,
             )
         };
@@ -497,14 +497,14 @@ impl Alerter {
         };
 
         let message = format!(
-            "Trident indexer is {} ledgers behind chain tip on {} (threshold: {})",
+            "Sentinel indexer is {} ledgers behind chain tip on {} (threshold: {})",
             lag, ctx.network, ctx.lag_threshold
         );
 
         let payload = WebhookPayload {
             alert: "indexer_lag",
             severity: severity.as_str().to_string(),
-            indexer: "trident-indexer",
+            indexer: "sentinel-indexer",
             network: ctx.network.clone(),
             lag_ledgers: lag,
             last_indexed_ledger: ctx.last_ledger_indexed,
@@ -540,7 +540,7 @@ impl Alerter {
         }
 
         let timestamp = Utc::now().to_rfc3339();
-        let message = format!("Trident indexer has recovered. Lag is now {} ledgers.", lag);
+        let message = format!("Sentinel indexer has recovered. Lag is now {} ledgers.", lag);
 
         let payload = RecoveryPayload {
             alert: "indexer_lag_resolved",
@@ -593,7 +593,7 @@ impl Alerter {
         let payload = RpcDegradedPayload {
             alert: "rpc_all_degraded",
             severity: "critical".to_string(),
-            indexer: "trident-indexer",
+            indexer: "sentinel-indexer",
             network: ctx.network.clone(),
             timestamp: timestamp.clone(),
             message: message.clone(),
@@ -630,7 +630,7 @@ impl Alerter {
         let payload = RpcDegradedPayload {
             alert: "rpc_all_degraded_resolved",
             severity: "info".to_string(),
-            indexer: "trident-indexer",
+            indexer: "sentinel-indexer",
             network: ctx.network.clone(),
             timestamp,
             message: message.clone(),

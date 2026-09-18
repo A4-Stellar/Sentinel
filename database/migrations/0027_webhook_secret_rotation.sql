@@ -2,7 +2,7 @@
 --
 -- During a rotation, the current primary secret is demoted to secondary_secret
 -- and a new secret becomes primary. Deliveries are signed with the new primary
--- but the old secondary signature is also included in X-Trident-Signature
+-- but the old secondary signature is also included in X-Sentinel-Signature
 -- (space-separated) so receivers can verify against either key until they have
 -- swapped. Once the overlap window expires the secondary is cleared.
 --

@@ -27,9 +27,9 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: trident
+          POSTGRES_USER: sentinel
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: trident
+          POSTGRES_DB: sentinel
         ports:
           - 5432:5432
         options: >-
@@ -75,12 +75,12 @@ jobs:
 
       - name: Run migrations
         env:
-          DATABASE_URL: postgres://trident:password@localhost:5432/trident
+          DATABASE_URL: postgres://sentinel:password@localhost:5432/sentinel
         run: sqlx migrate run --source database/migrations
 
       - name: Run sqlx prepare
         env:
-          DATABASE_URL: postgres://trident:password@localhost:5432/trident
+          DATABASE_URL: postgres://sentinel:password@localhost:5432/sentinel
         run: cargo sqlx prepare --workspace
 
       - name: Clippy (deny warnings)
@@ -88,7 +88,7 @@ jobs:
 
       - name: Tests
         env:
-          DATABASE_URL: postgres://trident:password@localhost:5432/trident
+          DATABASE_URL: postgres://sentinel:password@localhost:5432/sentinel
         run: cargo test --all -- --test-threads=1
 
       # Issue #416: the proptest suite already runs above as part of `cargo
@@ -100,14 +100,14 @@ jobs:
       #
       # For longer campaigns, run locally with a bigger budget and a persisted
       # corpus, e.g.:
-      #   PROPTEST_CASES=1000000 cargo test -p trident-indexer --bin trident-indexer parser::tests::
+      #   PROPTEST_CASES=1000000 cargo test -p sentinel-indexer --bin sentinel-indexer parser::tests::
       # Any input that trips a panic is written by proptest to
       # crates/indexer/proptest-regressions/ — commit that file so the case
       # becomes a permanent regression test.
       - name: Fuzz the XDR parser (short run)
         env:
           PROPTEST_CASES: 50000
-        run: "cargo test -p trident-indexer --bin trident-indexer parser::tests:: -- --test-threads=1"
+        run: "cargo test -p sentinel-indexer --bin sentinel-indexer parser::tests:: -- --test-threads=1"
 
       - name: Show sccache stats
         if: always()
@@ -407,7 +407,7 @@ jobs:
 
       - name: Check for uncommitted changes
         run: |
-          if git diff --exit-code             sdk/typescript/src/api-types.gen.ts             sdk/go/openapi/models_gen.go             sdk/python/src/trident_indexer/openapi_models_gen.py             sdk/rust/src/openapi_models_gen.rs; then
+          if git diff --exit-code             sdk/typescript/src/api-types.gen.ts             sdk/go/openapi/models_gen.go             sdk/python/src/sentinel_indexer/openapi_models_gen.py             sdk/rust/src/openapi_models_gen.rs; then
             echo "✓ Generated SDK models are up-to-date"
           else
             echo "✗ Generated SDK models are stale. Run 'python3 scripts/generate_sdk_models.py' and commit changes."
@@ -523,8 +523,8 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: trident
-          POSTGRES_DB: trident_test
+          POSTGRES_PASSWORD: sentinel
+          POSTGRES_DB: sentinel_test
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
@@ -570,18 +570,18 @@ jobs:
       # database/schema.sql mirror (which had drifted from migrations).
       - name: Apply database migrations
         env:
-          PGPASSWORD: trident
+          PGPASSWORD: sentinel
         run: |
           set -euo pipefail
           for f in database/migrations/*.sql; do
             echo "Applying $f"
-            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d trident_test -f "$f"
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d sentinel_test -f "$f"
           done
 
       - name: Run integration tests
         env:
-          DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
-          TEST_DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
+          DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
+          TEST_DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
           TEST_REDIS_URL: redis://localhost:6379
           # Turns a missing TEST_DATABASE_URL/TEST_REDIS_URL into a hard test
           # failure instead of a silent skip, so a misconfigured integration
@@ -620,7 +620,7 @@ jobs:
           context: .
           file: services/api/Dockerfile
           push: false
-          tags: trident-go-api:ci
+          tags: sentinel-go-api:ci
           cache-from: type=gha,scope=go-api
           cache-to: type=gha,mode=max,scope=go-api
 
@@ -630,7 +630,7 @@ jobs:
           context: .
           file: crates/api/Dockerfile
           push: false
-          tags: trident-grpc-api:ci
+          tags: sentinel-grpc-api:ci
           cache-from: type=gha,scope=grpc-api
           cache-to: type=gha,mode=max,scope=grpc-api
 
@@ -640,7 +640,7 @@ jobs:
           context: .
           file: crates/indexer/Dockerfile
           push: false
-          tags: trident-indexer:ci
+          tags: sentinel-indexer:ci
           cache-from: type=gha,scope=indexer
           cache-to: type=gha,mode=max,scope=indexer
 
@@ -650,7 +650,7 @@ jobs:
           context: .
           file: database/Dockerfile
           push: false
-          tags: trident-migrate:ci
+          tags: sentinel-migrate:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -696,7 +696,7 @@ jobs:
           context: .
           file: services/api/Dockerfile
           push: false
-          tags: trident-go-api:ci
+          tags: sentinel-go-api:ci
           cache-from: type=gha,scope=go-api
           cache-to: type=gha,mode=max,scope=go-api
 
@@ -706,7 +706,7 @@ jobs:
           context: .
           file: crates/api/Dockerfile
           push: false
-          tags: trident-grpc-api:ci
+          tags: sentinel-grpc-api:ci
           cache-from: type=gha,scope=grpc-api
           cache-to: type=gha,mode=max,scope=grpc-api
 
@@ -716,7 +716,7 @@ jobs:
           context: .
           file: crates/indexer/Dockerfile
           push: false
-          tags: trident-indexer:ci
+          tags: sentinel-indexer:ci
           cache-from: type=gha,scope=indexer
           cache-to: type=gha,mode=max,scope=indexer
 
@@ -906,7 +906,7 @@ jobs:
 
       - name: Build the reference token contract
         working-directory: contracts
-        run: cargo build --release --target wasm32v1-none -p trident-reference-token
+        run: cargo build --release --target wasm32v1-none -p sentinel-reference-token
 
       - name: Show sccache stats
         if: always()
@@ -986,7 +986,7 @@ jobs:
           RECIPIENT_ADDR=$(stellar keys address recipient)
 
           CONTRACT_ID=$(stellar contract deploy \
-            --wasm contracts/target/wasm32v1-none/release/trident_reference_token.wasm \
+            --wasm contracts/target/wasm32v1-none/release/sentinel_reference_token.wasm \
             --source admin \
             --network local)
           echo "contract_id=$CONTRACT_ID" >> "$GITHUB_OUTPUT"
@@ -1015,7 +1015,7 @@ jobs:
           context: .
           file: services/api/Dockerfile
           push: false
-          tags: trident-go-api:ci
+          tags: sentinel-go-api:ci
           cache-from: type=gha,scope=go-api
 
       - name: Restore Rust gRPC API image cache
@@ -1024,7 +1024,7 @@ jobs:
           context: .
           file: crates/api/Dockerfile
           push: false
-          tags: trident-grpc-api:ci
+          tags: sentinel-grpc-api:ci
           cache-from: type=gha,scope=grpc-api
 
       - name: Restore Rust indexer image cache
@@ -1033,7 +1033,7 @@ jobs:
           context: .
           file: crates/indexer/Dockerfile
           push: false
-          tags: trident-indexer:ci
+          tags: sentinel-indexer:ci
           cache-from: type=gha,scope=indexer
 
       - name: Start the full stack against the local network
@@ -1238,8 +1238,8 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: trident
-          POSTGRES_DB: trident_schema_check
+          POSTGRES_PASSWORD: sentinel
+          POSTGRES_DB: sentinel_schema_check
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
@@ -1264,7 +1264,7 @@ jobs:
 
       - name: Check schema.sql matches the migration chain
         env:
-          DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_schema_check
+          DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_schema_check
         run: bash scripts/check-schema-drift.sh
 
   # ---------------------------------------------------------------------------
@@ -1282,20 +1282,20 @@ jobs:
           version: "3.14.0"
 
       - name: Lint chart
-        run: helm lint helm/trident
+        run: helm lint helm/sentinel
 
       - name: Render templates
-        run: helm template trident helm/trident
+        run: helm template sentinel helm/sentinel
 
       - name: Create kind cluster
         uses: helm/kind-action@0025e74a8c7512023d06dc019c617aa3cf561fde # v1.10.0
         with:
-          cluster_name: trident-ci
+          cluster_name: sentinel-ci
 
       - name: Create CI secrets
         run: |
-          kubectl create secret generic trident-secrets \
-            --from-literal=DATABASE_URL="postgres://trident:trident@postgres:5432/trident" \
+          kubectl create secret generic sentinel-secrets \
+            --from-literal=DATABASE_URL="postgres://sentinel:sentinel@postgres:5432/sentinel" \
             --from-literal=REDIS_URL="redis://redis:6379" \
             --from-literal=ADMIN_API_KEY="ci-admin-key" \
             --from-literal=API_KEY_SALT="not-a-production-secret-ci-salt" \
@@ -1310,7 +1310,7 @@ jobs:
       # migrations run.
       - name: Install chart (CI values — nginx only, no image pull)
         run: |
-          helm install trident helm/trident \
+          helm install sentinel helm/sentinel \
             --set indexer.image.repository=busybox \
             --set indexer.image.tag=latest \
             --set grpcApi.image.repository=busybox \
@@ -1350,8 +1350,8 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: trident
-          POSTGRES_DB: trident_test
+          POSTGRES_PASSWORD: sentinel
+          POSTGRES_DB: sentinel_test
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
@@ -1396,17 +1396,17 @@ jobs:
 
       - name: Apply database migrations
         env:
-          PGPASSWORD: trident
+          PGPASSWORD: sentinel
         run: |
           set -euo pipefail
           for f in database/migrations/*.sql; do
-            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d trident_test -f "$f"
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d sentinel_test -f "$f"
           done
 
       - name: Rust coverage
         env:
-          DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
-          TEST_DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
+          DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
+          TEST_DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
           TEST_REDIS_URL: redis://localhost:6379
           REQUIRE_TEST_SERVICES: "1"
           CI: "true"
@@ -1442,8 +1442,8 @@ jobs:
       - name: Go coverage
         working-directory: services/api
         env:
-          DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
-          TEST_DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
+          DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
+          TEST_DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
           TEST_REDIS_URL: redis://localhost:6379
           REQUIRE_TEST_SERVICES: "1"
           CI: "true"
@@ -1458,8 +1458,8 @@ jobs:
       - name: Enforce Go critical-package floors
         working-directory: services/api
         env:
-          DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
-          TEST_DATABASE_URL: postgres://postgres:trident@localhost:5432/trident_test
+          DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
+          TEST_DATABASE_URL: postgres://postgres:sentinel@localhost:5432/sentinel_test
           TEST_REDIS_URL: redis://localhost:6379
           REQUIRE_TEST_SERVICES: "1"
           CI: "true"

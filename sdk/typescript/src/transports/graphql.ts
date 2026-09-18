@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TridentError } from "../errors.js";
+import { SentinelError } from "../errors.js";
 import { SorobanEventSchema } from "../index.js";
 
 // GraphQL query for listing events with pagination
@@ -134,12 +134,12 @@ export class GraphQLTransport {
         body: JSON.stringify({ query, variables }),
       });
     } catch (cause) {
-      throw new TridentError("INTERNAL", "Network request failed", cause);
+      throw new SentinelError("INTERNAL", "Network request failed", cause);
     }
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      throw new TridentError(
+      throw new SentinelError(
         "INTERNAL",
         `HTTP ${res.status}: ${body}`,
         undefined,
@@ -147,14 +147,14 @@ export class GraphQLTransport {
     }
 
     const json: unknown = await res.json().catch((cause: unknown) => {
-      throw new TridentError("INTERNAL", "Failed to parse response JSON", cause);
+      throw new SentinelError("INTERNAL", "Failed to parse response JSON", cause);
     });
 
     const response = json as GraphQLResponse<T>;
 
     // Check for GraphQL errors even if HTTP status is 200
     if (response.errors && response.errors.length > 0) {
-      throw new TridentError(
+      throw new SentinelError(
         "INTERNAL",
         `GraphQL error: ${response.errors[0].message}`,
         undefined,
@@ -162,7 +162,7 @@ export class GraphQLTransport {
     }
 
     if (!response.data) {
-      throw new TridentError(
+      throw new SentinelError(
         "INTERNAL",
         "No data in GraphQL response",
         undefined,

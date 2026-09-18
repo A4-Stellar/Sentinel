@@ -1,6 +1,6 @@
 # 🔄 Runbook: Ingestion Gap Detection & Backfill Recovery Drill
 
-This runbook documents the verification procedure for simulating a real ingestion outage, detecting gaps in `ledger_metadata` and `soroban_events`, and recovering 100% of missing data using `trident-backfill` (issue #505).
+This runbook documents the verification procedure for simulating a real ingestion outage, detecting gaps in `ledger_metadata` and `soroban_events`, and recovering 100% of missing data using `sentinel-backfill` (issue #505).
 
 ---
 
@@ -9,13 +9,13 @@ This runbook documents the verification procedure for simulating a real ingestio
 Stellar Testnet closes ledgers approximately every 5 seconds (~720 ledgers per hour). When the Rust indexer is stopped or network partitions occur:
 1. `soroban_events` and `ledger_metadata` sequence progression freezes.
 2. Horizon/RPC continues producing new closed ledgers.
-3. Upon service restoration, `trident-backfill` re-fetches missing ledger ranges in parallel worker threads without producing duplicate keys (`ON CONFLICT (id) DO NOTHING`).
+3. Upon service restoration, `sentinel-backfill` re-fetches missing ledger ranges in parallel worker threads without producing duplicate keys (`ON CONFLICT (id) DO NOTHING`).
 
 ```
 [Ingestion Outage Start] --> [Missing Ledger Window: N .. N+K] --> [Gap Detection SQL / Metric]
                                                                         │
                                                                         ▼
-[Reconciled: Zero Gaps]  <-- [Validation Check] <-- [trident-backfill --from N --to N+K]
+[Reconciled: Zero Gaps]  <-- [Validation Check] <-- [sentinel-backfill --from N --to N+K]
 ```
 
 ---
@@ -48,7 +48,7 @@ Invoke the multi-threaded Rust backfill utility:
 
 ```bash
 # Example: Backfill 1,000 missing ledgers using 4 concurrent workers
-cargo run --release --bin trident-backfill -- \
+cargo run --release --bin sentinel-backfill -- \
   --from-ledger 125000 \
   --to-ledger 126000 \
   --workers 4 \

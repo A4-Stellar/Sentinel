@@ -8,7 +8,7 @@ fn setup<'a>(env: &Env) -> (Address, TokenClient<'a>, Address) {
     let admin = Address::generate(env);
     let contract_id = env.register(Token, ());
     let client = TokenClient::new(env, &contract_id);
-    client.initialize(&admin, &7, &String::from_str(env, "Trident Reference Token"), &String::from_str(env, "TRT"));
+    client.initialize(&admin, &7, &String::from_str(env, "Sentinel Reference Token"), &String::from_str(env, "TRT"));
     (admin, client, contract_id)
 }
 
@@ -70,6 +70,6 @@ fn metadata_round_trips() {
 
     let (_, client, _) = setup(&env);
     assert_eq!(client.decimals(), 7);
-    assert_eq!(client.name(), String::from_str(&env, "Trident Reference Token"));
+    assert_eq!(client.name(), String::from_str(&env, "Sentinel Reference Token"));
     assert_eq!(client.symbol(), String::from_str(&env, "TRT"));
 }

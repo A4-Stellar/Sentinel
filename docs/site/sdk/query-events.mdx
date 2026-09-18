@@ -46,7 +46,7 @@ interface PaginatedEvents {
 
 ## Throws
 
-`TridentError` on:
+`SentinelError` on:
 - Network failure (`code: "INTERNAL"`)
 - Invalid API key (`code: "UNAUTHORIZED"`)
 - Rate limit exceeded (`code: "RATE_LIMITED"`)
@@ -59,12 +59,12 @@ interface PaginatedEvents {
 ### Basic query
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { PaginatedEvents } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { PaginatedEvents } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -91,12 +91,12 @@ const result = await client.queryEvents({
 ### Manual pagination
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { PaginatedEvents, SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { PaginatedEvents, SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -119,11 +119,11 @@ console.log(`Total: ${allEvents.length}`);
 ### Auto-paginate with iterEvents
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 

@@ -1,6 +1,6 @@
 ---
 title: "Configuration Reference"
-description: "Every environment variable accepted by the Trident stack, with type, default, required status, and what happens if it is missing."
+description: "Every environment variable accepted by the Sentinel stack, with type, default, required status, and what happens if it is missing."
 ---
 
 All configuration is done through environment variables. Copy `.env.example` to `.env` and fill in real values:
@@ -130,7 +130,7 @@ Variables marked **REQUIRED** must be set before the service starts. Variables m
 | `ALLOWED_ORIGINS`      | REQUIRED (prod)| string | —           | Comma-separated CORS allow-list. Dev allows any origin when unset — never leave unset in production. |
 | `REQUEST_TIMEOUT_MS`   | OPTIONAL      | integer | `30000`      | Per-request timeout (ms). Does not apply to `/ws` or `/v1/events/stream`. |
 | `MAX_WS_CONNECTIONS`   | OPTIONAL      | integer | `1000`       | Max concurrent WebSocket connections before new ones are rejected. |
-| `REDIS_STREAM_KEY`     | OPTIONAL      | string  | `trident:events` | Redis stream key for event pub/sub. Must match between indexer and Go API. |
+| `REDIS_STREAM_KEY`     | OPTIONAL      | string  | `sentinel:events` | Redis stream key for event pub/sub. Must match between indexer and Go API. |
 
 ### Rate limiting
 
@@ -153,7 +153,7 @@ Variables marked **REQUIRED** must be set before the service starts. Variables m
 
 | Variable                 | Required | Type    | Default              | Description |
 |--------------------------|----------|---------|----------------------|-------------|
-| `WEBHOOK_CONSUMER_GROUP` | OPTIONAL | string  | `trident-webhooks`   | Redis Stream consumer group for the webhook delivery worker. |
+| `WEBHOOK_CONSUMER_GROUP` | OPTIONAL | string  | `sentinel-webhooks`   | Redis Stream consumer group for the webhook delivery worker. |
 | `WEBHOOK_CONSUMER_NAME`  | OPTIONAL | string  | `webhook-worker`     | Redis Stream consumer name. |
 
 ### Request body limits and abuse protection
@@ -197,9 +197,9 @@ Variables marked **REQUIRED** must be set before the service starts. Variables m
 
 | Variable           | Required | Type   | Default    | Description |
 |--------------------|----------|--------|------------|-------------|
-| `POSTGRES_USER`    | OPTIONAL | string | `trident`  | PostgreSQL superuser username (used on first container create). |
+| `POSTGRES_USER`    | OPTIONAL | string | `sentinel`  | PostgreSQL superuser username (used on first container create). |
 | `POSTGRES_PASSWORD`| OPTIONAL | string | `password` | PostgreSQL superuser password. **Change in production.** |
-| `POSTGRES_DB`      | OPTIONAL | string | `trident`  | PostgreSQL database name. |
+| `POSTGRES_DB`      | OPTIONAL | string | `sentinel`  | PostgreSQL database name. |
 
 ---
 

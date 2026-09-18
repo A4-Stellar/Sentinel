@@ -26,11 +26,11 @@ Calling `subscription.unsubscribe()` cancels any pending reconnect immediately.
 The `onError` callback is called when a reconnect attempt fails, but the subscription continues to retry:
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -67,7 +67,7 @@ async def subscribe_with_reconnect(api_key: str, contract_id: str):
 
     while True:
         try:
-            url = f"wss://api.trident.telocel.com/ws?api_key={api_key}"
+            url = f"wss://api.sentinel.a4stellar.com/ws?api_key={api_key}"
             async with websockets.connect(url) as ws:
                 # Re-register subscription after every (re)connect
                 await ws.send(json.dumps({

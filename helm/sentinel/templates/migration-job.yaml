@@ -14,9 +14,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "trident.fullname" . }}-migrate
+  name: {{ include "sentinel.fullname" . }}-migrate
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
   annotations:
     # Runs before every other resource in this chart and, within hooks,
@@ -36,18 +36,18 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "trident.selectorLabels" (dict "root" . "component" "migrate") | nindent 8 }}
+        {{- include "sentinel.selectorLabels" (dict "root" . "component" "migrate") | nindent 8 }}
     spec:
-      {{- include "trident.imagePullSecrets" . | nindent 6 }}
+      {{- include "sentinel.imagePullSecrets" . | nindent 6 }}
       restartPolicy: Never
       securityContext:
-        {{- include "trident.podSecurityContext" (dict "uid" .Values.migrations.securityContextUid) | nindent 8 }}
+        {{- include "sentinel.podSecurityContext" (dict "uid" .Values.migrations.securityContextUid) | nindent 8 }}
       containers:
         - name: migrate
           image: "{{ .Values.migrations.image.repository }}:{{ .Values.migrations.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           securityContext:
-            {{- include "trident.containerSecurityContext" . | nindent 12 }}
+            {{- include "sentinel.containerSecurityContext" . | nindent 12 }}
           env:
             - name: DATABASE_URL
               valueFrom:

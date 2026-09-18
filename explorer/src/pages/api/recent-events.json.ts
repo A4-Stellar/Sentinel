@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ url }) => {
         status: "api_unreachable",
         events: [],
         reason: "network",
-        message: "Could not reach the Trident indexer. Check your connection.",
+        message: "Could not reach the Sentinel indexer. Check your connection.",
       } satisfies RecentEventsResponse, 502);
     }
 
@@ -51,9 +51,9 @@ export const GET: APIRoute = async ({ url }) => {
       unauthorized:
         "The explorer's server key is not configured. This is on us, not you.",
       network:
-        "Could not reach the Trident indexer. Please check your connection and retry.",
-      timeout: "The Trident indexer took too long to answer. Please retry.",
-      down: "The Trident indexer is temporarily unavailable. Please try again shortly.",
+        "Could not reach the Sentinel indexer. Please check your connection and retry.",
+      timeout: "The Sentinel indexer took too long to answer. Please retry.",
+      down: "The Sentinel indexer is temporarily unavailable. Please try again shortly.",
     };
 
     const httpStatus =

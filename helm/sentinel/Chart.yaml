@@ -1,0 +1,16 @@
+apiVersion: v2
+name: sentinel
+description: Helm chart for self-hosted Sentinel Soroban event indexer on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - soroban
+  - stellar
+  - blockchain
+  - indexer
+home: https://github.com/A4-Stellar/Sentinel
+sources:
+  - https://github.com/A4-Stellar/Sentinel
+maintainers:
+  - name: Sentinel Team

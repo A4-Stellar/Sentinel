@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: proto/trident.proto
+// source: proto/sentinel.proto
 
-package trident
+package sentinel
 
 import (
 	context "context"
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Events_ListEvents_FullMethodName   = "/trident.Events/ListEvents"
-	Events_GetEvent_FullMethodName     = "/trident.Events/GetEvent"
-	Events_StreamEvents_FullMethodName = "/trident.Events/StreamEvents"
+	Events_ListEvents_FullMethodName   = "/sentinel.Events/ListEvents"
+	Events_GetEvent_FullMethodName     = "/sentinel.Events/GetEvent"
+	Events_StreamEvents_FullMethodName = "/sentinel.Events/StreamEvents"
 )
 
 // EventsClient is the client API for Events service.
@@ -202,7 +202,7 @@ type Events_StreamEventsServer = grpc.ServerStreamingServer[Event]
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Events_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "trident.Events",
+	ServiceName: "sentinel.Events",
 	HandlerType: (*EventsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -221,5 +221,5 @@ var Events_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/trident.proto",
+	Metadata: "proto/sentinel.proto",
 }

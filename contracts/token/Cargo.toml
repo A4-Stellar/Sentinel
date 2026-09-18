@@ -1,5 +1,5 @@
 [package]
-name = "trident-reference-token"
+name = "sentinel-reference-token"
 version = "0.1.0"
 edition = "2021"
 publish = false

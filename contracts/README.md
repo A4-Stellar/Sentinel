@@ -1,7 +1,7 @@
-# Trident reference contracts
+# Sentinel reference contracts
 
 A minimal SEP-41 fungible token contract (`contracts/token`) used to give
-Trident's tests, deploy scripts, and E2E suite a deterministic on-chain
+Sentinel's tests, deploy scripts, and E2E suite a deterministic on-chain
 contract to exercise. Its storage layout (`Balance(Address)`) matches what
 the indexer's storage-snapshot fetcher (issue #270) expects.
 
@@ -23,7 +23,7 @@ profile, which doesn't belong alongside the indexer/API services.
 ./scripts/build.sh
 ```
 
-Produces `contracts/target/<wasm-target>/release/trident_reference_token.wasm`.
+Produces `contracts/target/<wasm-target>/release/sentinel_reference_token.wasm`.
 
 ## Deploy + invoke — local
 

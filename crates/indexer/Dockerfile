@@ -26,14 +26,14 @@ RUN mkdir -p crates/common/src crates/api/src crates/indexer/src crates/backfill
     && echo "fn main() {}"      > crates/indexer/src/main.rs \
     && echo "fn main() {}"      > crates/backfill/src/main.rs \
     && echo "pub fn _stub() {}" > sdk/rust/src/lib.rs \
-    && cargo build --release -p trident-indexer
+    && cargo build --release -p sentinel-indexer
 
 COPY . .
 
 # Refresh mtimes so cargo rebuilds the real crates instead of reusing the
 # cached stub artifacts from the dependency-caching layer above.
 RUN find crates sdk -name '*.rs' -exec touch {} + \
-    && cargo build --release -p trident-indexer
+    && cargo build --release -p sentinel-indexer
 
 # ── runtime ──────────────────────────────────────────────────────────────────
 FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 AS runtime
@@ -41,12 +41,12 @@ FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bb
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl libssl3 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 1001 --no-create-home trident
+    && useradd --system --uid 1001 --no-create-home sentinel
 
-COPY --from=builder /app/target/release/trident-indexer /usr/local/bin/trident-indexer
+COPY --from=builder /app/target/release/sentinel-indexer /usr/local/bin/sentinel-indexer
 
-USER trident
+USER sentinel
 
 EXPOSE 9090
 
-ENTRYPOINT ["/usr/local/bin/trident-indexer"]
+ENTRYPOINT ["/usr/local/bin/sentinel-indexer"]

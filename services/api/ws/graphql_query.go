@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 )
 
 // GraphQL query support for the graphql-transport-ws transport (issue #223).

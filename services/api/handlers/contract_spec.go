@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	"github.com/jackc/pgx/v5"
 )
 

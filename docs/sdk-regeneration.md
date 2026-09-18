@@ -1,6 +1,6 @@
 # SDK regeneration and testing
 
-Trident ships five client SDKs — Go, Python, React, Rust, and TypeScript —
+Sentinel ships five client SDKs — Go, Python, React, Rust, and TypeScript —
 generated from one source of truth, `api/openapi.yaml`. This document is the
 cross-SDK reference: what's generated vs. hand-written in each, the order to
 regenerate them in, how each is tested, and how version consistency is
@@ -17,7 +17,7 @@ for four of the five SDKs directly from `api/openapi.yaml`:
 | SDK | Generated file | Command |
 |---|---|---|
 | Go | `sdk/go/openapi/models_gen.go` | `python3 scripts/generate_sdk_models.py --language go` |
-| Python | `sdk/python/src/trident_indexer/openapi_models_gen.py` | `python3 scripts/generate_sdk_models.py --language python` |
+| Python | `sdk/python/src/sentinel_indexer/openapi_models_gen.py` | `python3 scripts/generate_sdk_models.py --language python` |
 | Rust | `sdk/rust/src/openapi_models_gen.rs` | `python3 scripts/generate_sdk_models.py --language rust` |
 | TypeScript | `sdk/typescript/src/api-types.gen.ts` | `python3 scripts/generate_sdk_models.py --language typescript` |
 
@@ -29,9 +29,9 @@ built from the OpenAPI components; TypeScript goes through
 directly. See the script itself (`scripts/generate_sdk_models.py`) for the
 exact transform.
 
-**React has no generated file of its own.** `@trident-indexer/react`
+**React has no generated file of its own.** `@sentinel-indexer/react`
 consumes the TypeScript SDK's types directly (`SorobanEvent`,
-`QueryEventsParams`, etc., re-exported from `@trident-indexer/sdk`) rather
+`QueryEventsParams`, etc., re-exported from `@sentinel-indexer/sdk`) rather
 than generating a parallel copy — see
 [`sdk/react/README.md`](../sdk/react/README.md#regenerating-openapi-models).
 Regenerating TypeScript's models is what keeps React's types current; there
@@ -80,12 +80,12 @@ just that the generated types compile:
 |---|---|---|
 | Go | `cd sdk/go && go test ./...` | Client, retry, streaming |
 | Python | `cd sdk/python && pip install -e ".[dev]" && pytest -q` | Sync + async clients, retry, config |
-| Rust | `cargo test -p trident-sdk` (or `cargo test --all` from the repo root) | Client, retry, webhook signature verification (including published test vectors), doc-tests |
+| Rust | `cargo test -p sentinel-sdk` (or `cargo test --all` from the repo root) | Client, retry, webhook signature verification (including published test vectors), doc-tests |
 | TypeScript | `cd sdk/typescript && npm install && npm run build && npm run test` | Client, retry, pagination iterator, GraphQL, config |
-| React | `cd sdk/react && npm install && npm run test` | Hooks (`useContractEvents`, `useSubscription`) against a mocked `TridentClient` |
+| React | `cd sdk/react && npm install && npm run test` | Hooks (`useContractEvents`, `useSubscription`) against a mocked `SentinelClient` |
 
 **React's tests require the TypeScript SDK to be built first.** React
-depends on `@trident-indexer/sdk` via `"file:../typescript"` in its
+depends on `@sentinel-indexer/sdk` via `"file:../typescript"` in its
 `package.json`, which resolves to that package's `dist/` output — if
 `sdk/typescript` was never built (no `dist/`), React's test run fails at
 import resolution, not at a test assertion, which can look like a broken

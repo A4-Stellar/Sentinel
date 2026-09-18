@@ -1,6 +1,6 @@
 # Incident Response
 
-How Trident handles production incidents from detection through resolution and
+How Sentinel handles production incidents from detection through resolution and
 communication. This document covers: severity classification, on-call ownership
 for launch week, the escalation path, and the user communication channel.
 
@@ -18,15 +18,15 @@ The product is broken for all or a meaningful fraction of users, or data
 correctness cannot be guaranteed.
 
 Concrete examples:
-- `TridentIndexerProcessDown` or `TridentAPIProcessDown` firing — the indexer
+- `SentinelIndexerProcessDown` or `SentinelAPIProcessDown` firing — the indexer
   or API is not reachable.
-- `TridentIndexerHeartbeatStale` + `TridentIndexerLagCritical` both firing —
+- `SentinelIndexerHeartbeatStale` + `SentinelIndexerLagCritical` both firing —
   the poll loop is hung and lag is growing without bound.
-- `TridentAPIDependencyUnhealthy` sustained for > 5 minutes — Postgres, Redis,
+- `SentinelAPIDependencyUnhealthy` sustained for > 5 minutes — Postgres, Redis,
   or the gRPC backend is down; `GET /v1/health` is failing.
 - `IngestFreshnessFastBurn` with `severity: page` — the 28-day error budget
   will exhaust in under 2 days at the current burn rate.
-- `TridentDiskFillingWithin48Hours` — the Postgres volume will be full within
+- `SentinelDiskFillingWithin48Hours` — the Postgres volume will be full within
   two days; writes are about to fail.
 - Any security breach: unauthorized access, credential exposure, or confirmed
   data exfiltration.
@@ -44,16 +44,16 @@ The service is running but a component is impaired. Users may notice slowness,
 elevated error rates, or stale data, but core functionality still works.
 
 Concrete examples:
-- `TridentIndexerLagWarning` firing (lag > 200 ledgers, indexer is behind but
+- `SentinelIndexerLagWarning` firing (lag > 200 ledgers, indexer is behind but
   not stalled).
-- `TridentAPIHTTP5xxRateHigh` (5–25% of requests returning 5xx).
-- `TridentIndexerRPCErrorRateHigh` (5–25% of Stellar RPC calls failing).
-- `TridentRPCHighLatency` (p95 RPC latency > 5s, indexer is slow but alive).
-- `TridentRPCFailoverActive` (running on a fallback RPC endpoint).
+- `SentinelAPIHTTP5xxRateHigh` (5–25% of requests returning 5xx).
+- `SentinelIndexerRPCErrorRateHigh` (5–25% of Stellar RPC calls failing).
+- `SentinelRPCHighLatency` (p95 RPC latency > 5s, indexer is slow but alive).
+- `SentinelRPCFailoverActive` (running on a fallback RPC endpoint).
 - `IngestFreshnessSlowBurn` with `severity: ticket` — budget is being consumed
   at 6x but not yet imminently.
-- `TridentAPIDBPoolSaturated` (pool > 90% utilised, requests starting to queue).
-- `TridentDiskFillingWithin14Days` (provisioning signal, not yet urgent).
+- `SentinelAPIDBPoolSaturated` (pool > 90% utilised, requests starting to queue).
+- `SentinelDiskFillingWithin14Days` (provisioning signal, not yet urgent).
 
 Response:
 - Notify the on-call owner; no immediate page required if the alert is
@@ -71,10 +71,10 @@ Response:
 Something is worth investigating but has no current user impact.
 
 Concrete examples:
-- `TridentIndexerParseErrorRateHigh` (> 1% of events failing XDR decode —
+- `SentinelIndexerParseErrorRateHigh` (> 1% of events failing XDR decode —
   parser may need an update but events are isolated, not lost).
-- `TridentRPCRateLimited` (quota pressure; indexer is still running).
-- `TridentDiskSpaceLow` (< 15% free, predictive alert triggered as backstop).
+- `SentinelRPCRateLimited` (quota pressure; indexer is still running).
+- `SentinelDiskSpaceLow` (< 15% free, predictive alert triggered as backstop).
 - A single alert that self-resolved before investigation started.
 - Any `severity: ticket` alert that has not worsened in 30 minutes.
 
@@ -88,10 +88,10 @@ Response:
 ## On-call owner — launch week
 
 **Primary on-call:** [FILL IN: name, GitHub handle, mobile number or pager
-handle — e.g. `@alice`, +1-555-0100, PagerDuty target `alice-trident`]
+handle — e.g. `@alice`, +1-555-0100, PagerDuty target `alice-sentinel`]
 
 **Secondary / escalation:** [FILL IN: name, GitHub handle, mobile number or
-pager handle — e.g. `@bob`, +1-555-0101, PagerDuty target `bob-trident`]
+pager handle — e.g. `@bob`, +1-555-0101, PagerDuty target `bob-sentinel`]
 
 **Coverage window:** launch week is defined as the 7-day period starting on
 the day of the first public announcement. Both contacts above are on-call for
@@ -130,7 +130,7 @@ launch.]
 
 **Option A — GitHub Discussions / Announcements**
 Use the `Announcements` category in GitHub Discussions
-(`https://github.com/Telocel-Labs/Trident/discussions`). Post a new discussion
+(`https://github.com/A4-Stellar/Sentinel/discussions`). Post a new discussion
 thread for each incident with updates appended as comments. Link the thread
 from any user-visible status page or README badge.
 

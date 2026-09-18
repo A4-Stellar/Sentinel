@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
 )
 
 // legacyMetricsPattern is the route pattern of the pre-existing hand-rolled

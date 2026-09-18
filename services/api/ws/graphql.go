@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 )
 
 const (

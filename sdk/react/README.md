@@ -1,19 +1,19 @@
-# @trident-indexer/react
+# @sentinel-indexer/react
 
-React hooks for the [Trident](https://github.com/Telocel-Labs/Trident) Soroban event indexer, built on top of [`@trident-indexer/sdk`](../typescript).
+React hooks for the [Sentinel](https://github.com/A4-Stellar/Sentinel) Soroban event indexer, built on top of [`@sentinel-indexer/sdk`](../typescript).
 
 ## Installation
 
 ```bash
-npm install @trident-indexer/react @trident-indexer/sdk
+npm install @sentinel-indexer/react @sentinel-indexer/sdk
 # or
-yarn add @trident-indexer/react @trident-indexer/sdk
+yarn add @sentinel-indexer/react @sentinel-indexer/sdk
 # or
-pnpm add @trident-indexer/react @trident-indexer/sdk
+pnpm add @sentinel-indexer/react @sentinel-indexer/sdk
 ```
 
-`@trident-indexer/sdk` is a peer dependency, not bundled — the TypeScript
-SDK's `TridentClient` and its types are what `TridentProvider` wraps and
+`@sentinel-indexer/sdk` is a peer dependency, not bundled — the TypeScript
+SDK's `SentinelClient` and its types are what `SentinelProvider` wraps and
 every hook re-exports for convenience.
 
 ---
@@ -21,16 +21,16 @@ every hook re-exports for convenience.
 ## Quick Start
 
 Wrap your app (or the portion of it that needs event data) in
-`TridentProvider`:
+`SentinelProvider`:
 
 ```tsx
-import { TridentProvider } from "@trident-indexer/react";
+import { SentinelProvider } from "@sentinel-indexer/react";
 
 function App() {
   return (
-    <TridentProvider apiUrl="https://api.trident.telocel.io" apiKey="your-api-key" network="mainnet">
+    <SentinelProvider apiUrl="https://api.sentinel.a4stellar.io" apiKey="your-api-key" network="mainnet">
       <EventFeed />
-    </TridentProvider>
+    </SentinelProvider>
   );
 }
 ```
@@ -38,7 +38,7 @@ function App() {
 Then use the hooks anywhere beneath the provider:
 
 ```tsx
-import { useContractEvents, useSubscription } from "@trident-indexer/react";
+import { useContractEvents, useSubscription } from "@sentinel-indexer/react";
 
 function EventFeed() {
   const { events, isLoading, error, hasMore, refresh } = useContractEvents({
@@ -75,15 +75,15 @@ function EventFeed() {
 
 ## API
 
-### `TridentProvider`
+### `SentinelProvider`
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `apiUrl` | `string` | `TRIDENT_BASE_URL` env var (SSR only) | Trident API base URL. |
-| `apiKey` | `string` | `TRIDENT_API_KEY` env var (SSR only) | API key. |
-| `network` | `TridentClientConfig["network"]` | `"mainnet"` | Network the client targets. |
+| `apiUrl` | `string` | `SENTINEL_BASE_URL` env var (SSR only) | Sentinel API base URL. |
+| `apiKey` | `string` | `SENTINEL_API_KEY` env var (SSR only) | API key. |
+| `network` | `SentinelClientConfig["network"]` | `"mainnet"` | Network the client targets. |
 
-Constructs one `TridentClient` (stable across re-renders unless `apiUrl`,
+Constructs one `SentinelClient` (stable across re-renders unless `apiUrl`,
 `apiKey`, or `network` change) and makes it available to every hook beneath
 it via context.
 
@@ -110,8 +110,8 @@ value.
 
 ### Re-exported types
 
-`SorobanEvent`, `QueryEventsParams`, and `TridentClientConfig` are
-re-exported from `@trident-indexer/sdk` so most consumers never need a
+`SorobanEvent`, `QueryEventsParams`, and `SentinelClientConfig` are
+re-exported from `@sentinel-indexer/sdk` so most consumers never need a
 direct import from the underlying package.
 
 ---
@@ -119,7 +119,7 @@ direct import from the underlying package.
 ## Regenerating OpenAPI models
 
 This package has no generated model file of its own — `useContractEvents`
-and `useSubscription` consume `@trident-indexer/sdk`'s `SorobanEvent` and
+and `useSubscription` consume `@sentinel-indexer/sdk`'s `SorobanEvent` and
 `QueryEventsParams` types directly rather than generating a parallel copy.
 Regenerating the TypeScript SDK's models
 (`python3 scripts/generate_sdk_models.py --language typescript`, see
@@ -133,7 +133,7 @@ run here.
 
 ```bash
 npm install
-npm run build   # requires @trident-indexer/sdk (../typescript) to be built first —
+npm run build   # requires @sentinel-indexer/sdk (../typescript) to be built first —
                  # its dist/ output is what this package's file: dependency resolves to
 npm test
 ```

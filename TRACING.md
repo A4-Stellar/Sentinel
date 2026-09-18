@@ -1,6 +1,6 @@
 # End-to-End OpenTelemetry Tracing
 
-This document describes how Trident implements and uses OpenTelemetry tracing to provide distributed tracing across the indexer, gRPC API, and Go HTTP API.
+This document describes how Sentinel implements and uses OpenTelemetry tracing to provide distributed tracing across the indexer, gRPC API, and Go HTTP API.
 
 ## Architecture
 
@@ -47,7 +47,7 @@ Tracing is configured via environment variables:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT` - gRPC endpoint for OTLP trace export (e.g., `localhost:4317`)
   - If unset, tracing is disabled (no-op exporter)
-- `RUST_LOG` - Log level filter (e.g., `info,trident=debug`)
+- `RUST_LOG` - Log level filter (e.g., `info,sentinel=debug`)
 
 Example:
 ```bash

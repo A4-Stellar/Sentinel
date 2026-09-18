@@ -1,6 +1,6 @@
-# trident-sdk
+# sentinel-sdk
 
-Rust client for the [Trident](https://github.com/Telocel-Labs/Trident) Soroban event indexer.
+Rust client for the [Sentinel](https://github.com/A4-Stellar/Sentinel) Soroban event indexer.
 
 ## Installation
 
@@ -8,7 +8,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-trident-sdk = "0.1"
+sentinel-sdk = "0.1"
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 ```
@@ -16,13 +16,13 @@ futures = "0.3"
 ## Quick start
 
 ```rust
-use trident_sdk::{ContractStatsQuery, TridentClient, TridentConfig, QueryParams, Network};
+use sentinel_sdk::{ContractStatsQuery, SentinelClient, SentinelConfig, QueryParams, Network};
 use futures::StreamExt;
 
 #[tokio::main]
-async fn main() -> Result<(), trident_sdk::TridentError> {
-    let client = TridentClient::new(TridentConfig {
-        api_url: "https://trident-api.fly.dev".into(),
+async fn main() -> Result<(), sentinel_sdk::SentinelError> {
+    let client = SentinelClient::new(SentinelConfig {
+        api_url: "https://sentinel-api.fly.dev".into(),
         api_key: "tk_your_key".into(),
         network: Network::Testnet,
         ..Default::default()
@@ -82,31 +82,31 @@ async fn main() -> Result<(), trident_sdk::TridentError> {
 
 ## Configuration
 
-`api_url` and `api_key` can be left empty in `TridentConfig`; `TridentClient::new`
-falls back to the `TRIDENT_BASE_URL` / `TRIDENT_API_KEY` environment
+`api_url` and `api_key` can be left empty in `SentinelConfig`; `SentinelClient::new`
+falls back to the `SENTINEL_BASE_URL` / `SENTINEL_API_KEY` environment
 variables, with an explicit field always taking precedence:
 
 ```rust
-use trident_sdk::{TridentClient, TridentConfig};
+use sentinel_sdk::{SentinelClient, SentinelConfig};
 
-// Reads TRIDENT_API_KEY / TRIDENT_BASE_URL from the environment.
-let client = TridentClient::new(TridentConfig::default())?;
+// Reads SENTINEL_API_KEY / SENTINEL_BASE_URL from the environment.
+let client = SentinelClient::new(SentinelConfig::default())?;
 ```
 
-If no API key is available from either source, `TridentClient::new` returns
-`Err(TridentError::MissingApiKey)`. The key is never logged: `TridentConfig`'s
+If no API key is available from either source, `SentinelClient::new` returns
+`Err(SentinelError::MissingApiKey)`. The key is never logged: `SentinelConfig`'s
 `Debug` implementation always redacts it (e.g. `***a1b2`).
 
 ## Publishing
 
 ```bash
-cargo publish --package trident-sdk
+cargo publish --package sentinel-sdk
 ```
 
 Dry-run check (runs in CI):
 
 ```bash
-cargo publish --dry-run --package trident-sdk
+cargo publish --dry-run --package sentinel-sdk
 ```
 
 ## Regenerating OpenAPI models

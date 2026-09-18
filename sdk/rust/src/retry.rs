@@ -6,7 +6,7 @@ use rand::Rng;
 /// 429/503 responses, falling back to exponential backoff with jitter
 /// otherwise.
 ///
-/// `None` in [`TridentConfig::retry`](crate::TridentConfig::retry) (or in a
+/// `None` in [`SentinelConfig::retry`](crate::SentinelConfig::retry) (or in a
 /// `*_with_retry` call) disables retries entirely — the default.
 #[derive(Debug, Clone)]
 pub struct RetryConfig {

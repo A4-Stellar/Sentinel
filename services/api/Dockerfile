@@ -23,9 +23,9 @@ ARG COMMIT_SHA=unknown
 ARG BUILD_TIME=unknown
 
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-X 'github.com/Depo-dev/trident/services/api/handlers.Version=${VERSION}' \
-              -X 'github.com/Depo-dev/trident/services/api/handlers.CommitSHA=${COMMIT_SHA}' \
-              -X 'github.com/Depo-dev/trident/services/api/handlers.BuildTime=${BUILD_TIME}'" \
+    -ldflags="-X 'github.com/Depo-dev/sentinel/services/api/handlers.Version=${VERSION}' \
+              -X 'github.com/Depo-dev/sentinel/services/api/handlers.CommitSHA=${COMMIT_SHA}' \
+              -X 'github.com/Depo-dev/sentinel/services/api/handlers.BuildTime=${BUILD_TIME}'" \
     -o /api .
 
 # ── runtime ──────────────────────────────────────────────────────────────────
@@ -44,11 +44,11 @@ FROM alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc
 # blocks every PR in the repo since it is a required check.
 RUN apk upgrade --no-cache
 
-RUN adduser -S -u 1001 trident
+RUN adduser -S -u 1001 sentinel
 
 COPY --from=builder /api /usr/local/bin/api
 
-USER trident
+USER sentinel
 
 EXPOSE 3000
 

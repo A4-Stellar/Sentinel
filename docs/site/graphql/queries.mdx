@@ -4,7 +4,7 @@ description: "Example GraphQL queries for fetching Soroban events by contract, t
 ---
 
 <Warning>
-**Pending #66.** These examples are based on the planned schema and will be verified against the live API once [issue #66](https://github.com/Telocel-Labs/Trident/issues/66) is merged.
+**Pending #66.** These examples are based on the planned schema and will be verified against the live API once [issue #66](https://github.com/A4-Stellar/Sentinel/issues/66) is merged.
 </Warning>
 
 ## Events by contract
@@ -122,9 +122,9 @@ Iterate using `pageInfo.endCursor` as the `after` variable on subsequent request
 ## Running queries
 
 ```bash
-curl -X POST https://api.trident.telocel.com/graphql \
+curl -X POST https://api.sentinel.a4stellar.com/graphql \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $TRIDENT_API_KEY" \
+  -H "X-API-Key: $SENTINEL_API_KEY" \
   -d '{
     "query": "query { events(contractId: \"CAAA...AD2KM\", first: 5) { edges { node { id ledgerSequence } } pageInfo { hasNextPage } } }"
   }'

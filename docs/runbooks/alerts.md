@@ -14,7 +14,7 @@ whom) is configured in [`monitoring/alertmanager.yml`](../../monitoring/alertman
 - [`alert-routing.md`](alert-routing.md) — Alertmanager configuration, pre-launch routing test checklist, and maintenance silences.
 - [`post-incident-review.md`](post-incident-review.md) — PIR template; complete within 72 hours of resolving any SEV-1 or SEV-2 incident.
 
-## TridentIndexerLagWarning
+## SentinelIndexerLagWarning
 
 **Means:** the indexer is more than 200 ledgers behind the Stellar chain tip,
 sustained for 10 minutes.
@@ -26,15 +26,15 @@ what "behind" means. The 10-minute `for` absorbs normal RPC jitter and brief
 upstream slowdowns without paging.
 
 **First steps:**
-1. Check `trident_indexer_rpc_call_duration_seconds` and
-   `trident_indexer_rpc_errors_total` — is the Stellar RPC node slow or
-   erroring? (see `TridentIndexerRPCErrorRateHigh` below)
-2. Check `trident_indexer_db_pool_size`/`_idle_connections` — is the
+1. Check `sentinel_indexer_rpc_call_duration_seconds` and
+   `sentinel_indexer_rpc_errors_total` — is the Stellar RPC node slow or
+   erroring? (see `SentinelIndexerRPCErrorRateHigh` below)
+2. Check `sentinel_indexer_db_pool_size`/`_idle_connections` — is the
    indexer's own Postgres write path the bottleneck?
 3. If both look healthy, check indexer logs for retries/backoff — the RPC
    node may be silently rate-limiting.
 
-## TridentIndexerLagCritical
+## SentinelIndexerLagCritical
 
 **Means:** the indexer is more than 1000 ledgers behind, sustained for 5
 minutes — API consumers are now reading meaningfully stale data.
@@ -44,14 +44,14 @@ well past "temporarily slow" and into "effectively stalled." The shorter
 5-minute window reflects the higher severity — page sooner once lag is this
 large.
 
-**First steps:** same as `TridentIndexerLagWarning`, but treat as
-page-worthy immediately; also check `TridentIndexerHeartbeatStale` — a lag
+**First steps:** same as `SentinelIndexerLagWarning`, but treat as
+page-worthy immediately; also check `SentinelIndexerHeartbeatStale` — a lag
 this large with a stale heartbeat means the poll loop itself is hung, not
 just slow.
 
-## TridentIndexerHeartbeatStale
+## SentinelIndexerHeartbeatStale
 
-**Means:** `trident_indexer_last_poll_timestamp_seconds` — updated once per
+**Means:** `sentinel_indexer_last_poll_timestamp_seconds` — updated once per
 poll-loop iteration regardless of outcome — hasn't advanced in over 5
 minutes.
 
@@ -71,36 +71,36 @@ running slowly.
 3. Restart the indexer; the cursor is persisted in `system_state`, so a
    restart resumes safely without reprocessing or data loss.
 
-## TridentIndexerMetricsMissing
+## SentinelIndexerMetricsMissing
 
-**Means:** no `trident_indexer_last_poll_timestamp_seconds` series exists at
+**Means:** no `sentinel_indexer_last_poll_timestamp_seconds` series exists at
 all — Prometheus can't find the metric, as opposed to finding it stale.
 
 **Why this threshold:** distinguishes "the indexer is emitting metrics but
-hung" (`TridentIndexerHeartbeatStale`) from "the indexer's `/metrics` isn't
+hung" (`SentinelIndexerHeartbeatStale`) from "the indexer's `/metrics` isn't
 scrapeable at all" (crashed, network partition, misconfigured scrape target).
 3 minutes gives one scrape-interval's worth of margin before treating it as
 real.
 
 **First steps:** check the indexer process is running and `/metrics` is
 reachable from Prometheus's network (`curl http://indexer:9090/metrics`);
-check Prometheus's Targets page for scrape errors on the `trident-indexer`
+check Prometheus's Targets page for scrape errors on the `sentinel-indexer`
 job.
 
-## TridentIndexerProcessDown
+## SentinelIndexerProcessDown
 
-**Means:** Prometheus's own `up{job="trident-indexer"}` is 0 — the scrape
+**Means:** Prometheus's own `up{job="sentinel-indexer"}` is 0 — the scrape
 itself is failing (connection refused/timeout), for 2 minutes.
 
 **Why this threshold:** `up` is the standard, library-level signal for "this
 target isn't reachable at all." 2 minutes covers one or two missed scrapes
 without paging on a single transient network blip.
 
-**First steps:** same as `TridentIndexerMetricsMissing` — this is usually the
+**First steps:** same as `SentinelIndexerMetricsMissing` — this is usually the
 same underlying problem (process down or network partition) observed from
 Prometheus's scrape health instead of the metric's own staleness.
 
-## TridentIndexerParseErrorRateHigh
+## SentinelIndexerParseErrorRateHigh
 
 **Means:** over 1% of events in the last 10 minutes failed XDR decoding and
 were written to `parse_errors` (parse-error isolation) instead of being
@@ -120,7 +120,7 @@ malformed events.
 3. If it's a new, valid event shape, this is a parser bug — file/fix rather
    than treating it as transient.
 
-## TridentIndexerUnexpectedScValVariant
+## SentinelIndexerUnexpectedScValVariant
 
 **Means:** an event payload contained an ScVal variant that no well-behaved
 contract emits — `ContractInstance`, `LedgerKeyContractInstance`, or
@@ -146,7 +146,7 @@ upgrade fails compilation instead of reaching production.
 3. If a legitimate new use appears for one of these variants in event
    payloads, decide its first-class rendering and demote it from the
    anomalous set.
-## TridentIndexerReconciliationMismatch
+## SentinelIndexerReconciliationMismatch
 
 **Means:** the reconciliation loop (issue #511) re-fetched a settled ledger
 window from `getEvents` - applying the ingest pipeline's own filter and skip
@@ -163,10 +163,10 @@ ratchet to critical once it has run clean on testnet for a while.
 **First steps:**
 1. Find the `Reconciliation discrepancy` warn logs - they name each ledger
    range with the RPC and database counts
-   (`trident_indexer_reconcile_missing_events_total` vs
+   (`sentinel_indexer_reconcile_missing_events_total` vs
    `_extra_events_total` says which direction).
 2. For missing events, re-ingest the reported ranges:
-   `trident-backfill --from-ledger <from> --to-ledger <to>` (idempotent).
+   `sentinel-backfill --from-ledger <from> --to-ledger <to>` (idempotent).
    Use `--dry-run` first to preview counts for any range on demand.
 3. If the discrepancy reappears on later passes for NEW ranges, the ingest
    pipeline is dropping events right now - check parse-error rates, RPC
@@ -175,7 +175,7 @@ ratchet to critical once it has run clean on testnet for a while.
    backfill wrote rows outside the allowlist rules or a duplicate-index bug
    - inspect the rows in the reported range before deleting anything.
 
-## TridentIndexerReconciliationFailing
+## SentinelIndexerReconciliationFailing
 
 **Means:** the reconciliation loop keeps aborting before producing a report
 - `getLatestLedger`/`getEvents` failures, or database errors during the
@@ -188,13 +188,13 @@ alert's silence is unknown, not clean.
 
 **First steps:**
 1. Check the `Reconciliation pass failed` warn logs for the error.
-2. If RPC-related, see `TridentIndexerRPCErrorRateHigh` - the reconciler
+2. If RPC-related, see `SentinelIndexerRPCErrorRateHigh` - the reconciler
    shares the endpoint pool and fails alongside it.
 3. If the indexer cursor has not yet reached the settled window (fresh
    deploy, deep backfill), passes fail with "nothing to reconcile yet" -
    expected until the indexer catches up.
 
-## TridentIndexerRPCErrorRateHigh
+## SentinelIndexerRPCErrorRateHigh
 
 **Means:** over 5% of Stellar RPC calls (`getEvents`/`getLedgers`) errored in
 the last 5 minutes (issue #297).
@@ -204,13 +204,13 @@ load; 5% sustained for 10 minutes is well above normal noise and usually
 means the upstream node is degraded or rate-limiting.
 
 **First steps:**
-1. Check `trident_indexer_rpc_call_duration_seconds` for the same method
+1. Check `sentinel_indexer_rpc_call_duration_seconds` for the same method
    — is latency also elevated (overload) or normal (outright rejections)?
 2. Check the RPC provider's status page / try a manual `getHealth` call
    against `STELLAR_RPC_URL`.
 3. If a fallback/alternate RPC endpoint is configured, consider failing over.
 
-## TridentIndexerRPCErrorRateCritical
+## SentinelIndexerRPCErrorRateCritical
 
 **Means:** over 25% of Stellar RPC calls errored in the last 5 minutes.
 
@@ -218,11 +218,11 @@ means the upstream node is degraded or rate-limiting.
 effectively stalled (most poll cycles failing outright). Page immediately
 rather than waiting the full 10-minute window used for the warning tier.
 
-**First steps:** same as `TridentIndexerRPCErrorRateHigh`, treated as
+**First steps:** same as `SentinelIndexerRPCErrorRateHigh`, treated as
 immediate: fail over to an alternate RPC endpoint if one exists, or escalate
 to the RPC provider.
 
-## TridentAPIHTTP5xxRateHigh
+## SentinelAPIHTTP5xxRateHigh
 
 **Means:** over 5% of Go API requests returned a 5xx in the last 5 minutes,
 sustained for 10 minutes.
@@ -232,13 +232,13 @@ request, a momentary DB blip); 5% sustained is a real, ongoing failure mode
 rather than noise.
 
 **First steps:**
-1. Check `trident_api_db_pool_acquired_connections` /
-   `trident_api_db_pool_max_connections` — is the pool saturated?
-2. Check `TridentAPIDependencyUnhealthy` — is Postgres/Redis/gRPC down?
-3. Break down by `route` (`trident_api_http_requests_total{status=~"5..",...}`)
+1. Check `sentinel_api_db_pool_acquired_connections` /
+   `sentinel_api_db_pool_max_connections` — is the pool saturated?
+2. Check `SentinelAPIDependencyUnhealthy` — is Postgres/Redis/gRPC down?
+3. Break down by `route` (`sentinel_api_http_requests_total{status=~"5..",...}`)
    to see if it's isolated to one endpoint or API-wide.
 
-## TridentAPIHTTP5xxRateCritical
+## SentinelAPIHTTP5xxRateCritical
 
 **Means:** over 25% of Go API requests are failing with a 5xx, sustained for
 5 minutes — the API is largely unusable.
@@ -247,24 +247,24 @@ rather than noise.
 fraction of all callers; the shorter window pages faster than the warning
 tier.
 
-**First steps:** same as `TridentAPIHTTP5xxRateHigh`, treated as immediate —
+**First steps:** same as `SentinelAPIHTTP5xxRateHigh`, treated as immediate —
 check dependency health first since a downed Postgres/Redis is the most
 common cause of an API-wide 5xx spike this large.
 
-## TridentAPIProcessDown
+## SentinelAPIProcessDown
 
-**Means:** `up{job="trident-api"}` is 0 for 2 minutes — Prometheus can't
+**Means:** `up{job="sentinel-api"}` is 0 for 2 minutes — Prometheus can't
 scrape the Go API at all.
 
-**Why this threshold:** same reasoning as `TridentIndexerProcessDown` — `up`
+**Why this threshold:** same reasoning as `SentinelIndexerProcessDown` — `up`
 is the standard scrape-health signal, 2 minutes covers a missed scrape or
 two without paging on a blip.
 
 **First steps:** check process status and container/pod logs; check
 `readinessProbe`/`livenessProbe` results if running under Kubernetes (see
-`helm/trident/values.yaml`).
+`helm/sentinel/values.yaml`).
 
-## TridentAPIDependencyUnhealthy
+## SentinelAPIDependencyUnhealthy
 
 **Means:** `GET /v1/health` has been returning non-200 for 5 minutes. That
 endpoint checks Postgres, Redis, and the gRPC backend concurrently and fails
@@ -272,7 +272,7 @@ if any one of them does.
 
 **Why this threshold:** relies on the Helm chart's liveness/readiness probes
 (or an equivalent external health check) polling `/v1/health` every ~10s to
-keep `trident_api_http_requests_total{route="GET /v1/health"}` moving; 5
+keep `sentinel_api_http_requests_total{route="GET /v1/health"}` moving; 5
 minutes gives ample margin over that polling interval before treating a
 failure as sustained rather than a single flaky check. If you deploy without
 those probes (e.g. bare `docker compose`), add an equivalent periodic health
@@ -281,12 +281,12 @@ check — otherwise this alert has no samples to evaluate.
 **First steps:**
 1. `curl` `/v1/health` directly and read the `checks` field
    (`postgres`/`redis`/`grpc_api`) to see which dependency is failing.
-2. If Postgres: check `TridentAPIDBPoolSaturated` and the database's own
+2. If Postgres: check `SentinelAPIDBPoolSaturated` and the database's own
    health/connection count.
-3. If Redis: check Redis process health and `trident_api_redis_stream_length`
+3. If Redis: check Redis process health and `sentinel_api_redis_stream_length`
    for a consumer that's stopped reading.
 
-## TridentAPIDBPoolSaturated
+## SentinelAPIDBPoolSaturated
 
 **Means:** over 90% of the Go API's Postgres connection pool has been
 checked out for 10 minutes.
@@ -307,7 +307,7 @@ absorbs on its own.
 
 ---
 
-## TridentDiskSpaceLow
+## SentinelDiskSpaceLow
 
 **Means:** less than 15% of the Postgres data volume remains, regardless of trend.
 
@@ -321,13 +321,13 @@ absorbs on its own.
    inactive slot pins WAL indefinitely. Drop it if the replica is genuinely
    gone: `SELECT pg_drop_replication_slot('<name>');`
 3. If it is ordinary growth, treat it as
-   `TridentDiskFillingWithin48Hours` above.
+   `SentinelDiskFillingWithin48Hours` above.
 
 ---
 
-## TridentPartitionExhaustionWarning
+## SentinelPartitionExhaustionWarning
 
-**Means:** `trident_indexer_partition_lookahead_ledgers` — the distance in
+**Means:** `sentinel_indexer_partition_lookahead_ledgers` — the distance in
 ledgers between the current ingest cursor and the upper bound of the last named
 `soroban_events` partition — has been below 5,000,000 for 30 minutes.
 
@@ -368,12 +368,12 @@ days.
 
 **Why it fires as a warning, not a page:** there is months of runway at the
 5M threshold. Create a ticket, action it during business hours, and monitor
-the gauge. Escalate to `TridentPartitionExhausted` (critical) if the lookahead
+the gauge. Escalate to `SentinelPartitionExhausted` (critical) if the lookahead
 continues to fall without action.
 
-## TridentPartitionExhausted
+## SentinelPartitionExhausted
 
-**Means:** `trident_indexer_partition_lookahead_ledgers` is at or below 0 —
+**Means:** `sentinel_indexer_partition_lookahead_ledgers` is at or below 0 —
 the ingest cursor has reached or passed the upper bound of the last named
 `soroban_events` partition. The indexer will refuse to commit any further pages
 and will halt with a `Fatal` error on the next poll cycle that produces events.
@@ -415,7 +415,7 @@ than corrupt the event stream (see `assert_no_default_partition_overflow` in
 3. **Restart the indexer** (it halted with a Fatal error; it will not recover
    on its own). The cursor is persisted in `system_state` so restart resumes
    from exactly where it stopped — no data loss, no re-index required.
-4. **Confirm** `trident_indexer_partition_lookahead_ledgers` is positive and
+4. **Confirm** `sentinel_indexer_partition_lookahead_ledgers` is positive and
    rising after the restart.
 5. Check whether any events landed in `soroban_events_default` during any
    window when the guard was not in effect (pre-#525). If rows exist there,
@@ -440,7 +440,7 @@ The following alerts monitor Stellar RPC provider health — latency, error
 rate, and failover state — so ops can see "RPC is degraded" before it turns
 into ingest lag.
 
-## TridentRPCHighErrorRate
+## SentinelRPCHighErrorRate
 
 **Means:** over 10% of Stellar RPC calls have failed over the last 5 minutes,
 sustained for 5 minutes.
@@ -451,9 +451,9 @@ transient failures. This is a leading indicator that will turn into ingest
 lag if not addressed.
 
 **First steps:**
-1. Check `trident_indexer_rpc_errors_total` and break down by `error_type`
+1. Check `sentinel_indexer_rpc_errors_total` and break down by `error_type`
    to distinguish rate-limited vs timing-out vs bad request shape.
-2. Check `trident_indexer_rpc_active_endpoint` to see if failover has
+2. Check `sentinel_indexer_rpc_active_endpoint` to see if failover has
    already kicked in to a secondary RPC provider.
 3. Check the RPC provider's status page or try a manual health check against
    `STELLAR_RPC_URL`.
@@ -469,7 +469,7 @@ raising rate limits with the provider.
 **Escalation:** if sustained for >15 minutes and no fallback is available,
 escalate to the RPC provider or switch endpoints.
 
-## TridentRPCHighLatency
+## SentinelRPCHighLatency
 
 **Means:** p95 latency for a specific RPC method (e.g., `getEvents`) has
 exceeded 5 seconds, sustained for 10 minutes.
@@ -481,11 +481,11 @@ waiting on slow RPC responses.
 
 **First steps:**
 1. Check which method is slow: break down
-   `trident_indexer_rpc_call_duration_seconds` by `method` label.
+   `sentinel_indexer_rpc_call_duration_seconds` by `method` label.
 2. Check if this correlates with elevated error rate
-   (`TridentRPCHighErrorRate`) — often both fire together when the provider
+   (`SentinelRPCHighErrorRate`) — often both fire together when the provider
    is overloaded.
-3. Check `trident_indexer_rpc_timeouts_total` — are requests timing out
+3. Check `sentinel_indexer_rpc_timeouts_total` — are requests timing out
    entirely, or just responding slowly?
 
 **Known causes:**
@@ -499,9 +499,9 @@ failover or allowing the automatic failover logic to switch.
 **Escalation:** if sustained for >30 minutes, escalate to the RPC provider
 or investigate network path.
 
-## TridentRPCFailoverActive
+## SentinelRPCFailoverActive
 
-**Means:** `trident_indexer_rpc_active_endpoint` has been non-zero (not the
+**Means:** `sentinel_indexer_rpc_active_endpoint` has been non-zero (not the
 primary) for at least 5 minutes — the indexer is running on a fallback RPC
 endpoint.
 
@@ -511,11 +511,11 @@ backup power") rather than urgent, but should be investigated before the
 backup fails too.
 
 **First steps:**
-1. Check `trident_indexer_rpc_failovers_total` to see how often failover has
+1. Check `sentinel_indexer_rpc_failovers_total` to see how often failover has
    occurred — frequent flapping suggests both endpoints are unstable.
 2. Check whether the primary RPC endpoint has recovered — try a manual health
    check or `getHealth` call.
-3. Check `trident_indexer_rpc_errors_total` for the primary endpoint to see
+3. Check `sentinel_indexer_rpc_errors_total` for the primary endpoint to see
    why failover triggered.
 
 **Known causes:**
@@ -531,9 +531,9 @@ for sustained traffic.
 **Escalation:** if both primary and fallback are degraded, page on-call to
 add a third endpoint or escalate to RPC provider(s).
 
-## TridentRPCRateLimited
+## SentinelRPCRateLimited
 
-**Means:** `trident_indexer_rpc_errors_total{error_type="rate_limited"}` has
+**Means:** `sentinel_indexer_rpc_errors_total{error_type="rate_limited"}` has
 been climbing for 5+ minutes — the Stellar RPC provider is actively
 rate-limiting the indexer.
 
@@ -545,7 +545,7 @@ over).
 **First steps:**
 1. Check the indexer's configured poll interval (`POLL_INTERVAL_MS`) — if
    it's very aggressive (e.g., <1s), consider backing off slightly.
-2. Check `trident_indexer_rpc_call_duration_seconds_count` to estimate
+2. Check `sentinel_indexer_rpc_call_duration_seconds_count` to estimate
    request rate — are we exceeding the provider's documented limits?
 3. Check the RPC provider's dashboard/billing page to see current quota usage
    and limits.
@@ -584,17 +584,17 @@ immediately — it's not a transient blip if both the 5m and 1h windows agree
 — but not so high that it triggers on every momentary spike.
 
 **First steps:**
-1. Check `trident_indexer_ledger_lag` current value — how far behind is the
+1. Check `sentinel_indexer_ledger_lag` current value — how far behind is the
    indexer right now?
-2. Check `trident_indexer_rpc_retries_total` and
-   `trident_indexer_rpc_failovers_total` — is the RPC layer struggling?
-3. Check `trident_indexer_last_poll_timestamp_seconds` — is the poll loop
+2. Check `sentinel_indexer_rpc_retries_total` and
+   `sentinel_indexer_rpc_failovers_total` — is the RPC layer struggling?
+3. Check `sentinel_indexer_last_poll_timestamp_seconds` — is the poll loop
    stalled entirely, or just slow?
 
 **Known causes:**
-- RPC provider degradation (see `TridentRPCHighErrorRate`,
-  `TridentRPCHighLatency`)
-- Database write path bottleneck (check `trident_indexer_db_pool_size` and
+- RPC provider degradation (see `SentinelRPCHighErrorRate`,
+  `SentinelRPCHighLatency`)
+- Database write path bottleneck (check `sentinel_indexer_db_pool_size` and
   Postgres slow query log)
 - Indexer restart/deploy during high ledger activity
 
@@ -621,11 +621,11 @@ issues the fast-burn rule would already catch.
    lower urgency — this is a leading indicator, not an active outage.
 2. Check whether this correlates with any recent deploys, config changes, or
    upstream Stellar protocol upgrades.
-3. Review `trident_indexer_rpc_errors_total` and
-   `trident_indexer_parse_errors_total` for elevated rates.
+3. Review `sentinel_indexer_rpc_errors_total` and
+   `sentinel_indexer_parse_errors_total` for elevated rates.
 
 **Known causes:**
-- Slightly degraded RPC latency not yet crossing the `TridentRPCHighLatency`
+- Slightly degraded RPC latency not yet crossing the `SentinelRPCHighLatency`
   threshold
 - Gradual increase in ledger activity (more events per ledger) without a
   corresponding indexer capacity increase
@@ -639,7 +639,7 @@ business hours before it escalates to fast burn.
 
 ## IndexerHeartbeatStalled
 
-**Means:** `trident_indexer_last_poll_timestamp_seconds` has not advanced in
+**Means:** `sentinel_indexer_last_poll_timestamp_seconds` has not advanced in
 over 2 minutes — the indexer poll loop has not completed a cycle.
 
 **Why this threshold:** this is a dead-man's-switch for the SLO: if the
@@ -651,7 +651,7 @@ stuck retrying RPC.
 **First steps:**
 1. Check indexer process status (`kubectl get pods` or `docker compose ps`) —
    is it running, restarting, or crashed?
-2. Check `trident_indexer_rpc_errors_total` — is it stuck retrying RPC
+2. Check `sentinel_indexer_rpc_errors_total` — is it stuck retrying RPC
    failures?
 3. If the process is alive but stalled, capture a stack dump/profile before
    restarting.
@@ -668,9 +668,9 @@ stuck retrying RPC.
 **Escalation:** page on-call immediately — a stalled indexer violates the
 ingest-freshness SLO directly.
 
-## TridentIngestLagSustainedHigh
+## SentinelIngestLagSustainedHigh
 
-**Means:** `trident_indexer_ledger_lag_seconds_estimated` (lag expressed in
+**Means:** `sentinel_indexer_ledger_lag_seconds_estimated` (lag expressed in
 estimated wall-clock seconds, assuming ~5s per ledger) has been above 500s
 (~100 ledgers) for 10 minutes.
 
@@ -681,9 +681,9 @@ of lag) sustained for 10 minutes is well past "transient slowdown" and into
 `GET /v1/stats/indexer` (docs/observability/data-freshness.md).
 
 **First steps:**
-1. Check `trident_indexer_ledger_lag` (the raw ledger-count lag) and
-   `trident_indexer_rpc_active_endpoint` to see if RPC failover has occurred.
-2. Check `trident_indexer_rpc_errors_total` — is the RPC provider the cause?
+1. Check `sentinel_indexer_ledger_lag` (the raw ledger-count lag) and
+   `sentinel_indexer_rpc_active_endpoint` to see if RPC failover has occurred.
+2. Check `sentinel_indexer_rpc_errors_total` — is the RPC provider the cause?
 3. Same diagnostic steps as `IngestFreshnessFastBurn` — this is an alternate
    view of the same underlying problem.
 
@@ -695,7 +695,7 @@ bottleneck, indexer restart during high activity).
 **Escalation:** page on-call — this crosses the "API consumers are reading
 meaningfully stale data" threshold.
 
-## TridentDiskFillingWithin14Days
+## SentinelDiskFillingWithin14Days
 
 **Means:** extrapolating the last 6 hours of growth, the Postgres data volume
 runs out of space within 14 days.
@@ -727,7 +727,7 @@ rather than to react.
    ```
    Confirm the retention policy before dropping — those events are gone.
 
-## TridentDiskFillingWithin48Hours
+## SentinelDiskFillingWithin48Hours
 
 **Means:** the same projection, now inside 48 hours.
 
@@ -744,7 +744,7 @@ indexer stops committing and the API fails writes.
    unrotated WAL (`SELECT pg_size_pretty(sum(size)) FROM pg_ls_waldir();`) or a
    stalled replication slot holds space that no partition drop will release.
 
-## TridentDiskSpaceLow
+## SentinelDiskSpaceLow
 
 **Means:** less than 15% of the Postgres data volume remains, regardless of
 trend.
@@ -762,15 +762,15 @@ those, so it fires on the level rather than the slope.
    inactive slot pins WAL indefinitely. Drop it if the replica is genuinely
    gone: `SELECT pg_drop_replication_slot('<name>');`
 3. If it is ordinary growth, treat it as
-   `TridentDiskFillingWithin48Hours` above.
+   `SentinelDiskFillingWithin48Hours` above.
 
-## TridentIndexerPersistDeadLetterBacklog
+## SentinelIndexerPersistDeadLetterBacklog
 
 **Means:** `failed_events` has pending rows — at least one event decoded
 fine but its database commit kept failing through the whole-page retry, the
 per-event isolation retry, and its backoff budget, so the streamer captured
 the failing event (full payload + error message), counted it on
-`trident_indexer_persist_dead_lettered_total`, and advanced the cursor past
+`sentinel_indexer_persist_dead_lettered_total`, and advanced the cursor past
 it (issues #208/#508). The data is safe but missing from `soroban_events`
 until replayed.
 
@@ -804,7 +804,7 @@ distinct poisoned events, not retry bursts.
    historical repair, but know what you are and are not restoring:
 
    ```
-   trident-backfill --from-ledger <min> --to-ledger <max> [--contract <id>]
+   sentinel-backfill --from-ledger <min> --to-ledger <max> [--contract <id>]
    ```
 
    using `SELECT MIN(ledger_sequence), MAX(ledger_sequence) FROM

@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/gen"
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

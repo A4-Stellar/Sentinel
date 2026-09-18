@@ -44,12 +44,12 @@ Calling `unsubscribe()` is idempotent — calling it multiple times is safe.
 ### Basic subscription
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
-import type { SorobanEvent, Subscription } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { SorobanEvent, Subscription } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -73,12 +73,12 @@ setTimeout(() => sub.unsubscribe(), 5 * 60_000);
 
 ```typescript
 import { useEffect, useState } from "react";
-import { TridentClient } from "@trident-indexer/sdk";
-import type { SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
+import type { SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.NEXT_PUBLIC_TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.NEXT_PUBLIC_SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -102,11 +102,11 @@ function useContractEvents(contractId: string): SorobanEvent[] {
 ### Node.js server — graceful shutdown
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 

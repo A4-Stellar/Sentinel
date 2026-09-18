@@ -16,7 +16,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -54,7 +54,7 @@ type idempotencyRecord struct {
 // idempotencyEncryptionKey is the AES-256 key used to encrypt idempotency
 // records at rest in Redis (issue #572). Two of the routes this middleware
 // wraps — create api-key, create webhook — return a live credential
-// (trident_... key, whsec_... signing secret) in their 201 body, and that
+// (sentinel_... key, whsec_... signing secret) in their 201 body, and that
 // body used to sit in Redis in plaintext for the full 24h TTL: readable by
 // anything with Redis visibility (a replica, a backup, MONITOR, a
 // compromise), not just the original caller.

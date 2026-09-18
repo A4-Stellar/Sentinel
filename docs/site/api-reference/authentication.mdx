@@ -1,9 +1,9 @@
 ---
 title: "Authentication"
-description: "How API key authentication works in Trident — the X-API-Key header, 401 vs 403 responses, and managing keys in self-hosted deployments."
+description: "How API key authentication works in Sentinel — the X-API-Key header, 401 vs 403 responses, and managing keys in self-hosted deployments."
 ---
 
-Every Trident API endpoint (except `GET /v1/health`) requires authentication via an API key.
+Every Sentinel API endpoint (except `GET /v1/health`) requires authentication via an API key.
 
 ---
 
@@ -12,16 +12,16 @@ Every Trident API endpoint (except `GET /v1/health`) requires authentication via
 Pass your API key as the `X-API-Key` header on every request:
 
 ```bash
-curl https://api.trident.telocel.com/v1/events \
+curl https://api.sentinel.a4stellar.com/v1/events \
   -H "X-API-Key: tdk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 // The SDK sends X-API-Key automatically on every request.
@@ -37,7 +37,7 @@ Never expose your API key in client-side code, public repositories, or browser e
 
 ### Hosted API
 
-Sign up at [trident.telocel.com](https://trident.telocel.com/signup). Free tier keys are issued immediately. Each key is tied to a rate-limit tier (see [Rate Limiting](/api-reference/rate-limiting)).
+Sign up at [sentinel.a4stellar.com](https://sentinel.a4stellar.com/signup). Free tier keys are issued immediately. Each key is tied to a rate-limit tier (see [Rate Limiting](/api-reference/rate-limiting)).
 
 ### Self-hosted
 

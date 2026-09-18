@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/internal/contracttest"
+	"github.com/Depo-dev/sentinel/services/api/internal/contracttest"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 

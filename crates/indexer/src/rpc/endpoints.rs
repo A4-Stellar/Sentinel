@@ -25,7 +25,7 @@
 
 use std::time::{Duration, Instant};
 
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 /// A single configured endpoint and its health state.
 #[derive(Debug, Clone)]
@@ -69,14 +69,14 @@ impl EndpointPool {
         urls: Vec<String>,
         failover_threshold: u32,
         cooldown: Duration,
-    ) -> Result<Self, TridentError> {
+    ) -> Result<Self, SentinelError> {
         if urls.is_empty() {
-            return Err(TridentError::config(anyhow::anyhow!(
+            return Err(SentinelError::config(anyhow::anyhow!(
                 "[indexer] at least one Stellar RPC endpoint must be configured"
             )));
         }
         if failover_threshold == 0 {
-            return Err(TridentError::config(anyhow::anyhow!(
+            return Err(SentinelError::config(anyhow::anyhow!(
                 "[indexer] RPC failover threshold must be at least 1"
             )));
         }

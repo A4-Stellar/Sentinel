@@ -1,12 +1,12 @@
-# 📜 Trident `/v1/` API Compatibility Promise & Stability Policy
+# 📜 Sentinel `/v1/` API Compatibility Promise & Stability Policy
 
-This document formally defines the **frozen `/v1/` API surface, backward-compatibility guarantees, deprecation lifecycle, and versioning contract** for Trident across the REST API, WebSocket streams, and official client SDKs.
+This document formally defines the **frozen `/v1/` API surface, backward-compatibility guarantees, deprecation lifecycle, and versioning contract** for Sentinel across the REST API, WebSocket streams, and official client SDKs.
 
 ---
 
 ## 1. Frozen `/v1/` Public API Surface
 
-Trident commits that all endpoints listed below are **stable and frozen**. Any valid request targeting these endpoints will remain supported without breaking changes throughout the lifetime of the `v1` API.
+Sentinel commits that all endpoints listed below are **stable and frozen**. Any valid request targeting these endpoints will remain supported without breaking changes throughout the lifetime of the `v1` API.
 
 ### 1.1 Stable Endpoints
 
@@ -34,7 +34,7 @@ Trident commits that all endpoints listed below are **stable and frozen**. Any v
 ## 2. Invariants & Compatibility Guarantees
 
 ### 2.1 Request & Parameter Contracts
-- **No Required Field Additions**: Trident will never add new required query parameters, path variables, or request body fields to existing `v1` endpoints.
+- **No Required Field Additions**: Sentinel will never add new required query parameters, path variables, or request body fields to existing `v1` endpoints.
 - **Strict Parameter Validation**: Unknown query parameters are rejected with `400 INVALID_ARGUMENT` rather than silently ignored.
 - **Data Formatting**:
   - Contract addresses: Stellar contract strkey (`C` followed by 55 base32 uppercase characters).
@@ -91,7 +91,7 @@ If a stable `v1` endpoint or response field must be retired:
    ```http
    Deprecation: @1772323200
    Sunset: Wed, 01 Mar 2027 00:00:00 GMT
-   Link: <https://docs.trident.telocel.com/migrations/v1-to-v2>; rel="deprecation"
+   Link: <https://docs.sentinel.a4stellar.com/migrations/v1-to-v2>; rel="deprecation"
    ```
 3. **Documentation**: Detailed migration guides and alternative endpoints published in `CHANGELOG.md` and docs portal.
 

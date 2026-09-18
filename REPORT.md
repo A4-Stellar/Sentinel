@@ -1,4 +1,4 @@
-# Trident Hardening Sweep — Findings Report
+# Sentinel Hardening Sweep — Findings Report
 
 Branch: `hardening-sweep` (cut from `pr-189-fix` @ `b93316a`, which is 78 commits ahead of
 `origin/main` and is the "green under fire" work; `main` itself is behind and has red history).
@@ -9,7 +9,7 @@ Branch: `hardening-sweep` (cut from `pr-189-fix` @ `b93316a`, which is 78 commit
   OpenAPI, Docker build, E2E smoke, Helm). Verified via check-runs API.
 - Repo map: `crates/{api,indexer,backfill,common}` (Rust), `services/api` (Go REST + gRPC
   client), `sdk/{typescript,rust,go,python,react}`, `database/{schema.sql,migrations/0001-0009}`,
-  `docker/*compose*`, `helm/trident`, `.github/workflows/{ci,release}.yml`.
+  `docker/*compose*`, `helm/sentinel`, `.github/workflows/{ci,release}.yml`.
 
 ## How "green" hides gaps (Phase 1 — proven from CI logs)
 
@@ -51,7 +51,7 @@ bootstrapped from it is materially broken.**
   (`database/schema.sql:42`) exists in no migration. Insert path uses `ON CONFLICT (id)`
   (`crates/indexer/src/db/mod.rs:66`), so it is redundant divergence.
 
-*Failure scenario:* the **`rust-integration` CI job builds `trident_test` from schema.sql**
+*Failure scenario:* the **`rust-integration` CI job builds `sentinel_test` from schema.sql**
 (`.github/workflows/ci.yml:206`), so every code path touching `audit_log`, `parse_errors`, or the
 `system_state` health/alert columns is **not integration-covered** — tests are green only because
 they never exercise those paths against the DB. Anyone who runs `psql -f schema.sql` for local/dev
@@ -106,7 +106,7 @@ Acceptable by design; documented here so it isn't mistaken for coverage.
 `docker-compose.ci.yml`** though a prior fix removed it from E2E `depends_on`. Dead scaffolding in
 the CI stack.
 
-**L4 — Generated gRPC "not implemented" stubs** in `services/api/gen/trident_grpc.pb.go:95-103`
+**L4 — Generated gRPC "not implemented" stubs** in `services/api/gen/sentinel_grpc.pb.go:95-103`
 are normal protoc `Unimplemented*Server` output (the Go service is a gRPC *client*), not a real
 gap. Noted to pre-empt false alarms. No other real-code TODO/FIXME/unimplemented in the tree.
 
@@ -118,7 +118,7 @@ gap. Noted to pre-empt false alarms. No other real-code TODO/FIXME/unimplemented
    (add `audit_log`, `parse_errors`, the `system_state` health/alert columns; replace the
    soroban_events index set with the `0004`+`0009` canonical indexes; drop the non-migration
    `uq_soroban_events_tx_index`).
-2. **H1/M1 (durable)** — switch the `rust-integration` job to build `trident_test` from the
+2. **H1/M1 (durable)** — switch the `rust-integration` job to build `sentinel_test` from the
    **migration chain** instead of `schema.sql`, so CI validates the real deploy artifact and can
    never again silently depend on a stale mirror; and make `require_services!` **panic** (fail
    loud) when a dedicated `REQUIRE_TEST_SERVICES` flag (set only in that job) is present but the

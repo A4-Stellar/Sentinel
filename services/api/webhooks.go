@@ -21,12 +21,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/cursor"
-	"github.com/Depo-dev/trident/services/api/handlers"
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/internal/metrics"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/cursor"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/metrics"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/redis/go-redis/v9"
 )
@@ -93,7 +93,7 @@ type webhookDelivery struct {
 // middleware.NewDBAuth resolved and attached to the request context.
 //
 // It previously interpreted the raw X-API-Key HEADER as an api_keys.id UUID
-// — which no real key ever is, since keys are "trident_<hex>" strings — and
+// — which no real key ever is, since keys are "sentinel_<hex>" strings — and
 // then fell back to `INSERT INTO api_keys DEFAULT VALUES`, which violates
 // the table's NOT NULL constraints. Every legitimate caller therefore got a
 // 500 before reaching a subscription, making the documented list/create
@@ -125,7 +125,7 @@ type webhookDeliveryResult struct {
 
 // signWebhookPayload signs "${timestamp}.${body}" with the subscription secret
 // using HMAC-SHA256. The timestamp (Unix seconds) is also sent as the
-// X-Trident-Timestamp header so receivers can verify replay attacks:
+// X-Sentinel-Timestamp header so receivers can verify replay attacks:
 //
 //	mac := hmac.New(sha256.New, []byte(secret))
 //	mac.Write([]byte(fmt.Sprintf("%d.%s", timestamp, body)))
@@ -137,7 +137,7 @@ func signWebhookPayload(timestamp int64, body string, secret string) string {
 }
 
 // verifyWebhookSignature checks the HMAC-SHA256 signature over
-// "${timestamp}.${body}" against the X-Trident-Signature header value.
+// "${timestamp}.${body}" against the X-Sentinel-Signature header value.
 //
 // The header may contain a single signature ("sha256=<hex>") or two
 // space-separated signatures during a rotation overlap window
@@ -196,11 +196,11 @@ func startWebhookWorker(ctx context.Context, db *sql.DB, redisClient *redis.Clie
 	}
 	streamKey := os.Getenv("REDIS_STREAM_KEY")
 	if streamKey == "" {
-		streamKey = "trident:events"
+		streamKey = "sentinel:events"
 	}
 	groupName := os.Getenv("WEBHOOK_CONSUMER_GROUP")
 	if groupName == "" {
-		groupName = "trident-webhooks"
+		groupName = "sentinel-webhooks"
 	}
 	consumerName := os.Getenv("WEBHOOK_CONSUMER_NAME")
 	if consumerName == "" {
@@ -490,8 +490,8 @@ func performWebhookDelivery(ctx context.Context, sub webhookSubscription, event 
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Trident-Timestamp", strconv.FormatInt(now, 10))
-	req.Header.Set("X-Trident-Signature", "sha256="+signWebhookPayload(now, string(payload), sub.Secret))
+	req.Header.Set("X-Sentinel-Timestamp", strconv.FormatInt(now, 10))
+	req.Header.Set("X-Sentinel-Signature", "sha256="+signWebhookPayload(now, string(payload), sub.Secret))
 	// During a rotation overlap window both the new primary and the old
 	// secondary signature are sent, space-separated. Receivers MUST accept
 	// either one, allowing them to drain in-flight deliveries while they swap
@@ -499,7 +499,7 @@ func performWebhookDelivery(ctx context.Context, sub webhookSubscription, event 
 	if sub.SecondarySecret != nil && *sub.SecondarySecret != "" {
 		primary := "sha256=" + signWebhookPayload(now, string(payload), sub.Secret)
 		secondary := "sha256=" + signWebhookPayload(now, string(payload), *sub.SecondarySecret)
-		req.Header.Set("X-Trident-Signature", primary+" "+secondary)
+		req.Header.Set("X-Sentinel-Signature", primary+" "+secondary)
 	}
 
 	client := newWebhookDeliveryHTTPClient()

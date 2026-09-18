@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Depo-dev/trident/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/gen"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -67,7 +67,7 @@ func TestRetry_NonIdempotentMethodNotRetried(t *testing.T) {
 	var attempts int
 	invoker := failNTimesInvoker(10, codes.Unavailable, &attempts)
 
-	err := retryUnaryInterceptor(context.Background(), "/trident.Events/SomeMutation", nil, nil, nil, invoker)
+	err := retryUnaryInterceptor(context.Background(), "/sentinel.Events/SomeMutation", nil, nil, nil, invoker)
 	if status.Code(err) != codes.Unavailable {
 		t.Fatalf("expected Unavailable, got %v", err)
 	}
@@ -105,10 +105,10 @@ func TestMetricsInterceptor_RecordsAttempts(t *testing.T) {
 	var buf bytes.Buffer
 	WriteClientMetrics(&buf)
 	out := buf.String()
-	if !strings.Contains(out, `trident_grpc_client_requests_total{method="/trident.Events/GetEvent",code="Unavailable"}`) {
+	if !strings.Contains(out, `sentinel_grpc_client_requests_total{method="/sentinel.Events/GetEvent",code="Unavailable"}`) {
 		t.Errorf("missing request counter, got:\n%s", out)
 	}
-	if !strings.Contains(out, `trident_grpc_client_latency_seconds_total{method="/trident.Events/GetEvent"}`) {
+	if !strings.Contains(out, `sentinel_grpc_client_latency_seconds_total{method="/sentinel.Events/GetEvent"}`) {
 		t.Errorf("missing latency counter, got:\n%s", out)
 	}
 }

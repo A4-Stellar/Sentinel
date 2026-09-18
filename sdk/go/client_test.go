@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func TestQueryEvents(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		APIKey:  "test-key",
 	})
@@ -94,7 +94,7 @@ func TestGetEventByID(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		APIKey:  "test-key",
 	})
@@ -139,7 +139,7 @@ func TestAllEvents_FollowsCursorAcrossPages(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{BaseURL: server.URL})
+	client := NewClient(SentinelClientConfig{BaseURL: server.URL})
 
 	var gotIDs []string
 	for ev, err := range client.AllEvents(context.Background(), QueryEventsParams{}) {
@@ -170,7 +170,7 @@ func TestAllEvents_StopsAndYieldsError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{BaseURL: server.URL, RetryDisabled: true})
+	client := NewClient(SentinelClientConfig{BaseURL: server.URL, RetryDisabled: true})
 
 	var sawErr error
 	for _, err := range client.AllEvents(context.Background(), QueryEventsParams{}) {
@@ -212,7 +212,7 @@ func TestBatchGetEvents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:       "server error surfaces as TridentApiError",
+			name:       "server error surfaces as SentinelApiError",
 			ids:        []string{"id-1"},
 			statusCode: http.StatusBadRequest,
 			respBody:   `{"error":{"code":"INVALID_ARGUMENT","message":"bad id"}}`,
@@ -237,7 +237,7 @@ func TestBatchGetEvents(t *testing.T) {
 			}))
 			defer server.Close()
 
-			client := NewClient(TridentClientConfig{BaseURL: server.URL, RetryDisabled: true})
+			client := NewClient(SentinelClientConfig{BaseURL: server.URL, RetryDisabled: true})
 
 			res, err := client.BatchGetEvents(context.Background(), tt.ids)
 
@@ -281,7 +281,7 @@ func TestGetIndexerStats(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{BaseURL: server.URL})
+	client := NewClient(SentinelClientConfig{BaseURL: server.URL})
 
 	stats, err := client.GetIndexerStats(context.Background())
 	if err != nil {
@@ -342,7 +342,7 @@ func TestSubscribeToContract_ReceivesAndDecodesEvent(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		APIKey:  "test-key",
 	})
@@ -413,7 +413,7 @@ func TestSubscribeToContract_ResumesWithLastEventID(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{BaseURL: server.URL})
+	client := NewClient(SentinelClientConfig{BaseURL: server.URL})
 
 	sub, err := client.SubscribeToContract(context.Background(), SubscribeToContractParams{
 		ContractID: "C123",

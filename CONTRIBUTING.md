@@ -1,12 +1,12 @@
-# Contributing to Trident
+# Contributing to Sentinel
 
-Trident is infrastructure — the kind of system other developers will build products on top of without thinking about it. That means the bar for what gets merged is higher than it would be for an application. Code here needs to be correct, readable, and maintainable by someone who didn't write it. Those three things, in that order.
+Sentinel is infrastructure — the kind of system other developers will build products on top of without thinking about it. That means the bar for what gets merged is higher than it would be for an application. Code here needs to be correct, readable, and maintainable by someone who didn't write it. Those three things, in that order.
 
 ---
 
 ## Before the Codebase Is Public
 
-The most useful thing you can do right now is engage with the design while it can still change. Read the full specification at [`docs/SPECIFICATION.md`](./docs/SPECIFICATION.md) and open an issue if something looks wrong, underspecified, or like a decision that hasn't been thought through. Open a [Discussion](https://github.com/trident-build/trident/discussions) and describe what you're building on Stellar and what you'd need from an indexer. If you've built event pipelines or indexing infrastructure before, your architectural critique matters more right now than it will once the code exists.
+The most useful thing you can do right now is engage with the design while it can still change. Read the full specification at [`docs/SPECIFICATION.md`](./docs/SPECIFICATION.md) and open an issue if something looks wrong, underspecified, or like a decision that hasn't been thought through. Open a [Discussion](https://github.com/A4-Stellar/Sentinel/discussions) and describe what you're building on Stellar and what you'd need from an indexer. If you've built event pipelines or indexing infrastructure before, your architectural critique matters more right now than it will once the code exists.
 
 ---
 
@@ -15,8 +15,8 @@ The most useful thing you can do right now is engage with the design while it ca
 You'll need Rust, Go, Node.js, and Docker with Compose v2. Once those are in place, getting a local environment running is simple:
 
 ```bash
-git clone https://github.com/trident-build/trident.git
-cd trident
+git clone https://github.com/A4-Stellar/Sentinel.git
+cd sentinel
 cp .env.example .env
 make dev
 ```
@@ -55,7 +55,7 @@ CI runs the same scan on every push and pull request targeting `dev` or `main` v
 ## How the Repo Is Structured
 
 ```
-trident/
+sentinel/
 ├── crates/
 │   ├── indexer/        # Rust core — streamer, XDR parser, cursor management
 │   ├── api/            # Rust gRPC server
@@ -63,7 +63,7 @@ trident/
 ├── services/
 │   └── api/            # Go front office — REST, GraphQL, WebSocket, Redis consumer
 ├── sdk/
-│   └── typescript/     # TypeScript SDK (@trident-indexer/sdk)
+│   └── typescript/     # TypeScript SDK (@sentinel-indexer/sdk)
 ├── database/
 │   ├── schema.sql      # Canonical PostgreSQL schema
 │   └── migrations/     # Versioned, append-only migration files
@@ -104,7 +104,7 @@ A PR that comes back for revision is one that mixes concerns, doesn't explain th
 
 ## Code Standards
 
-On the Rust side, `cargo clippy` must pass clean and `cargo fmt` must produce no diff — both enforced in CI with no exceptions. `.unwrap()` is not allowed in non-test code because a panic in the streaming loop means missed events, and missed events are the one thing Trident cannot tolerate. New error variants go in `crates/common`. Public functions and types get doc comments.
+On the Rust side, `cargo clippy` must pass clean and `cargo fmt` must produce no diff — both enforced in CI with no exceptions. `.unwrap()` is not allowed in non-test code because a panic in the streaming loop means missed events, and missed events are the one thing Sentinel cannot tolerate. New error variants go in `crates/common`. Public functions and types get doc comments.
 
 On the Go side, `golangci-lint` must pass. Errors are returned and never ignored. Every function doing I/O takes a `context.Context` as its first argument. Error messages returned to developers need to be genuinely useful — not "internal server error" but something that tells them exactly what was wrong and how to fix it.
 
@@ -124,14 +124,14 @@ For more substantial work — changes to the indexer core, query performance imp
 
 ## Security
 
-Security issues must not be filed as public GitHub issues. Send them to `security@trident.build` and expect a response within 48 hours.
+Security issues must not be filed as public GitHub issues. Email **Afolabi** at [afolabiaderonke1995@gmail.com](mailto:afolabiaderonke1995@gmail.com) and expect a response within 48 hours.
 
 ---
 
 ## Getting Help
 
-[GitHub Discussions](https://github.com/trident-build/trident/discussions) is the right place for questions, ideas, and design conversations before an issue is opened. [GitHub Issues](https://github.com/trident-build/trident/issues) is for confirmed bugs and concrete feature requests. For anything that shouldn't be public, reach out at `contributors@trident.build`.
+[GitHub Discussions](https://github.com/A4-Stellar/Sentinel/discussions) is the right place for questions, ideas, and design conversations before an issue is opened. [GitHub Issues](https://github.com/A4-Stellar/Sentinel/issues) is for confirmed bugs and concrete feature requests. For anything that shouldn't be public, reach out to **Afolabi** at `afolabiaderonke1995@gmail.com`.
 
 ---
 
-*Trident is infrastructure for the whole Stellar ecosystem. Getting it right matters. Thanks for helping.*>>>>>>> 7e309c3 (chore(db): integrate sqlx-cli database migration management)
+*Sentinel is infrastructure for the whole Stellar ecosystem. Getting it right matters. Thanks for helping.*>>>>>>> 7e309c3 (chore(db): integrate sqlx-cli database migration management)

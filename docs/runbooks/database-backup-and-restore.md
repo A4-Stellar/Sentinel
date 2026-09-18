@@ -1,6 +1,6 @@
 # Database Backup, Point-In-Time Recovery, and Restore Runbook
 
-This runbook details the backup automation, point-in-time recovery (PITR) configuration, failure alerting mechanisms, and the end-to-end restore drill procedure for the Trident production PostgreSQL database.
+This runbook details the backup automation, point-in-time recovery (PITR) configuration, failure alerting mechanisms, and the end-to-end restore drill procedure for the Sentinel production PostgreSQL database.
 
 ## 1. Automated Scheduled Backups & Retention Policy
 
@@ -17,7 +17,7 @@ This runbook details the backup automation, point-in-time recovery (PITR) config
 
 ## 3. End-to-End Restore Drill & Wall-Clock Time
 
-- **Drill Performed On**: 2025-02-24 into a scratch ephemeral environment (`trident_scratch`).
+- **Drill Performed On**: 2025-02-24 into a scratch ephemeral environment (`sentinel_scratch`).
 - **Procedure executed**:
   1. Provisioned isolated scratch Postgres instance.
   2. Restored latest base snapshot (`pg_restore --clean --if-exists`).
@@ -28,7 +28,7 @@ This runbook details the backup automation, point-in-time recovery (PITR) config
 ## 4. Backup-Failure Alerting
 
 - **Design**: A silently failing backup job is the default failure mode, so monitoring enforces strict liveness.
-- **Alert**: `TridentDatabaseBackupFailed` fires if no successful backup completion marker has been written to the metrics gateway or object storage within 26 hours.
+- **Alert**: `SentinelDatabaseBackupFailed` fires if no successful backup completion marker has been written to the metrics gateway or object storage within 26 hours.
 - **Destination**: Paged immediately to the on-call engineer via PagerDuty and Slack `#infra-alerts`.
 
 ## 5. Scheduled Restore Drill Cadence

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
@@ -55,7 +55,7 @@ func SetInternalStatusDeps(db *pgxpool.Pool, redis *redis.Client, hub HubConn) {
 //
 // This endpoint is internal-only: it must never be reachable from outside the
 // cluster/VPC. Defense in depth is layered on top of this handler's own auth
-// check — see docker/nginx/nginx.conf and helm/trident/templates/ingress.yaml,
+// check — see docker/nginx/nginx.conf and helm/sentinel/templates/ingress.yaml,
 // which both explicitly deny /internal/ before it ever reaches this handler.
 func InternalStatus() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +108,7 @@ func InternalStatus() http.HandlerFunc {
 
 			// Redis stream depth
 			if statusDeps.redis != nil {
-				len := statusDeps.redis.XLen(ctx, "trident:events").Val()
+				len := statusDeps.redis.XLen(ctx, "sentinel:events").Val()
 				resp.RedisStreamDepth = len
 			}
 

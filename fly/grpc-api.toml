@@ -1,5 +1,5 @@
-﻿# fly/grpc-api.toml — Trident gRPC API (Rust, trident-api binary)
-app = "trident-grpc-api"
+﻿# fly/grpc-api.toml — Sentinel gRPC API (Rust, sentinel-api binary)
+app = "sentinel-grpc-api"
 primary_region = "iad"
 
 [build]
@@ -7,13 +7,13 @@ primary_region = "iad"
 
 [env]
   LOG_LEVEL = "info"
-  # trident-api (Rust) fails collect_required("GRPC_ADDR") at startup and
+  # sentinel-api (Rust) fails collect_required("GRPC_ADDR") at startup and
   # crash-loops if this is unset (crates/api/src/config.rs). Must match
   # [[services]] internal_port below.
   GRPC_ADDR = "0.0.0.0:50051"
 
 # Secrets are sourced exclusively from Fly's encrypted secrets store
-# (set via: fly secrets set -a trident-grpc-api KEY=value), never from [env].
+# (set via: fly secrets set -a sentinel-grpc-api KEY=value), never from [env].
 # Required: DATABASE_URL (set automatically by `fly postgres attach`),
 # REDIS_URL (crates/api/src/main.rs calls .expect("REDIS_URL is required")
 # and panics on startup if unset)

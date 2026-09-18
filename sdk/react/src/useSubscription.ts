@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { SorobanEvent, SubscribeToContractParams } from "@trident-indexer/sdk";
-import { useTridentClient } from "./context.js";
+import type { SorobanEvent, SubscribeToContractParams } from "@sentinel-indexer/sdk";
+import { useSentinelClient } from "./context.js";
 
 export interface UseSubscriptionParams {
   contractId: string;
@@ -21,7 +21,7 @@ export interface UseSubscriptionResult {
 export function useSubscription(
   params: UseSubscriptionParams,
 ): UseSubscriptionResult {
-  const client = useTridentClient();
+  const client = useSentinelClient();
   const [lastEvent, setLastEvent] = useState<SorobanEvent | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const paramsRef = useRef(params);

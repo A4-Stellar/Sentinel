@@ -5,11 +5,11 @@ use std::time::Duration;
 use crate::retry::RetryConfig;
 
 /// Environment variable consulted for the API key when
-/// [`TridentConfig::api_key`] is left empty.
-pub const ENV_API_KEY: &str = "TRIDENT_API_KEY";
+/// [`SentinelConfig::api_key`] is left empty.
+pub const ENV_API_KEY: &str = "SENTINEL_API_KEY";
 /// Environment variable consulted for the base URL when
-/// [`TridentConfig::api_url`] is left empty.
-pub const ENV_BASE_URL: &str = "TRIDENT_BASE_URL";
+/// [`SentinelConfig::api_url`] is left empty.
+pub const ENV_BASE_URL: &str = "SENTINEL_BASE_URL";
 
 /// Stellar network selection.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -31,15 +31,15 @@ impl Network {
     }
 }
 
-/// Configuration for [`TridentClient`](crate::TridentClient).
+/// Configuration for [`SentinelClient`](crate::SentinelClient).
 ///
 /// Precedence for `api_key` / `api_url` is: the explicit field value set
-/// here, falling back to the `TRIDENT_API_KEY` / `TRIDENT_BASE_URL`
+/// here, falling back to the `SENTINEL_API_KEY` / `SENTINEL_BASE_URL`
 /// environment variables (applied by
-/// [`TridentClient::new`](crate::TridentClient::new)) when left empty.
+/// [`SentinelClient::new`](crate::SentinelClient::new)) when left empty.
 #[derive(Clone)]
-pub struct TridentConfig {
-    /// Base URL of the Trident REST API.
+pub struct SentinelConfig {
+    /// Base URL of the Sentinel REST API.
     pub api_url: String,
     /// API key sent as `X-API-Key` on every request.
     pub api_key: String,
@@ -53,10 +53,10 @@ pub struct TridentConfig {
     pub retry: Option<RetryConfig>,
 }
 
-impl Default for TridentConfig {
+impl Default for SentinelConfig {
     fn default() -> Self {
-        TridentConfig {
-            api_url: "https://trident-api.fly.dev".to_string(),
+        SentinelConfig {
+            api_url: "https://sentinel-api.fly.dev".to_string(),
             api_key: String::new(),
             network: Network::Testnet,
             timeout: Duration::from_secs(30),
@@ -77,9 +77,9 @@ pub(crate) fn redact_key(key: &str) -> String {
 }
 
 // Custom Debug impl: never print the raw API key.
-impl fmt::Debug for TridentConfig {
+impl fmt::Debug for SentinelConfig {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TridentConfig")
+        f.debug_struct("SentinelConfig")
             .field("api_url", &self.api_url)
             .field("api_key", &redact_key(&self.api_key))
             .field("network", &self.network)
@@ -88,12 +88,12 @@ impl fmt::Debug for TridentConfig {
     }
 }
 
-impl TridentConfig {
+impl SentinelConfig {
     /// Applies explicit-value-over-environment-variable precedence,
-    /// filling in `api_key` / `api_url` from `TRIDENT_API_KEY` /
-    /// `TRIDENT_BASE_URL` where they were left empty. Does not mutate
+    /// filling in `api_key` / `api_url` from `SENTINEL_API_KEY` /
+    /// `SENTINEL_BASE_URL` where they were left empty. Does not mutate
     /// `self`.
-    pub(crate) fn resolved(&self) -> TridentConfig {
+    pub(crate) fn resolved(&self) -> SentinelConfig {
         let mut resolved = self.clone();
         if resolved.api_key.is_empty() {
             if let Ok(v) = std::env::var(ENV_API_KEY) {
@@ -109,7 +109,7 @@ impl TridentConfig {
     }
 }
 
-/// Parameters for [`query_events`](crate::TridentClient::query_events).
+/// Parameters for [`query_events`](crate::SentinelClient::query_events).
 #[derive(Debug, Default, Clone)]
 pub struct QueryParams {
     pub contract_id: Option<String>,
@@ -133,7 +133,7 @@ pub enum EventType {
     Diagnostic,
 }
 
-/// A single Soroban event returned by the Trident API.
+/// A single Soroban event returned by the Sentinel API.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SorobanEvent {
     pub id: String,
@@ -150,7 +150,7 @@ pub struct SorobanEvent {
     pub created_at: String,
 }
 
-/// A page of events returned by [`query_events`](crate::TridentClient::query_events).
+/// A page of events returned by [`query_events`](crate::SentinelClient::query_events).
 #[derive(Debug)]
 pub struct PaginatedEvents {
     pub events: Vec<SorobanEvent>,
@@ -236,7 +236,7 @@ mod config_tests {
         std::env::set_var(ENV_API_KEY, "env-key");
         std::env::set_var(ENV_BASE_URL, "https://env.example.com");
 
-        let config = TridentConfig {
+        let config = SentinelConfig {
             api_key: "explicit-key".into(),
             api_url: "https://explicit.example.com".into(),
             ..Default::default()
@@ -256,7 +256,7 @@ mod config_tests {
         std::env::set_var(ENV_API_KEY, "env-key");
         std::env::set_var(ENV_BASE_URL, "https://env.example.com");
 
-        let config = TridentConfig {
+        let config = SentinelConfig {
             api_key: String::new(),
             api_url: String::new(),
             ..Default::default()
@@ -272,7 +272,7 @@ mod config_tests {
 
     #[test]
     fn debug_repr_redacts_api_key() {
-        let config = TridentConfig {
+        let config = SentinelConfig {
             api_key: "super-secret-value".into(),
             ..Default::default()
         };

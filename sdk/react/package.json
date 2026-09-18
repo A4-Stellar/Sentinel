@@ -1,7 +1,7 @@
 {
-  "name": "@trident-indexer/react",
+  "name": "@sentinel-indexer/react",
   "version": "1.0.0",
-  "description": "React hooks for the Trident Soroban event indexer",
+  "description": "React hooks for the Sentinel Soroban event indexer",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -34,7 +34,7 @@
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "@trident-indexer/sdk": "file:../typescript"
+    "@sentinel-indexer/sdk": "file:../typescript"
   },
   "engines": {
     "node": ">=20"

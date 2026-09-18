@@ -4,7 +4,7 @@ description: "Subscribe to real-time Soroban events over GraphQL WebSocket subsc
 ---
 
 <Warning>
-**Pending #66.** GraphQL subscriptions are part of [issue #66](https://github.com/Telocel-Labs/Trident/issues/66) and will be verified once merged.
+**Pending #66.** GraphQL subscriptions are part of [issue #66](https://github.com/A4-Stellar/Sentinel/issues/66) and will be verified once merged.
 </Warning>
 
 ## Subscription endpoint
@@ -12,7 +12,7 @@ description: "Subscribe to real-time Soroban events over GraphQL WebSocket subsc
 GraphQL subscriptions use the `graphql-ws` protocol over WebSocket:
 
 ```
-wss://api.trident.telocel.com/graphql
+wss://api.sentinel.a4stellar.com/graphql
 ```
 
 ---
@@ -52,9 +52,9 @@ subscription OnEventAdded($contractId: String!, $topic0: String) {
 import { createClient } from "graphql-ws";
 
 const client = createClient({
-  url: "wss://api.trident.telocel.com/graphql",
+  url: "wss://api.sentinel.a4stellar.com/graphql",
   connectionParams: {
-    "X-API-Key": process.env.TRIDENT_API_KEY!,
+    "X-API-Key": process.env.SENTINEL_API_KEY!,
   },
 });
 

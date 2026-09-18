@@ -1,9 +1,9 @@
 pub mod relay;
 
 use redis::{streams::StreamMaxlen, AsyncCommands};
-use trident_common::{SorobanEvent, TridentError};
+use sentinel_common::{SorobanEvent, SentinelError};
 
-const STREAM_KEY: &str = "trident:events";
+const STREAM_KEY: &str = "sentinel:events";
 
 /// Publish a normalised event onto the Redis Stream, trimming it to at most
 /// `maxlen` entries (approximate trim — `MAXLEN ~`). The Go API layer
@@ -18,9 +18,9 @@ pub async fn publish_event(
     event: &SorobanEvent,
     maxlen: u64,
     event_id: Option<&str>,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let topics = serde_json::to_string(&event.topics)
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("topics serialise")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("topics serialise")))?;
     let data = event.data.to_string();
     let event_type = format!("{:?}", event.event_type).to_lowercase();
 
@@ -48,7 +48,7 @@ pub async fn publish_event(
             &fields,
         )
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("redis xadd")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("redis xadd")))?;
 
     Ok(())
 }

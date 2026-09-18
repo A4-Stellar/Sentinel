@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Trident — Automated PostgreSQL Restore & Drill Script
+# Sentinel — Automated PostgreSQL Restore & Drill Script
 # =============================================================================
 # Verifies SHA-256 checksum and restores a custom-format dump into target DB.
 # Validates partition table definitions and sync cursor state.

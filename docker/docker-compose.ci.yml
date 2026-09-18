@@ -1,4 +1,4 @@
-# CI overlay for the Trident full-stack smoke test.
+# CI overlay for the Sentinel full-stack smoke test.
 #
 # Usage:
 #   docker compose \

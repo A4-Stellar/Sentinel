@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "trident.fullname" . }}-go-api
+  name: {{ include "sentinel.fullname" . }}-go-api
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: go-api
 spec:
   replicas: {{ .Values.goApi.replicaCount }}
   selector:
     matchLabels:
-      {{- include "trident.selectorLabels" (dict "root" . "component" "go-api") | nindent 6 }}
+      {{- include "sentinel.selectorLabels" (dict "root" . "component" "go-api") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "trident.selectorLabels" (dict "root" . "component" "go-api") | nindent 8 }}
+        {{- include "sentinel.selectorLabels" (dict "root" . "component" "go-api") | nindent 8 }}
     spec:
-      {{- include "trident.imagePullSecrets" . | nindent 6 }}
+      {{- include "sentinel.imagePullSecrets" . | nindent 6 }}
       securityContext:
-        {{- include "trident.podSecurityContext" (dict "uid" .Values.goApi.securityContextUid) | nindent 8 }}
+        {{- include "sentinel.podSecurityContext" (dict "uid" .Values.goApi.securityContextUid) | nindent 8 }}
       {{- if .Values.goApi.topologySpreadConstraints.enabled }}
       topologySpreadConstraints:
         - maxSkew: {{ .Values.goApi.topologySpreadConstraints.maxSkew }}
@@ -25,14 +25,14 @@ spec:
           whenUnsatisfiable: {{ .Values.goApi.topologySpreadConstraints.whenUnsatisfiable }}
           labelSelector:
             matchLabels:
-              {{- include "trident.selectorLabels" (dict "root" . "component" "go-api") | nindent 14 }}
+              {{- include "sentinel.selectorLabels" (dict "root" . "component" "go-api") | nindent 14 }}
       {{- end }}
       containers:
         - name: go-api
           image: "{{ .Values.goApi.image.repository }}:{{ .Values.goApi.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           securityContext:
-            {{- include "trident.containerSecurityContext" . | nindent 12 }}
+            {{- include "sentinel.containerSecurityContext" . | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.goApi.service.port }}
@@ -120,14 +120,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "trident.fullname" . }}-go-api
+  name: {{ include "sentinel.fullname" . }}-go-api
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: go-api
 spec:
   type: ClusterIP
   selector:
-    {{- include "trident.selectorLabels" (dict "root" . "component" "go-api") | nindent 4 }}
+    {{- include "sentinel.selectorLabels" (dict "root" . "component" "go-api") | nindent 4 }}
   ports:
     - name: http
       port: {{ .Values.goApi.service.port }}
@@ -138,13 +138,13 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "trident.fullname" . }}-go-api
+  name: {{ include "sentinel.fullname" . }}-go-api
   labels:
-    {{- include "trident.labels" . | nindent 4 }}
+    {{- include "sentinel.labels" . | nindent 4 }}
     app.kubernetes.io/component: go-api
 spec:
   minAvailable: {{ .Values.goApi.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      {{- include "trident.selectorLabels" (dict "root" . "component" "go-api") | nindent 6 }}
+      {{- include "sentinel.selectorLabels" (dict "root" . "component" "go-api") | nindent 6 }}
 {{- end }}

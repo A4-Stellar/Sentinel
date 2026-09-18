@@ -74,7 +74,7 @@ if [ "${#GATE_ROWS[@]}" -eq 0 ]; then
   exit 2
 fi
 
-echo "=== Trident launch gate check ==="
+echo "=== Sentinel launch gate check ==="
 echo "Checklist: $CHECKLIST"
 echo "Gate rows found: ${#GATE_ROWS[@]}"
 echo ""

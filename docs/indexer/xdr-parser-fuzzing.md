@@ -50,13 +50,13 @@ search to rediscover it.
 Default in-file case count (fast, runs as part of `cargo test`):
 
 ```bash
-cargo test -p trident-indexer --bin trident-indexer parser::tests::
+cargo test -p sentinel-indexer --bin sentinel-indexer parser::tests::
 ```
 
 A much larger local campaign, overriding `ProptestConfig::with_cases`:
 
 ```bash
-PROPTEST_CASES=1000000 cargo test -p trident-indexer --bin trident-indexer parser::tests:: -- --test-threads=1
+PROPTEST_CASES=1000000 cargo test -p sentinel-indexer --bin sentinel-indexer parser::tests:: -- --test-threads=1
 ```
 
 Any input that trips a panic (or a failed assertion) is written by `proptest`
@@ -75,7 +75,7 @@ every push:
 - name: Fuzz the XDR parser (short run)
   env:
     PROPTEST_CASES: 50000
-  run: "cargo test -p trident-indexer --bin trident-indexer parser::tests:: -- --test-threads=1"
+  run: "cargo test -p sentinel-indexer --bin sentinel-indexer parser::tests:: -- --test-threads=1"
 ```
 
 50,000 cases per property keeps CI fast (a few seconds) while still catching

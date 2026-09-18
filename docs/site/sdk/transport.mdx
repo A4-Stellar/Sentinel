@@ -1,11 +1,11 @@
 ---
 title: "Transport Selection"
-description: "How to choose between the REST and GraphQL transports when using the Trident SDK."
+description: "How to choose between the REST and GraphQL transports when using the Sentinel SDK."
 ---
 
 ## Overview
 
-The Trident SDK currently uses the **REST API** transport by default for all `queryEvents`, `getEventById`, and `iterEvents` calls. GraphQL transport support will be added once the GraphQL API ships in [issue #66](https://github.com/Telocel-Labs/Trident/issues/66).
+The Sentinel SDK currently uses the **REST API** transport by default for all `queryEvents`, `getEventById`, and `iterEvents` calls. GraphQL transport support will be added once the GraphQL API ships in [issue #66](https://github.com/A4-Stellar/Sentinel/issues/66).
 
 WebSocket subscriptions (`subscribeToContract`) always use the WebSocket transport — they are not affected by the REST/GraphQL selection.
 
@@ -16,11 +16,11 @@ WebSocket subscriptions (`subscribeToContract`) always use the WebSocket transpo
 All SDK methods use the REST transport out of the box. No configuration is required.
 
 ```typescript
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
   // transport defaults to REST
 });
@@ -36,11 +36,11 @@ Once the GraphQL API ships, you will be able to select GraphQL as the transport:
 
 ```typescript
 // Future API — not yet available
-import { TridentClient } from "@trident-indexer/sdk";
+import { SentinelClient } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
   transport: "graphql", // coming in #66
 });

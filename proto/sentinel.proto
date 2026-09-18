@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package trident;
+package sentinel;
 
-option go_package = "github.com/Depo-dev/trident/services/api/internal/trident";
+option go_package = "github.com/Depo-dev/sentinel/services/api/internal/sentinel";
 
 // ---------------------------------------------------------------------------
 // EventsService

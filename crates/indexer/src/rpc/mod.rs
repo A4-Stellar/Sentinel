@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 pub mod filters;
 
@@ -282,7 +282,7 @@ impl RpcHttpSettings {
     /// Build the shared `reqwest::Client`: bounded connect/request timeouts plus
     /// keep-alive and idle-pool tuning so successive polls reuse connections
     /// instead of paying a fresh TCP + TLS handshake each time.
-    fn build_client(&self) -> Result<reqwest::Client, TridentError> {
+    fn build_client(&self) -> Result<reqwest::Client, SentinelError> {
         reqwest::Client::builder()
             .connect_timeout(self.connect_timeout)
             .timeout(self.request_timeout)
@@ -291,27 +291,27 @@ impl RpcHttpSettings {
             .tcp_keepalive(self.tcp_keepalive)
             .build()
             .map_err(|e| {
-                TridentError::config(
+                SentinelError::config(
                     anyhow::Error::new(e).context("failed to build RPC HTTP client"),
                 )
             })
     }
 }
 
-/// Convert a `reqwest` transport failure into a retryable [`TridentError`],
+/// Convert a `reqwest` transport failure into a retryable [`SentinelError`],
 /// tagging timeouts explicitly so they are visible in logs and metrics.
 ///
 /// `RpcError` is already classified `Severity::Retryable`, which is what makes
 /// the backoff wrapper and the poll loop treat a timeout as a transient failure
 /// rather than a poison input (issue #214).
-fn rpc_transport_error(err: reqwest::Error, context: &'static str) -> TridentError {
+fn rpc_transport_error(err: reqwest::Error, context: &'static str) -> SentinelError {
     if err.is_timeout() {
         metrics::record_rpc_timeout();
         metrics::record_rpc_error(context, "timeout");
-        return TridentError::rpc(anyhow::Error::new(err).context(format!("{context} timed out")));
+        return SentinelError::rpc(anyhow::Error::new(err).context(format!("{context} timed out")));
     }
     metrics::record_rpc_error(context, "transport");
-    TridentError::rpc(anyhow::Error::new(err).context(context))
+    SentinelError::rpc(anyhow::Error::new(err).context(context))
 }
 
 /// Coarse error-type label for a non-2xx RPC HTTP response (issue #294).
@@ -339,7 +339,7 @@ impl RpcClient {
     /// Build a single-endpoint client whose transport honours the configured
     /// timeouts and connection-pool settings (issue #214).
     #[cfg(test)]
-    pub fn with_settings(url: String, settings: &RpcHttpSettings) -> Result<Self, TridentError> {
+    pub fn with_settings(url: String, settings: &RpcHttpSettings) -> Result<Self, SentinelError> {
         Self::with_endpoints(vec![url], settings)
     }
 
@@ -348,7 +348,7 @@ impl RpcClient {
     pub fn with_endpoints(
         urls: Vec<String>,
         settings: &RpcHttpSettings,
-    ) -> Result<Self, TridentError> {
+    ) -> Result<Self, SentinelError> {
         let scorer = Arc::new(RpcHealthScorer::new(urls.clone())?);
 
         Ok(Self {
@@ -405,7 +405,7 @@ impl RpcClient {
         id: u64,
         params: P,
         context: &'static str,
-    ) -> Result<R, TridentError>
+    ) -> Result<R, SentinelError>
     where
         P: Serialize,
         R: serde::de::DeserializeOwned,
@@ -433,7 +433,7 @@ impl RpcClient {
     }
 
     /// Record an error based on its type.
-    fn record_error(&self, url: &str, error: &TridentError) {
+    fn record_error(&self, url: &str, error: &SentinelError) {
         let error_str = error.to_string();
         if error_str.contains("timed out") {
             self.record_timeout(url);
@@ -456,7 +456,7 @@ impl RpcClient {
         url: &str,
         req: &JsonRpcRequest<'_, P>,
         context: &'static str,
-    ) -> Result<R, TridentError>
+    ) -> Result<R, SentinelError>
     where
         P: Serialize,
         R: serde::de::DeserializeOwned,
@@ -474,7 +474,7 @@ impl RpcClient {
         if !resp.status().is_success() {
             let status = resp.status();
             metrics::record_rpc_error(context, classify_http_status(status));
-            return Err(TridentError::rpc(anyhow::anyhow!(
+            return Err(SentinelError::rpc(anyhow::anyhow!(
                 "{context}: endpoint {url} returned HTTP {}",
                 status
             )));
@@ -495,7 +495,7 @@ impl RpcClient {
                 "rpc_error"
             };
             metrics::record_rpc_error(context, error_type);
-            return Err(TridentError::rpc(anyhow::anyhow!(
+            return Err(SentinelError::rpc(anyhow::anyhow!(
                 "{context}: RPC error {}: {}",
                 err.code,
                 err.message
@@ -504,7 +504,7 @@ impl RpcClient {
 
         body.result.ok_or_else(|| {
             metrics::record_rpc_error(context, "empty_result");
-            TridentError::rpc(anyhow::anyhow!("{context}: empty result"))
+            SentinelError::rpc(anyhow::anyhow!("{context}: empty result"))
         })
     }
 
@@ -522,7 +522,7 @@ impl RpcClient {
     /// exactly the case this method exists for. (Previously `#[cfg(test)]`
     /// with a note to remove the gate when a production caller appeared —
     /// the reconciler is that caller.)
-    pub async fn get_latest_ledger(&self) -> Result<u64, TridentError> {
+    pub async fn get_latest_ledger(&self) -> Result<u64, SentinelError> {
         let result: GetLatestLedgerResult = self
             .call("getLatestLedger", 3, EmptyParams {}, "getLatestLedger")
             .await?;
@@ -531,7 +531,7 @@ impl RpcClient {
 
     /// Fetch the ledger hash for a given sequence number via `getLedgers`.
     /// Returns `None` if the RPC does not know about that ledger yet.
-    pub async fn get_ledger(&self, sequence: u64) -> Result<Option<String>, TridentError> {
+    pub async fn get_ledger(&self, sequence: u64) -> Result<Option<String>, SentinelError> {
         let params = GetLedgersParams {
             start_ledger: sequence,
             pagination: LedgerPagination { limit: 1 },
@@ -559,7 +559,7 @@ impl RpcClient {
         cursor: Option<String>,
         limit: u32,
         filters: &[EventFilter],
-    ) -> Result<EventsPage, TridentError> {
+    ) -> Result<EventsPage, SentinelError> {
         let (url, _endpoint_index) = self.select_endpoint();
         let params = GetEventsParams {
             start_ledger,
@@ -574,7 +574,7 @@ impl RpcClient {
             params: &params,
         };
 
-        let result: Result<GetEventsResult, TridentError> =
+        let result: Result<GetEventsResult, SentinelError> =
             self.execute(&url, &req, "getEvents").await;
         match &result {
             Ok(r) => {
@@ -596,7 +596,7 @@ impl RpcClient {
     /// (issue #266). Used to derive per-invocation fee and declared resource
     /// metering for tracked contracts — see
     /// `crate::parser::invocation_metrics`.
-    pub async fn get_transaction(&self, hash: &str) -> Result<GetTransactionResult, TridentError> {
+    pub async fn get_transaction(&self, hash: &str) -> Result<GetTransactionResult, SentinelError> {
         let params = GetTransactionParams { hash };
         self.call("getTransaction", 3, params, "getTransaction")
             .await
@@ -614,7 +614,7 @@ impl RpcClient {
     pub async fn simulate_transaction(
         &self,
         envelope_xdr: &str,
-    ) -> Result<SimulateTransactionResult, TridentError> {
+    ) -> Result<SimulateTransactionResult, SentinelError> {
         let params = SimulateTransactionParams {
             transaction: envelope_xdr,
         };
@@ -629,7 +629,7 @@ impl RpcClient {
     pub async fn get_ledger_entries(
         &self,
         keys: &[String],
-    ) -> Result<Vec<LedgerEntryResult>, TridentError> {
+    ) -> Result<Vec<LedgerEntryResult>, SentinelError> {
         if keys.is_empty() {
             return Ok(Vec::new());
         }
@@ -645,7 +645,7 @@ impl RpcClient {
 mod tests {
     use super::*;
     use std::time::Instant;
-    use trident_common::Severity;
+    use sentinel_common::Severity;
     use wiremock::matchers::method;
     use wiremock::{Mock, MockServer, ResponseTemplate};
 

@@ -10,7 +10,7 @@ use tracing::Instrument;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use uuid::Uuid;
 
-use crate::trident::{
+use crate::sentinel::{
     events_server::Events, Event, GetEventRequest, ListEventsRequest, ListEventsResponse,
     StreamEventsRequest,
 };
@@ -44,7 +44,7 @@ fn extract_context(metadata: &tonic::metadata::MetadataMap) -> opentelemetry::Co
     opentelemetry::global::get_text_map_propagator(|prop| prop.extract(&MetadataCarrier(metadata)))
 }
 
-const REDIS_STREAM_KEY: &str = "trident:events";
+const REDIS_STREAM_KEY: &str = "sentinel:events";
 
 /// Default in-flight buffer per subscriber. Bounded so one slow consumer
 /// cannot make the server accumulate events without limit; when it fills, the

@@ -1,11 +1,11 @@
 ---
 title: "Upgrading & Migrations"
-description: "Migration strategies, schema updates, and version compatibility guidelines for self-hosted Trident deployments."
+description: "Migration strategies, schema updates, and version compatibility guidelines for self-hosted Sentinel deployments."
 ---
 
 ## Overview
 
-When upgrading a self-hosted Trident deployment, care must be taken to ensure zero downtime for API consumers and data integrity across database migrations.
+When upgrading a self-hosted Sentinel deployment, care must be taken to ensure zero downtime for API consumers and data integrity across database migrations.
 
 ---
 
@@ -21,7 +21,7 @@ Always perform upgrades in the following sequential order:
 
 ## Step 1: Database Migrations
 
-Trident uses goose / SQL-based migrations located in `database/migrations/`.
+Sentinel uses goose / SQL-based migrations located in `database/migrations/`.
 
 Before deploying new binary releases, apply pending schema migrations against PostgreSQL:
 

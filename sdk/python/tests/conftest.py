@@ -1,8 +1,8 @@
-"""Shared fixtures for Trident Python SDK tests."""
+"""Shared fixtures for Sentinel Python SDK tests."""
 
 import pytest
 
-API_URL = "https://api.trident.example"
+API_URL = "https://api.sentinel.example"
 API_KEY = "test-api-key"
 
 RAW_EVENT = {

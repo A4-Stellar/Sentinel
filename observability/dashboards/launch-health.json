@@ -1,6 +1,6 @@
 {
-  "title": "Trident Launch Health",
-  "uid": "trident-launch-health",
+  "title": "Sentinel Launch Health",
+  "uid": "sentinel-launch-health",
   "description": "Single-pane-of-glass health dashboard for testnet launch monitoring (issue #398). Shows ledger lag, event ingestion rate, API performance, RPC failover state, Redis stream length, DB pool saturation, and webhook delivery success ratio at a glance.",
   "schemaVersion": 39,
   "version": 1,
@@ -8,7 +8,7 @@
   "timezone": "utc",
   "time": { "from": "now-1h", "to": "now" },
   "refresh": "10s",
-  "tags": ["trident", "launch", "health", "overview"],
+  "tags": ["sentinel", "launch", "health", "overview"],
   "templating": {
     "list": [
       {
@@ -53,12 +53,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"trident-indexer\"}",
+          "expr": "up{job=\"sentinel-indexer\"}",
           "legendFormat": "Indexer"
         },
         {
           "refId": "B",
-          "expr": "up{job=\"trident-api\"}",
+          "expr": "up{job=\"sentinel-api\"}",
           "legendFormat": "API"
         },
         {
@@ -98,7 +98,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "trident_indexer_ledger_lag",
+          "expr": "sentinel_indexer_ledger_lag",
           "legendFormat": "Ledger lag"
         }
       ]
@@ -128,7 +128,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(trident_indexer_events_ingested_total[1m]) * 60",
+          "expr": "rate(sentinel_indexer_events_ingested_total[1m]) * 60",
           "legendFormat": "Events/min"
         }
       ]
@@ -150,7 +150,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(trident_api_http_requests_total[5m])) by (endpoint)",
+          "expr": "sum(rate(sentinel_api_http_requests_total[5m])) by (endpoint)",
           "legendFormat": "{{endpoint}}"
         }
       ]
@@ -182,12 +182,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(trident_api_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(trident_api_http_requests_total[5m]))",
+          "expr": "sum(rate(sentinel_api_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(sentinel_api_http_requests_total[5m]))",
           "legendFormat": "5xx error ratio"
         },
         {
           "refId": "B",
-          "expr": "sum(rate(trident_api_http_requests_total{status=~\"4..\"}[5m])) / sum(rate(trident_api_http_requests_total[5m]))",
+          "expr": "sum(rate(sentinel_api_http_requests_total{status=~\"4..\"}[5m])) / sum(rate(sentinel_api_http_requests_total[5m]))",
           "legendFormat": "4xx error ratio"
         }
       ]
@@ -217,7 +217,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum(rate(trident_api_http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_api_http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
           "legendFormat": "p95 {{endpoint}}"
         }
       ]
@@ -254,7 +254,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "trident_indexer_rpc_active_endpoint",
+          "expr": "sentinel_indexer_rpc_active_endpoint",
           "legendFormat": "Active endpoint index"
         }
       ]
@@ -289,7 +289,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "trident_redis_stream_length",
+          "expr": "sentinel_redis_stream_length",
           "legendFormat": "Stream length"
         }
       ]
@@ -324,7 +324,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "trident_db_pool_connections_acquired / trident_db_pool_connections_max",
+          "expr": "sentinel_db_pool_connections_acquired / sentinel_db_pool_connections_max",
           "legendFormat": "Pool utilization"
         }
       ]
@@ -359,7 +359,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(trident_webhook_deliveries_total{status=\"success\"}[5m])) / sum(rate(trident_webhook_deliveries_total[5m]))",
+          "expr": "sum(rate(sentinel_webhook_deliveries_total{status=\"success\"}[5m])) / sum(rate(sentinel_webhook_deliveries_total[5m]))",
           "legendFormat": "Success ratio"
         }
       ]
@@ -386,17 +386,17 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "trident_db_pool_connections_acquired",
+          "expr": "sentinel_db_pool_connections_acquired",
           "legendFormat": "Acquired"
         },
         {
           "refId": "B",
-          "expr": "trident_db_pool_connections_idle",
+          "expr": "sentinel_db_pool_connections_idle",
           "legendFormat": "Idle"
         },
         {
           "refId": "C",
-          "expr": "trident_db_pool_connections_max",
+          "expr": "sentinel_db_pool_connections_max",
           "legendFormat": "Max connections"
         }
       ]
@@ -418,17 +418,17 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(trident_webhook_deliveries_total{status=\"success\"}[5m])",
+          "expr": "rate(sentinel_webhook_deliveries_total{status=\"success\"}[5m])",
           "legendFormat": "Success"
         },
         {
           "refId": "B",
-          "expr": "rate(trident_webhook_deliveries_total{status=\"failed\"}[5m])",
+          "expr": "rate(sentinel_webhook_deliveries_total{status=\"failed\"}[5m])",
           "legendFormat": "Failed"
         },
         {
           "refId": "C",
-          "expr": "rate(trident_webhook_deliveries_total{status=\"retry\"}[5m])",
+          "expr": "rate(sentinel_webhook_deliveries_total{status=\"retry\"}[5m])",
           "legendFormat": "Retry"
         }
       ]
@@ -499,7 +499,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "trident_indexer_event_processing_lag_seconds",
+          "expr": "sentinel_indexer_event_processing_lag_seconds",
           "legendFormat": "Processing lag"
         }
       ]
@@ -533,7 +533,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(trident_api_rate_limit_rejections_total[5m])",
+          "expr": "rate(sentinel_api_rate_limit_rejections_total[5m])",
           "legendFormat": "Rate limited"
         }
       ]
@@ -566,7 +566,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "rate(trident_db_query_errors_total[5m])",
+          "expr": "rate(sentinel_db_query_errors_total[5m])",
           "legendFormat": "Query errors"
         }
       ]
@@ -577,7 +577,7 @@
       {
         "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
         "enable": true,
-        "expr": "changes(trident_indexer_rpc_active_endpoint[5m]) > 0",
+        "expr": "changes(sentinel_indexer_rpc_active_endpoint[5m]) > 0",
         "iconColor": "orange",
         "name": "RPC Failover Events",
         "tagKeys": "endpoint",

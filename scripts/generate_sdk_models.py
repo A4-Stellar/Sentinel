@@ -21,7 +21,7 @@ TMP_SCHEMA_PATH = REPO_ROOT / "sdk" / ".openapi-components.schema.json"
 
 TARGETS = {
     "go": REPO_ROOT / "sdk" / "go" / "openapi" / "models_gen.go",
-    "python": REPO_ROOT / "sdk" / "python" / "src" / "trident_indexer" / "openapi_models_gen.py",
+    "python": REPO_ROOT / "sdk" / "python" / "src" / "sentinel_indexer" / "openapi_models_gen.py",
     "rust": REPO_ROOT / "sdk" / "rust" / "src" / "openapi_models_gen.rs",
     "typescript": REPO_ROOT / "sdk" / "typescript" / "src" / "api-types.gen.ts",
 }

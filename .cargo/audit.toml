@@ -1,4 +1,4 @@
-# cargo-audit configuration for Trident
+# cargo-audit configuration for Sentinel
 #
 # Ignore list for pre-existing advisories surfaced by the first real
 # Dependency audit run (issue #373). Each entry documents:

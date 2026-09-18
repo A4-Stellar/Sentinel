@@ -13,7 +13,7 @@ use stellar_xdr::curr::{
     LedgerKeyContractData, Limited, Limits, PublicKey, ReadXdr, ScAddress, ScSymbol, ScVal, ScVec,
     Uint256, VecM, WriteXdr,
 };
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 use crate::rpc::RpcClient;
 use crate::spec::contract_address;
@@ -27,13 +27,13 @@ pub struct StorageObservation {
     pub value_json: Option<serde_json::Value>,
 }
 
-fn decode_address(strkey: &str) -> Result<ScAddress, TridentError> {
+fn decode_address(strkey: &str) -> Result<ScAddress, SentinelError> {
     match stellar_strkey::Strkey::from_string(strkey) {
         Ok(stellar_strkey::Strkey::PublicKeyEd25519(pk)) => Ok(ScAddress::Account(AccountId(
             PublicKey::PublicKeyTypeEd25519(Uint256(pk.0)),
         ))),
         Ok(stellar_strkey::Strkey::Contract(c)) => Ok(ScAddress::Contract(ContractId(Hash(c.0)))),
-        _ => Err(TridentError::parse(anyhow::anyhow!(
+        _ => Err(SentinelError::parse(anyhow::anyhow!(
             "unsupported address strkey: {strkey}"
         ))),
     }
@@ -43,7 +43,7 @@ fn decode_address(strkey: &str) -> Result<ScAddress, TridentError> {
 /// token contract (contracts/token, issue #267) and by soroban-examples'
 /// token contract — the de facto standard `DataKey::Balance(Address)`
 /// storage layout.
-fn balance_key(contract_id: &str, holder: &str) -> Result<LedgerKey, TridentError> {
+fn balance_key(contract_id: &str, holder: &str) -> Result<LedgerKey, SentinelError> {
     let entries: Vec<ScVal> = vec![
         ScVal::Symbol(ScSymbol::try_from("Balance".to_string()).expect("literal fits ScSymbol")),
         ScVal::Address(decode_address(holder)?),
@@ -59,10 +59,10 @@ fn balance_key(contract_id: &str, holder: &str) -> Result<LedgerKey, TridentErro
     }))
 }
 
-fn encode_key(key: &LedgerKey) -> Result<String, TridentError> {
+fn encode_key(key: &LedgerKey) -> Result<String, SentinelError> {
     let mut buf = Vec::new();
     key.write_xdr(&mut Limited::new(&mut buf, Limits::none()))
-        .map_err(|e| TridentError::parse(anyhow::Error::new(e).context("encode LedgerKey")))?;
+        .map_err(|e| SentinelError::parse(anyhow::Error::new(e).context("encode LedgerKey")))?;
     Ok(STANDARD.encode(buf))
 }
 
@@ -78,7 +78,7 @@ pub async fn fetch_balance_snapshots(
     rpc: &RpcClient,
     contract_id: &str,
     holders: &[String],
-) -> Result<Vec<StorageObservation>, TridentError> {
+) -> Result<Vec<StorageObservation>, SentinelError> {
     if holders.is_empty() {
         return Ok(Vec::new());
     }
@@ -102,12 +102,12 @@ pub async fn fetch_balance_snapshots(
         };
 
         let bytes = STANDARD.decode(&entry.xdr).map_err(|e| {
-            TridentError::parse(anyhow::Error::new(e).context("base64 decode ledger entry"))
+            SentinelError::parse(anyhow::Error::new(e).context("base64 decode ledger entry"))
         })?;
         let mut cursor = std::io::Cursor::new(bytes);
         let data = LedgerEntryData::read_xdr(&mut Limited::new(&mut cursor, Limits::none()))
             .map_err(|e| {
-                TridentError::parse(anyhow::Error::new(e).context("XDR decode LedgerEntryData"))
+                SentinelError::parse(anyhow::Error::new(e).context("XDR decode LedgerEntryData"))
             })?;
 
         let LedgerEntryData::ContractData(contract_data) = data else {

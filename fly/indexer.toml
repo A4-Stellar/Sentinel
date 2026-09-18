@@ -1,5 +1,5 @@
-﻿# fly/indexer.toml — Trident Stellar event indexer (Rust)
-app = "trident-indexer"
+﻿# fly/indexer.toml — Sentinel Stellar event indexer (Rust)
+app = "sentinel-indexer"
 primary_region = "iad"
 
 [build]
@@ -17,7 +17,7 @@ primary_region = "iad"
   LOG_LEVEL         = "info"
 
 # Secrets are sourced exclusively from Fly's encrypted secrets store
-# (set via: fly secrets set -a trident-indexer KEY=value), never from [env].
+# (set via: fly secrets set -a sentinel-indexer KEY=value), never from [env].
 # Required: DATABASE_URL, REDIS_URL, STELLAR_RPC_URL (or STELLAR_RPC_URLS)
 # Optional (defaults to "testnet" if unset — crates/indexer/src/config.rs):
 # NETWORK

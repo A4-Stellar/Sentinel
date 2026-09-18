@@ -1,9 +1,9 @@
 import type { SorobanEvent, ListEventsResponse, Network } from "./types";
 
 const TESTNET_URL =
-  import.meta.env.TRIDENT_TESTNET_API_URL ?? "https://api.testnet.trident.dev";
+  import.meta.env.SENTINEL_TESTNET_API_URL ?? "https://api.testnet.sentinel.dev";
 const MAINNET_URL =
-  import.meta.env.TRIDENT_MAINNET_API_URL ?? "https://api.mainnet.trident.dev";
+  import.meta.env.SENTINEL_MAINNET_API_URL ?? "https://api.mainnet.sentinel.dev";
 const API_KEY: string = import.meta.env.EXPLORER_API_KEY ?? "";
 const API_TIMEOUT = 30000; // 30 second timeout
 
@@ -18,7 +18,7 @@ function authHeaders(): HeadersInit {
 }
 
 /**
- * Typed error for a non-OK Trident API response. `code` is the machine
+ * Typed error for a non-OK Sentinel API response. `code` is the machine
  * readable code from the standard {"error":{code,message}} envelope so callers
  * can surface a deliberate state instead of a raw error string.
  */
@@ -125,7 +125,7 @@ export async function getEvent(
 }
 
 /**
- * Build the Trident SSE stream URL for a contract. This is fetched by the
+ * Build the Sentinel SSE stream URL for a contract. This is fetched by the
  * explorer's own /api/events/stream proxy (never directly from the browser),
  * so the API key and the Last-Event-ID handshake stay server-side.
  */

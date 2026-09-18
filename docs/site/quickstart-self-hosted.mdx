@@ -1,6 +1,6 @@
 ---
 title: "Quick Start — Self-Hosted"
-description: "Run the full Trident stack locally with Docker Compose and make your first curl request in minutes."
+description: "Run the full Sentinel stack locally with Docker Compose and make your first curl request in minutes."
 ---
 
 ## Prerequisites
@@ -20,8 +20,8 @@ No Rust, Go, or Node.js installation is required to run the stack — everything
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/Telocel-Labs/Trident.git
-cd Trident
+git clone https://github.com/A4-Stellar/Sentinel.git
+cd Sentinel
 ```
 
 ---
@@ -36,7 +36,7 @@ Open `.env` and set the required variables. For a local testnet setup, the minim
 
 ```bash
 # Already set correctly for local development:
-DATABASE_URL=postgresql://trident:password@localhost:5432/trident
+DATABASE_URL=postgresql://sentinel:password@localhost:5432/sentinel
 REDIS_URL=redis://localhost:6379
 STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 NETWORK=testnet
@@ -66,7 +66,7 @@ This starts four services:
 Wait until you see log lines like:
 
 ```
-indexer  | INFO  trident_indexer: indexer started, polling testnet
+indexer  | INFO  sentinel_indexer: indexer started, polling testnet
 api      | INFO  server listening on :3000
 ```
 
@@ -167,7 +167,7 @@ docker compose down -v
     Every environment variable, its type, default, and what happens if it is missing.
   </Card>
   <Card title="Fly.io Deployment" icon="rocket" href="/self-hosting/fly-io">
-    Deploy Trident to production on Fly.io.
+    Deploy Sentinel to production on Fly.io.
   </Card>
   <Card title="REST API Reference" icon="server" href="/api-reference/events-list">
     Explore all API endpoints, parameters, and response schemas.

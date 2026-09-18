@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

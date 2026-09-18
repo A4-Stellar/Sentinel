@@ -10,40 +10,40 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-TRIDENT_API_KEY_ENV = "TRIDENT_API_KEY"
-TRIDENT_BASE_URL_ENV = "TRIDENT_BASE_URL"
+SENTINEL_API_KEY_ENV = "SENTINEL_API_KEY"
+SENTINEL_BASE_URL_ENV = "SENTINEL_BASE_URL"
 
 
-class TridentConfigError(ValueError):
+class SentinelConfigError(ValueError):
     """Raised when required client configuration is missing or invalid."""
 
 
 def resolve_api_key(api_key: Optional[str]) -> str:
-    """Resolve the API key from an explicit value or TRIDENT_API_KEY.
+    """Resolve the API key from an explicit value or SENTINEL_API_KEY.
 
     Raises:
-        TridentConfigError: if neither source provides a non-empty key.
+        SentinelConfigError: if neither source provides a non-empty key.
     """
-    resolved = api_key or os.environ.get(TRIDENT_API_KEY_ENV, "")
+    resolved = api_key or os.environ.get(SENTINEL_API_KEY_ENV, "")
     if not resolved:
-        raise TridentConfigError(
-            "Trident API key is required: pass api_key= explicitly or set "
-            f"the {TRIDENT_API_KEY_ENV} environment variable."
+        raise SentinelConfigError(
+            "Sentinel API key is required: pass api_key= explicitly or set "
+            f"the {SENTINEL_API_KEY_ENV} environment variable."
         )
     return resolved
 
 
 def resolve_api_url(api_url: Optional[str]) -> str:
-    """Resolve the base URL from an explicit value or TRIDENT_BASE_URL.
+    """Resolve the base URL from an explicit value or SENTINEL_BASE_URL.
 
     Raises:
-        TridentConfigError: if neither source provides a non-empty URL.
+        SentinelConfigError: if neither source provides a non-empty URL.
     """
-    resolved = api_url or os.environ.get(TRIDENT_BASE_URL_ENV, "")
+    resolved = api_url or os.environ.get(SENTINEL_BASE_URL_ENV, "")
     if not resolved:
-        raise TridentConfigError(
-            "Trident api_url is required: pass api_url= explicitly or set "
-            f"the {TRIDENT_BASE_URL_ENV} environment variable."
+        raise SentinelConfigError(
+            "Sentinel api_url is required: pass api_url= explicitly or set "
+            f"the {SENTINEL_BASE_URL_ENV} environment variable."
         )
     return resolved.rstrip("/")
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This specification details Stellar Asset Contract (SAC) recognition, contract address resolution, and SEP-41 token event decoding within the Trident indexer engine (`crates/indexer/src/parser/sac.rs`).
+This specification details Stellar Asset Contract (SAC) recognition, contract address resolution, and SEP-41 token event decoding within the Sentinel indexer engine (`crates/indexer/src/parser/sac.rs`).
 
 ---
 

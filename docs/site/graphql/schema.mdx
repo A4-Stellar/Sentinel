@@ -1,18 +1,18 @@
 ---
 title: "GraphQL Schema"
-description: "Full GraphQL schema for the Trident API — auto-generated from the SDL."
+description: "Full GraphQL schema for the Sentinel API — auto-generated from the SDL."
 ---
 
 <Warning>
-**Pending #66.** The GraphQL API is being developed in [issue #66](https://github.com/Telocel-Labs/Trident/issues/66). This page will be updated with the full schema listing once the SDL is merged. Subscribe to that issue for updates.
+**Pending #66.** The GraphQL API is being developed in [issue #66](https://github.com/A4-Stellar/Sentinel/issues/66). This page will be updated with the full schema listing once the SDL is merged. Subscribe to that issue for updates.
 </Warning>
 
 ## Overview
 
-The Trident GraphQL API is served at:
+The Sentinel GraphQL API is served at:
 
 ```
-POST https://api.trident.telocel.com/graphql
+POST https://api.sentinel.a4stellar.com/graphql
 ```
 
 It supports the same event query and subscription capabilities as the REST API, with the added flexibility of composable queries and field-level selection.
@@ -24,9 +24,9 @@ It supports the same event query and subscription capabilities as the REST API, 
 Pass your API key in the `X-API-Key` header (same as the REST API):
 
 ```bash
-curl -X POST https://api.trident.telocel.com/graphql \
+curl -X POST https://api.sentinel.a4stellar.com/graphql \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $TRIDENT_API_KEY" \
+  -H "X-API-Key: $SENTINEL_API_KEY" \
   -d '{ "query": "{ __typename }" }'
 ```
 

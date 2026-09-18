@@ -1,8 +1,8 @@
-# Trident Framework Architecture Overview
+# Sentinel Framework Architecture Overview
 
 ## Overview
 
-Trident is a high-throughput event indexing and query infrastructure for Stellar and Soroban smart contract ecosystems. It ingests block headers, ledger metadata, and Soroban contract execution logs from Soroban RPC nodes, normalizes binary XDR events, persists relational state into PostgreSQL, caches hot stream buffers in Redis, and exposes query interfaces via gRPC and HTTP REST APIs with WebSockets/SSE streaming.
+Sentinel is a high-throughput event indexing and query infrastructure for Stellar and Soroban smart contract ecosystems. It ingests block headers, ledger metadata, and Soroban contract execution logs from Soroban RPC nodes, normalizes binary XDR events, persists relational state into PostgreSQL, caches hot stream buffers in Redis, and exposes query interfaces via gRPC and HTTP REST APIs with WebSockets/SSE streaming.
 
 ---
 
@@ -37,7 +37,7 @@ graph TD
 - **Go REST API (`services/rest-api`)**: Go-based API server providing RESTful HTTP endpoints (`/v1/events`, `/v1/ledgers`), OpenAPI documentation, CORS middleware, and Server-Sent Events (SSE) / WebSocket endpoints for real-time updates.
 
 ### 4. Client SDK (`sdk/`)
-- Client libraries providing typed interfaces for consuming Trident gRPC and REST streams with automatic reconnection logic and signature verification.
+- Client libraries providing typed interfaces for consuming Sentinel gRPC and REST streams with automatic reconnection logic and signature verification.
 
 ---
 

@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "trident-indexer"
+name = "sentinel-indexer"
 version = "1.0.0"
-description = "Python client SDK for the Trident Soroban event indexer"
+description = "Python client SDK for the Sentinel Soroban event indexer"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -42,17 +42,17 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Depo-dev/trident"
-Repository = "https://github.com/Depo-dev/trident"
-Issues = "https://github.com/Depo-dev/trident/issues"
-Documentation = "https://github.com/Depo-dev/trident/blob/main/sdk/python/README.md"
+Homepage = "https://github.com/Depo-dev/sentinel"
+Repository = "https://github.com/Depo-dev/sentinel"
+Issues = "https://github.com/Depo-dev/sentinel/issues"
+Documentation = "https://github.com/Depo-dev/sentinel/blob/main/sdk/python/README.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/trident_indexer"]
+packages = ["src/sentinel_indexer"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "src/trident_indexer",
+    "src/sentinel_indexer",
     "tests",
     "README.md",
     "LICENSE",
@@ -60,7 +60,7 @@ include = [
 
 [tool.mypy]
 python_version = "3.9"
-packages = ["trident_indexer"]
+packages = ["sentinel_indexer"]
 mypy_path = "src"
 strict = true
 warn_unused_configs = true
@@ -82,7 +82,7 @@ ignore_missing_imports = true
 # this module only keeps --strict enforced everywhere a human writes code;
 # the models it exports are still fully typed at their public boundary.
 [[tool.mypy.overrides]]
-module = ["trident_indexer.openapi_models_gen"]
+module = ["sentinel_indexer.openapi_models_gen"]
 disallow_untyped_calls = false
 disallow_untyped_defs = false
 disallow_any_generics = false
@@ -93,7 +93,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["src/trident_indexer"]
+source = ["src/sentinel_indexer"]
 branch = true
 
 [tool.coverage.report]

@@ -72,7 +72,7 @@ jobs:
           # silent skip, so this job cannot report green without having tested.
           REQUIRE_TESTNET_CORRECTNESS: "1"
         run: |
-          cargo test -p trident-indexer testnet_correctness -- \
+          cargo test -p sentinel-indexer testnet_correctness -- \
             --nocapture --test-threads=1
 
       - name: Show sccache stats

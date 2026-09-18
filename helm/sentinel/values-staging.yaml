@@ -1,8 +1,8 @@
-# Staging overlay for the Trident Helm chart (issue #313).
+# Staging overlay for the Sentinel Helm chart (issue #313).
 #
 # Applied on top of values.yaml via:
-#   helm upgrade --install trident-staging helm/trident \
-#     -f helm/trident/values.yaml -f helm/trident/values-staging.yaml \
+#   helm upgrade --install sentinel-staging helm/sentinel \
+#     -f helm/sentinel/values.yaml -f helm/sentinel/values-staging.yaml \
 #     --set indexer.image.tag=<sha> --set grpcApi.image.tag=<sha> --set goApi.image.tag=<sha>
 #
 # Scaled down from production defaults (single replicas, smaller resource
@@ -55,7 +55,7 @@ ingress:
   enabled: false
 
 # Staging still uses the existingSecret pattern (issue #305) — populate
-# trident-secrets in the staging namespace/cluster the same way as
+# sentinel-secrets in the staging namespace/cluster the same way as
 # production, just pointed at staging Postgres/Redis instances.
 global:
-  existingSecret: trident-secrets
+  existingSecret: sentinel-secrets

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/gen"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func TestQueryEvents_SucceedsAfterTransient503s(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		Retry:   fastRetryConfig(3),
 	})
@@ -78,7 +78,7 @@ func TestQueryEvents_HonoursRetryAfterOn429(t *testing.T) {
 
 	// Base delay is large; Retry-After: 0 must be honoured instead, so this
 	// completes fast rather than waiting out the (large) computed backoff.
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		Retry: &RetryConfig{
 			MaxAttempts:   3,
@@ -120,7 +120,7 @@ func TestQueryEvents_GivesUpAfterMaxAttempts(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		Retry:   fastRetryConfig(3),
 	})
@@ -130,9 +130,9 @@ func TestQueryEvents_GivesUpAfterMaxAttempts(t *testing.T) {
 		t.Fatal("expected error after exhausting retries, got nil")
 	}
 
-	apiErr, ok := err.(*TridentApiError)
+	apiErr, ok := err.(*SentinelApiError)
 	if !ok {
-		t.Fatalf("expected *TridentApiError, got %T: %v", err, err)
+		t.Fatalf("expected *SentinelApiError, got %T: %v", err, err)
 	}
 	if apiErr.Status != http.StatusServiceUnavailable {
 		t.Errorf("expected status 503, got %d", apiErr.Status)
@@ -154,7 +154,7 @@ func TestQueryEvents_DoesNotRetryNonRetryableStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		Retry:   fastRetryConfig(5),
 	})
@@ -163,9 +163,9 @@ func TestQueryEvents_DoesNotRetryNonRetryableStatus(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	apiErr, ok := err.(*TridentApiError)
+	apiErr, ok := err.(*SentinelApiError)
 	if !ok {
-		t.Fatalf("expected *TridentApiError, got %T", err)
+		t.Fatalf("expected *SentinelApiError, got %T", err)
 	}
 	if apiErr.Attempts != 1 {
 		t.Errorf("expected 1 attempt for non-retryable status, got %d", apiErr.Attempts)
@@ -184,7 +184,7 @@ func TestQueryEvents_RetriesDisabledAtClientLevel(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL:       server.URL,
 		RetryDisabled: true,
 	})
@@ -207,7 +207,7 @@ func TestQueryEvents_PerCallOptionOverridesClientPolicy(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		Retry:   fastRetryConfig(5),
 	})
@@ -240,7 +240,7 @@ func TestGetEventByID_AppliesRetryPolicy(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewClient(TridentClientConfig{
+	client := NewClient(SentinelClientConfig{
 		BaseURL: server.URL,
 		Retry:   fastRetryConfig(3),
 	})
@@ -299,8 +299,8 @@ func TestComputeBackoff_ExponentialGrowthCappedAtMaxDelay(t *testing.T) {
 	}
 }
 
-func TestTridentApiError_ErrorMessageIncludesAttempts(t *testing.T) {
-	err := &TridentApiError{Status: 503, Code: "INTERNAL", Message: "down", Attempts: 3}
+func TestSentinelApiError_ErrorMessageIncludesAttempts(t *testing.T) {
+	err := &SentinelApiError{Status: 503, Code: "INTERNAL", Message: "down", Attempts: 3}
 	msg := err.Error()
 	if want := strconv.Itoa(3); msg == "" || !contains(msg, want) {
 		t.Errorf("expected error message to mention attempts, got %q", msg)

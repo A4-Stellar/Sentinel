@@ -28,7 +28,7 @@
 
 use std::time::{Duration, Instant};
 
-/// Circuit breaker state, exported as `trident_indexer_rpc_breaker_state`
+/// Circuit breaker state, exported as `sentinel_indexer_rpc_breaker_state`
 /// (0 = Closed, 1 = Open, 2 = HalfOpen).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BreakerState {

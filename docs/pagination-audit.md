@@ -1,6 +1,6 @@
 # Pagination Audit — Keyset Cursor Across All List Endpoints
 
-This document audits every list endpoint exposed by the Trident API and confirms
+This document audits every list endpoint exposed by the Sentinel API and confirms
 they all use **opaque keyset cursors** instead of offset-based pagination.
 Keyset pagination is required for correctness on testnet: offset pagination
 silently skips or duplicates rows when events are being written concurrently

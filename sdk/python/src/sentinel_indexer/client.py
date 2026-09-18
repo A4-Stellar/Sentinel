@@ -1,4 +1,4 @@
-"""Synchronous Trident client."""
+"""Synchronous Sentinel client."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import requests
 import websocket  # websocket-client
 
 from ._config import redact_key, resolve_api_key, resolve_api_url
-from .errors import TridentApiError
+from .errors import SentinelApiError
 from .retry import (
     RetryConfig,
     RetryOverride,
@@ -35,21 +35,21 @@ class _Subscription:
         self._thread.join(timeout=5)
 
 
-class TridentClient:
-    """Synchronous HTTP + WebSocket client for the Trident Soroban event indexer.
+class SentinelClient:
+    """Synchronous HTTP + WebSocket client for the Sentinel Soroban event indexer.
 
     Args:
-        api_url: Base URL of the Trident REST API, e.g. ``"https://api.trident.example.com"``.
-            Falls back to the ``TRIDENT_BASE_URL`` environment variable when omitted.
+        api_url: Base URL of the Sentinel REST API, e.g. ``"https://api.sentinel.example.com"``.
+            Falls back to the ``SENTINEL_BASE_URL`` environment variable when omitted.
         api_key: API key passed as ``X-API-Key`` on every request. Falls back to
-            the ``TRIDENT_API_KEY`` environment variable when omitted.
+            the ``SENTINEL_API_KEY`` environment variable when omitted.
         network: One of ``"mainnet"``, ``"testnet"``, or ``"futurenet"``.
         retry: Retry policy applied to idempotent (GET) requests. Honours
             ``Retry-After`` on 429/503 responses, falling back to exponential
             backoff with jitter otherwise. Pass ``False`` to disable retries
-            for this client, or a :class:`~trident_indexer.retry.RetryConfig`
+            for this client, or a :class:`~sentinel_indexer.retry.RetryConfig`
             to customize the policy. Defaults to
-            :data:`~trident_indexer.retry.DEFAULT_RETRY_CONFIG`.
+            :data:`~sentinel_indexer.retry.DEFAULT_RETRY_CONFIG`.
     """
 
     def __init__(
@@ -68,7 +68,7 @@ class TridentClient:
 
     def __repr__(self) -> str:  # pragma: no cover
         return (
-            f"TridentClient(api_url={self._api_url!r}, "
+            f"SentinelClient(api_url={self._api_url!r}, "
             f"api_key={redact_key(self._api_key)}, network={self._network!r})"
         )
 
@@ -129,7 +129,7 @@ class TridentClient:
             retry: Overrides the client-level retry policy for this call only.
 
         Raises:
-            TridentApiError: with ``code="NOT_FOUND"`` if the event does not exist.
+            SentinelApiError: with ``code="NOT_FOUND"`` if the event does not exist.
         """
         data = self._get(f"/v1/events/{event_id}", retry=retry)
         return SorobanEvent.from_api(data["event"])
@@ -201,7 +201,7 @@ class TridentClient:
                         time.sleep(wait)
                         continue
                 code = "RETRY_EXHAUSTED" if attempt > 1 else "INTERNAL"
-                raise TridentApiError(
+                raise SentinelApiError(
                     0, code, f"Network error: {exc}", attempts=attempt
                 ) from exc
 
@@ -223,7 +223,7 @@ class TridentClient:
                         total_waited += wait
                         time.sleep(wait)
                         continue
-                raise TridentApiError.from_response(
+                raise SentinelApiError.from_response(
                     resp.status_code, resp.text, attempts=attempt
                 )
             return resp.json()

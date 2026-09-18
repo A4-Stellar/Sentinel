@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

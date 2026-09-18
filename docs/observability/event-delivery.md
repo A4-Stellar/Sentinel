@@ -3,7 +3,7 @@
 The indexer does not publish events to Redis inline with the poll loop. It
 commits each event to Postgres **together with an `event_outbox` row in the same
 transaction**, and a relay task publishes unpublished rows to the
-`trident:events` stream (issue #200).
+`sentinel:events` stream (issue #200).
 
 ## Why
 
@@ -37,24 +37,24 @@ pass resumes at the failed row rather than skipping past it.
 
 | Metric | Type | Meaning |
 |---|---|---|
-| `trident_indexer_outbox_backlog` | gauge | Committed events not yet published |
-| `trident_indexer_outbox_published_total` | counter | Events delivered to the stream by the relay |
-| `trident_indexer_outbox_publish_failures_total` | counter | Failed publish attempts |
-| `trident_indexer_rpc_timeouts_total` | counter | RPC calls aborted by the connect or request timeout |
-| `trident_indexer_rpc_active_endpoint` | gauge | Index of the RPC endpoint in use, `0` = primary |
-| `trident_indexer_rpc_failovers_total` | counter | Switches to a different RPC endpoint |
-| `trident_indexer_rpc_call_duration_seconds{method,endpoint}` | histogram | RPC call latency, labelled by method (`getEvents`, `getLedgers`, `getTransaction`, `getLedgerEntries`) and endpoint pool index. Recorded for every call regardless of outcome, so `_count` also gives per-method/per-endpoint call volume (issue #294) |
-| `trident_indexer_rpc_errors_total{method,error_type}` | counter | RPC failures labelled by method and `error_type`: `timeout`, `rate_limited`, `http_4xx`, `http_5xx`, `invalid_cursor`, `rpc_error`, `empty_result`, or `transport` (issue #294) |
+| `sentinel_indexer_outbox_backlog` | gauge | Committed events not yet published |
+| `sentinel_indexer_outbox_published_total` | counter | Events delivered to the stream by the relay |
+| `sentinel_indexer_outbox_publish_failures_total` | counter | Failed publish attempts |
+| `sentinel_indexer_rpc_timeouts_total` | counter | RPC calls aborted by the connect or request timeout |
+| `sentinel_indexer_rpc_active_endpoint` | gauge | Index of the RPC endpoint in use, `0` = primary |
+| `sentinel_indexer_rpc_failovers_total` | counter | Switches to a different RPC endpoint |
+| `sentinel_indexer_rpc_call_duration_seconds{method,endpoint}` | histogram | RPC call latency, labelled by method (`getEvents`, `getLedgers`, `getTransaction`, `getLedgerEntries`) and endpoint pool index. Recorded for every call regardless of outcome, so `_count` also gives per-method/per-endpoint call volume (issue #294) |
+| `sentinel_indexer_rpc_errors_total{method,error_type}` | counter | RPC failures labelled by method and `error_type`: `timeout`, `rate_limited`, `http_4xx`, `http_5xx`, `invalid_cursor`, `rpc_error`, `empty_result`, or `transport` (issue #294) |
 
 ## Alerting
 
-A healthy relay keeps `trident_indexer_outbox_backlog` near zero. A backlog that
+A healthy relay keeps `sentinel_indexer_outbox_backlog` near zero. A backlog that
 grows without recovering means live subscribers are missing data, even though
 Postgres is up to date.
 
 ```yaml
-- alert: TridentOutboxBacklogGrowing
-  expr: trident_indexer_outbox_backlog > 10000
+- alert: SentinelOutboxBacklogGrowing
+  expr: sentinel_indexer_outbox_backlog > 10000
   for: 5m
   annotations:
     summary: "Outbox backlog above threshold — live subscribers are falling behind"
@@ -64,13 +64,13 @@ Postgres is up to date.
 warning the relay logs, so the log line and the alert fire on the same
 condition. Tune both together.
 
-A sustained non-zero `trident_indexer_rpc_active_endpoint` is worth alerting on
+A sustained non-zero `sentinel_indexer_rpc_active_endpoint` is worth alerting on
 as well: the indexer is running on a fallback provider and the primary has not
 recovered.
 
 ### RPC provider health (issue #294)
 
-`trident_indexer_rpc_call_duration_seconds` and `trident_indexer_rpc_errors_total`
+`sentinel_indexer_rpc_call_duration_seconds` and `sentinel_indexer_rpc_errors_total`
 exist to answer one question ops otherwise has to guess at: is ingest lag
 because the chain is quiet, or because the RPC provider is degraded? The
 `method` and `error_type`/`endpoint` labels let a dashboard or query break a
@@ -93,10 +93,10 @@ so it's alertable and doesn't blow up cardinality:
 
 Full rule definitions live in `observability/rpc-alerts.yml`:
 
-- `TridentRPCHighErrorRate` — RPC error ratio above 10% for 5m (page).
-- `TridentRPCHighLatency` — p95 latency above 5s for a method, for 10m (ticket).
-- `TridentRPCFailoverActive` — running on a non-primary endpoint for 5m+ (ticket).
-- `TridentRPCRateLimited` — sustained `rate_limited` errors for 5m+ (ticket).
+- `SentinelRPCHighErrorRate` — RPC error ratio above 10% for 5m (page).
+- `SentinelRPCHighLatency` — p95 latency above 5s for a method, for 10m (ticket).
+- `SentinelRPCFailoverActive` — running on a non-primary endpoint for 5m+ (ticket).
+- `SentinelRPCRateLimited` — sustained `rate_limited` errors for 5m+ (ticket).
 
 A Grafana dashboard covering latency percentiles, per-method/endpoint call
 volume, error rate by type, and active-endpoint/failover status is in

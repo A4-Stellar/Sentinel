@@ -5,12 +5,12 @@ use serde_json::Value as Json;
 // rendering from #415 and lacked the Timepoint/Duration/Error arms, so a
 // backfilled event could store different values than the live path stored
 // for the same XDR. One decoder makes that divergence impossible.
-use trident_common::scval::{decode_scval, scval_to_json, scval_to_string};
-use trident_common::{EventType, SorobanEvent, TridentError};
+use sentinel_common::scval::{decode_scval, scval_to_json, scval_to_string};
+use sentinel_common::{EventType, SorobanEvent, SentinelError};
 
 /// Accept a field the RPC sends as either a JSON string or a JSON number.
 /// `ledger` is quoted on older servers and a bare integer on current ones;
-/// see the matching helper in `trident-indexer`'s rpc module.
+/// see the matching helper in `sentinel-indexer`'s rpc module.
 fn string_or_number<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -83,7 +83,7 @@ impl Parser {
         Self { index_diagnostic }
     }
 
-    pub fn parse_event(&self, raw: &RawEvent) -> Result<Option<SorobanEvent>, TridentError> {
+    pub fn parse_event(&self, raw: &RawEvent) -> Result<Option<SorobanEvent>, SentinelError> {
         let event_type = parse_event_type(&raw.event_type)?;
 
         if event_type == EventType::Diagnostic && !self.index_diagnostic {
@@ -111,7 +111,7 @@ impl Parser {
         let ledger_sequence: u64 = raw
             .ledger
             .parse()
-            .map_err(|_| TridentError::parse(anyhow::anyhow!("invalid ledger: {}", raw.ledger)))?;
+            .map_err(|_| SentinelError::parse(anyhow::anyhow!("invalid ledger: {}", raw.ledger)))?;
 
         // Prefer the explicit operationIndex (stellar-rpc#383); the legacy
         // `id` suffix is only correct on servers predating #382, which changed
@@ -138,12 +138,12 @@ impl Parser {
     }
 }
 
-fn parse_event_type(raw: &str) -> Result<EventType, TridentError> {
+fn parse_event_type(raw: &str) -> Result<EventType, SentinelError> {
     match raw {
         "contract" => Ok(EventType::Contract),
         "system" => Ok(EventType::System),
         "diagnostic" => Ok(EventType::Diagnostic),
-        other => Err(TridentError::parse(anyhow::anyhow!(
+        other => Err(SentinelError::parse(anyhow::anyhow!(
             "unknown event type: {other}"
         ))),
     }

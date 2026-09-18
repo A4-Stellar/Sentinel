@@ -1,6 +1,6 @@
 # Structured Logging & Correlation IDs (issue #294)
 
-Both Trident stacks — the Go REST API (`services/api`) and the Rust services
+Both Sentinel stacks — the Go REST API (`services/api`) and the Rust services
 (`crates/indexer`, `crates/api`) — emit **one JSON object per log line**, and
 share the concepts below (a `service` field, a per-request correlation id,
 one line per request). The two are not byte-identical, though: Go's `slog`
@@ -15,7 +15,7 @@ one literal wire format is a separate, not-yet-scheduled piece of work).
 
 | Field | Type | Always present | Description |
 |-------|------|:--:|-------------|
-| `service` | string | ✅ | Emitting service: `trident-api` (Go REST), `trident-grpc-api` (Rust gRPC), `trident-indexer` (Rust indexer) |
+| `service` | string | ✅ | Emitting service: `sentinel-api` (Go REST), `sentinel-grpc-api` (Rust gRPC), `sentinel-indexer` (Rust indexer) |
 | `level` | string | ✅ | Severity. Rust: lowercase (`debug`\|`info`\|`warn`\|`error`). Go: `slog`'s default uppercase (`DEBUG`\|`INFO`\|`WARN`\|`ERROR`) |
 | `time` | string | ✅ | RFC 3339 UTC, Go's default `slog` key (e.g. `2024-01-01T12:00:00Z`) |
 | `msg` | string | ✅ | Human-readable log message, Go's default `slog` key |
@@ -28,7 +28,7 @@ one literal wire format is a separate, not-yet-scheduled piece of work).
 Example (Go REST API per-request summary line, emitted by `middleware.StructuredLogging`):
 
 ```json
-{"time":"2024-01-01T12:00:00Z","level":"INFO","msg":"http_request","service":"trident-api","request_id":"a1b2c3d4e5f6a7b8","method":"GET","route":"GET /v1/events/{id}","status":200,"latency_ms":4,"api_key_id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}
+{"time":"2024-01-01T12:00:00Z","level":"INFO","msg":"http_request","service":"sentinel-api","request_id":"a1b2c3d4e5f6a7b8","method":"GET","route":"GET /v1/events/{id}","status":200,"latency_ms":4,"api_key_id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}
 ```
 
 `api_key_id` is a UUID, never the raw `X-API-Key` value — the API never logs a
@@ -39,7 +39,7 @@ usable credential, only the opaque row id (verified by
 Example (Rust indexer line within a request-scoped span):
 
 ```json
-{"service":"trident-indexer","level":"info","timestamp":"2024-01-01T12:00:00Z","target":"trident_indexer::streamer","message":"handling request","request_id":"a1b2c3d4e5f6a7b8","trace_id":"0af7651916cd43dd8448eb211c80319c"}
+{"service":"sentinel-indexer","level":"info","timestamp":"2024-01-01T12:00:00Z","target":"sentinel_indexer::streamer","message":"handling request","request_id":"a1b2c3d4e5f6a7b8","trace_id":"0af7651916cd43dd8448eb211c80319c"}
 ```
 
 ## Correlation IDs
@@ -77,13 +77,13 @@ Example (Rust indexer line within a request-scoped span):
   something this doc can claim is already true.
 - **Rust**: any log emitted inside a span carrying a `trace_id` field
   inherits it automatically (the shared JSON layer merges span fields onto
-  every event) — see `trident_common::logging` for that side.
+  every event) — see `sentinel_common::logging` for that side.
 
 ## Implementation
 
 - **Go** (issue #239): `initLogger` (`services/api/logging.go`) installs a
   process-wide JSON (production) or text (otherwise) `slog.Handler` at
-  startup, with `service: "trident-api"` pinned as a base attribute so it
+  startup, with `service: "sentinel-api"` pinned as a base attribute so it
   appears on every line without each call site adding it. `RequestID`
   attaches a request id to the context and echoes it on `X-Request-ID`.
   `StructuredLogging(mux)` — mux is used to resolve the registered route
@@ -102,8 +102,8 @@ Example (Rust indexer line within a request-scoped span):
   why). High-volume debug logs can be thinned with
   `internal/logsampling.Sampler` (issue #239); wired into
   `services/api/ws/hub.go`'s per-connection register/unregister logs.
-- **Rust**: `trident_common::logging::init(service)` installs a custom
-  `tracing` layer (`trident_common::logging::JsonLayer`) that serialises each
+- **Rust**: `sentinel_common::logging::init(service)` installs a custom
+  `tracing` layer (`sentinel_common::logging::JsonLayer`) that serialises each
   event to the schema above and merges span fields (root→leaf) onto every line,
   so request/trace ids on an enclosing span appear on all nested logs. Both
   `crates/indexer` and `crates/api` call it at startup.

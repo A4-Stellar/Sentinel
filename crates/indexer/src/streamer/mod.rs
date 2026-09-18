@@ -27,7 +27,7 @@ use sqlx::PgPool;
 use tokio_retry::{strategy::ExponentialBackoff, Retry};
 use tokio_util::sync::CancellationToken;
 use tracing::Instrument;
-use trident_common::{Severity, TridentError};
+use sentinel_common::{Severity, SentinelError};
 
 use crate::{
     alerting::{AlertContext, Alerter},
@@ -153,7 +153,7 @@ impl Streamer {
     /// Build the streamer. It owns no Redis connection: events are committed to
     /// Postgres with an outbox row and delivered by `redis_stream::relay`
     /// (issue #200).
-    pub async fn new(config: Config, db: PgPool) -> Result<Self, TridentError> {
+    pub async fn new(config: Config, db: PgPool) -> Result<Self, SentinelError> {
         let rpc = RpcClient::with_endpoints(
             config.stellar_rpc_urls.clone(),
             &RpcHttpSettings {
@@ -219,7 +219,7 @@ impl Streamer {
     async fn load_filter(
         pool: &PgPool,
         network: &str,
-    ) -> Result<Option<HashMap<String, i64>>, TridentError> {
+    ) -> Result<Option<HashMap<String, i64>>, SentinelError> {
         let map = db::load_indexed_contracts(pool, network).await?;
         if map.is_empty() {
             Ok(None)
@@ -232,7 +232,7 @@ impl Streamer {
     /// Reload the contract filter from DB. Called periodically inside `run`.
     /// Detects newly-registered contracts with a historical `index_from` and
     /// logs a backfill suggestion (issue #202).
-    pub async fn refresh_contract_filter(&mut self) -> Result<(), TridentError> {
+    pub async fn refresh_contract_filter(&mut self) -> Result<(), SentinelError> {
         match Self::load_filter(&self.db, &self.config.network).await {
             Ok(filter) => {
                 // Detect newly added contracts whose index_from is behind the
@@ -384,7 +384,7 @@ impl Streamer {
 
     /// Start the polling loop. Runs until `shutdown` is cancelled, always
     /// finishing the current `poll_once` before stopping (never mid-batch).
-    pub async fn run(&mut self, shutdown: CancellationToken) -> Result<(), TridentError> {
+    pub async fn run(&mut self, shutdown: CancellationToken) -> Result<(), SentinelError> {
         tracing::info!(network = %self.config.network, "Streamer started");
         tracing::info!(
             "[indexer] poll interval: {}ms",
@@ -674,7 +674,7 @@ impl Streamer {
     /// - If it exceeds max depth, emit metric, log error, and return a fatal error.
     /// - If within bounds, atomically delete affected rows, rewind cursor in `system_state`, update `*cursor`,
     ///   record metric `metrics::record_reorg()`, and log structured warning.
-    async fn check_and_handle_reorg(&mut self, cursor: &mut u64) -> Result<(), TridentError> {
+    async fn check_and_handle_reorg(&mut self, cursor: &mut u64) -> Result<(), SentinelError> {
         if *cursor == 0 {
             return Ok(());
         }
@@ -727,7 +727,7 @@ impl Streamer {
                     max_reorg_depth = self.config.max_reorg_depth,
                     "Deep ledger reorganisation detected exceeding maximum allowed depth; halting indexer"
                 );
-                return Err(TridentError::config(anyhow::anyhow!(
+                return Err(SentinelError::config(anyhow::anyhow!(
                     "Deep reorg of depth {} exceeds max allowed depth {}",
                     reorg_depth,
                     self.config.max_reorg_depth
@@ -754,7 +754,7 @@ impl Streamer {
     /// Execute a single poll cycle. Fetches all available pages from the RPC
     /// starting at `cursor`, persists each event, and advances the cursor.
     /// Returns the total number of events processed in this cycle.
-    async fn poll_once(&mut self, cursor: &mut u64) -> Result<usize, TridentError> {
+    async fn poll_once(&mut self, cursor: &mut u64) -> Result<usize, SentinelError> {
         self.check_and_handle_reorg(cursor).await?;
 
         let poll_start = Instant::now();
@@ -783,7 +783,7 @@ impl Streamer {
             Ok(_) => {
                 // No named partitions at all — every insert would land in
                 // DEFAULT. This is a real misconfiguration, not a blip.
-                return Err(TridentError::config(anyhow::anyhow!(
+                return Err(SentinelError::config(anyhow::anyhow!(
                     "partition exhaustion: soroban_events has no named range partitions.                      All inserts would land in soroban_events_default.                      Run `SELECT create_soroban_partition(0, 2000000);` to create the                      first partition (issue #525)."
                 )));
             }
@@ -792,7 +792,7 @@ impl Streamer {
                 // problem. Returning a config error here would classify it as
                 // Fatal and halt ingestion permanently, so surface it as the
                 // storage error it is and let the caller's retry path handle it.
-                return Err(TridentError::storage(anyhow::Error::new(e).context(
+                return Err(SentinelError::storage(anyhow::Error::new(e).context(
                     "could not query soroban_events partition ranges (issue #525)",
                 )));
             }
@@ -877,7 +877,7 @@ impl Streamer {
             let mut skipped_in_page: u64 = 0;
             // Accumulate the page and commit it in one transaction (issue #199)
             // rather than paying a round-trip per row.
-            let mut page_events: Vec<trident_common::SorobanEvent> =
+            let mut page_events: Vec<sentinel_common::SorobanEvent> =
                 Vec::with_capacity(page.events.len());
             // Token projections keyed by position in `page_events` (issue #211).
             // Indices, not references, because `page_events` is still growing.
@@ -1059,7 +1059,7 @@ impl Streamer {
             // the database. Uses the boundary queried at the top of this cycle
             // so there is no extra round-trip per page.
             //
-            // This returns TridentError::ConfigError (Severity::Fatal), which
+            // This returns SentinelError::ConfigError (Severity::Fatal), which
             // causes the poll loop to halt and log an ERROR rather than
             // silently retrying — the intended loud-failure behaviour for
             // partition exhaustion.
@@ -1435,7 +1435,7 @@ fn parse_retained_floor(message: &str) -> Option<u64> {
 #[allow(clippy::too_many_arguments)]
 async fn commit_page_with_fallback(
     db: &PgPool,
-    page_events: &[trident_common::SorobanEvent],
+    page_events: &[sentinel_common::SorobanEvent],
     page_tokens: &[(usize, crate::parser::token_events::TokenEvent)],
     invocation_metrics: &[db::InvocationMetricRow<'_>],
     storage_snapshots: &[db::StorageSnapshotRow<'_>],
@@ -1443,7 +1443,7 @@ async fn commit_page_with_fallback(
     cursor: Option<u64>,
     ledger: Option<db::LedgerMeta<'_>>,
     batch_size: usize,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let token_projections: Vec<db::TokenProjection<'_>> = page_tokens
         .iter()
         .map(|(index, token)| db::TokenProjection {
@@ -2419,7 +2419,7 @@ mod tests {
 
         // Trim the stream so we start fresh.
         let _: () = redis::cmd("XTRIM")
-            .arg("trident:events")
+            .arg("sentinel:events")
             .arg("MAXLEN")
             .arg(0)
             .query_async(&mut conn)
@@ -2445,7 +2445,7 @@ mod tests {
         assert_eq!(published, 2, "relay should publish both committed events");
 
         let len: i64 = redis::cmd("XLEN")
-            .arg("trident:events")
+            .arg("sentinel:events")
             .query_async(&mut conn)
             .await
             .unwrap();
@@ -2480,7 +2480,7 @@ mod tests {
             .await
             .unwrap();
         let _: () = redis::cmd("XTRIM")
-            .arg("trident:events")
+            .arg("sentinel:events")
             .arg("MAXLEN")
             .arg(0)
             .query_async(&mut conn)
@@ -2495,7 +2495,7 @@ mod tests {
         assert_eq!(backlog, 3, "committed events must be queued for delivery");
 
         let len: i64 = redis::cmd("XLEN")
-            .arg("trident:events")
+            .arg("sentinel:events")
             .query_async(&mut conn)
             .await
             .unwrap();
@@ -2518,7 +2518,7 @@ mod tests {
         assert_eq!(relay.publish_pending().await.unwrap(), 3);
 
         let len: i64 = redis::cmd("XLEN")
-            .arg("trident:events")
+            .arg("sentinel:events")
             .query_async(&mut conn)
             .await
             .unwrap();

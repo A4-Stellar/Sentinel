@@ -8,7 +8,7 @@
 #
 # The figure is read from the indexer's own Prometheus metrics rather than
 # timed externally, so the benchmark and production observability report the
-# same number from the same source (`trident_indexer_catchup_ledgers_per_second`).
+# same number from the same source (`sentinel_indexer_catchup_ledgers_per_second`).
 #
 # Usage:
 #   scripts/measure-catchup-throughput.sh [--deficit N] [--metrics-url URL]
@@ -71,7 +71,7 @@ EOF
 
 require_indexer
 
-start_lag="$(scrape trident_indexer_ledger_lag)"
+start_lag="$(scrape sentinel_indexer_ledger_lag)"
 start_lag="${start_lag:-0}"
 start_epoch="$(date +%s)"
 
@@ -121,10 +121,10 @@ while :; do
     break
   fi
 
-  lag="$(scrape trident_indexer_ledger_lag)"
+  lag="$(scrape sentinel_indexer_ledger_lag)"
   lag="${lag:-$last_lag}"
-  lps="$(scrape trident_indexer_catchup_ledgers_per_second)"
-  eps="$(scrape trident_indexer_catchup_events_per_second)"
+  lps="$(scrape sentinel_indexer_catchup_ledgers_per_second)"
+  eps="$(scrape sentinel_indexer_catchup_events_per_second)"
 
   if [[ -n "$lps" ]]; then
     samples=$(( samples + 1 ))

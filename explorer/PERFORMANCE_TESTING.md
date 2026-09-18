@@ -10,7 +10,7 @@ Test against a live testnet API:
 
 ```bash
 npm run perf-test -- \
-  --api-url https://api.testnet.trident.dev \
+  --api-url https://api.testnet.sentinel.dev \
   --api-key YOUR_API_KEY \
   --contract-id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4
 ```

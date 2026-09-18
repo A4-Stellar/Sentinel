@@ -1,13 +1,13 @@
-package trident
+package sentinel
 
 import (
 	"encoding/json"
 	"fmt"
 )
 
-// TridentApiError is the typed error returned for non-2xx API responses,
+// SentinelApiError is the typed error returned for non-2xx API responses,
 // optionally after exhausting the configured retry policy (Attempts > 1).
-type TridentApiError struct {
+type SentinelApiError struct {
 	Status   int
 	Code     string
 	Message  string
@@ -15,18 +15,18 @@ type TridentApiError struct {
 	Attempts int
 }
 
-func (e *TridentApiError) Error() string {
+func (e *SentinelApiError) Error() string {
 	suffix := ""
 	if e.Field != "" {
 		suffix = fmt.Sprintf(" (field: %s)", e.Field)
 	}
 	if e.Attempts > 1 {
-		return fmt.Sprintf("trident API error %d (%s) after %d attempts: %s%s", e.Status, e.Code, e.Attempts, e.Message, suffix)
+		return fmt.Sprintf("sentinel API error %d (%s) after %d attempts: %s%s", e.Status, e.Code, e.Attempts, e.Message, suffix)
 	}
-	return fmt.Sprintf("trident API error %d (%s): %s%s", e.Status, e.Code, e.Message, suffix)
+	return fmt.Sprintf("sentinel API error %d (%s): %s%s", e.Status, e.Code, e.Message, suffix)
 }
 
-func parseApiError(status int, body string) *TridentApiError {
+func parseApiError(status int, body string) *SentinelApiError {
 	var env struct {
 		Error struct {
 			Code    string `json:"code"`
@@ -35,13 +35,13 @@ func parseApiError(status int, body string) *TridentApiError {
 		} `json:"error"`
 	}
 	if err := json.Unmarshal([]byte(body), &env); err == nil && env.Error.Code != "" {
-		return &TridentApiError{Status: status, Code: env.Error.Code, Message: env.Error.Message, Field: env.Error.Field}
+		return &SentinelApiError{Status: status, Code: env.Error.Code, Message: env.Error.Message, Field: env.Error.Field}
 	}
 	msg := body
 	if msg == "" {
 		msg = fmt.Sprintf("HTTP %d", status)
 	}
-	return &TridentApiError{Status: status, Code: "INTERNAL", Message: msg}
+	return &SentinelApiError{Status: status, Code: "INTERNAL", Message: msg}
 }
 
 // RequestError represents a transport-level failure (e.g. a network error)

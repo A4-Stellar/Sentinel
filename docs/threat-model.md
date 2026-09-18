@@ -1,6 +1,6 @@
 # Threat Model
 
-A lightweight threat model for Trident: what's worth protecting, where an
+A lightweight threat model for Sentinel: what's worth protecting, where an
 attacker can touch the system, where trust boundaries sit, and the top
 threats we've identified with their current mitigations (issue #321).
 
@@ -18,7 +18,7 @@ What's worth protecting, roughly in order of blast radius if compromised:
 | Per-consumer API keys | `api_keys` table (hashed, see `services/api/handlers/apikeys.go`); plaintext returned once at creation | Gate read access to indexed event data; tied to a rate-limit tier |
 | Postgres data (events, audit log, api_keys, webhooks) | `postgres` service, reached via pgx (Go) and sqlx (Rust) | Indexed on-chain event data, audit trail, and credentials-adjacent metadata (key hashes, webhook target URLs) |
 | Event/ledger data itself | `soroban_events` table, populated by `crates/indexer` from Soroban RPC | The actual product — integrity (not just confidentiality) matters: a tampered or incomplete event feed misleads every downstream consumer |
-| Webhook target URLs + delivery secrets | `webhooks` table | An attacker who can register a webhook can potentially use Trident as an SSRF launchpad against the target URL's network |
+| Webhook target URLs + delivery secrets | `webhooks` table | An attacker who can register a webhook can potentially use Sentinel as an SSRF launchpad against the target URL's network |
 | Redis (rate-limit state, WS pub/sub stream, cache) | `redis` service | Availability-critical (rate limiting fails open without it — see `ratelimit.go`), not confidentiality-critical (no secrets stored there directly) |
 | TLS certificates | `docker/nginx/certs` | Transport confidentiality/integrity for the whole public surface |
 

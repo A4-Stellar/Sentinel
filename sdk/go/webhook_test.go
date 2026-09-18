@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"crypto/hmac"

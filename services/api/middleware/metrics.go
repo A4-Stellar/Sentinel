@@ -10,7 +10,7 @@ import (
 )
 
 // httpLatencyBuckets are the histogram bucket bounds (seconds) for
-// trident_api_http_request_duration_seconds — the standard Prometheus
+// sentinel_api_http_request_duration_seconds — the standard Prometheus
 // client library default buckets, which comfortably span sub-millisecond
 // DB-free responses through multi-second cold paths.
 var httpLatencyBuckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
@@ -92,29 +92,29 @@ func PrometheusHTTP(next http.Handler) http.Handler {
 	})
 }
 
-// WriteHTTPMetrics renders trident_api_http_requests_total and
-// trident_api_http_request_duration_seconds in Prometheus text format.
+// WriteHTTPMetrics renders sentinel_api_http_requests_total and
+// sentinel_api_http_request_duration_seconds in Prometheus text format.
 func WriteHTTPMetrics(w io.Writer) {
-	_, _ = fmt.Fprint(w, "# HELP trident_api_http_requests_total Total HTTP requests received.\n")
-	_, _ = fmt.Fprint(w, "# TYPE trident_api_http_requests_total counter\n")
-	_, _ = fmt.Fprint(w, "# HELP trident_api_http_request_duration_seconds HTTP request latency in seconds.\n")
-	_, _ = fmt.Fprint(w, "# TYPE trident_api_http_request_duration_seconds histogram\n")
+	_, _ = fmt.Fprint(w, "# HELP sentinel_api_http_requests_total Total HTTP requests received.\n")
+	_, _ = fmt.Fprint(w, "# TYPE sentinel_api_http_requests_total counter\n")
+	_, _ = fmt.Fprint(w, "# HELP sentinel_api_http_request_duration_seconds HTTP request latency in seconds.\n")
+	_, _ = fmt.Fprint(w, "# TYPE sentinel_api_http_request_duration_seconds histogram\n")
 
 	httpMetricsMu.Lock()
 	defer httpMetricsMu.Unlock()
 
 	for key, series := range httpMetricsData {
 		for i, bound := range httpLatencyBuckets {
-			_, _ = fmt.Fprintf(w, "trident_api_http_request_duration_seconds_bucket{method=%q,route=%q,status=%q,le=%q} %d\n",
+			_, _ = fmt.Fprintf(w, "sentinel_api_http_request_duration_seconds_bucket{method=%q,route=%q,status=%q,le=%q} %d\n",
 				key.method, key.pattern, key.status, formatBucketBound(bound), series.bucketCounts[i])
 		}
-		_, _ = fmt.Fprintf(w, "trident_api_http_request_duration_seconds_bucket{method=%q,route=%q,status=%q,le=\"+Inf\"} %d\n",
+		_, _ = fmt.Fprintf(w, "sentinel_api_http_request_duration_seconds_bucket{method=%q,route=%q,status=%q,le=\"+Inf\"} %d\n",
 			key.method, key.pattern, key.status, series.count)
-		_, _ = fmt.Fprintf(w, "trident_api_http_request_duration_seconds_sum{method=%q,route=%q,status=%q} %g\n",
+		_, _ = fmt.Fprintf(w, "sentinel_api_http_request_duration_seconds_sum{method=%q,route=%q,status=%q} %g\n",
 			key.method, key.pattern, key.status, series.sum)
-		_, _ = fmt.Fprintf(w, "trident_api_http_request_duration_seconds_count{method=%q,route=%q,status=%q} %d\n",
+		_, _ = fmt.Fprintf(w, "sentinel_api_http_request_duration_seconds_count{method=%q,route=%q,status=%q} %d\n",
 			key.method, key.pattern, key.status, series.count)
-		_, _ = fmt.Fprintf(w, "trident_api_http_requests_total{method=%q,route=%q,status=%q} %d\n",
+		_, _ = fmt.Fprintf(w, "sentinel_api_http_requests_total{method=%q,route=%q,status=%q} %d\n",
 			key.method, key.pattern, key.status, series.count)
 	}
 }

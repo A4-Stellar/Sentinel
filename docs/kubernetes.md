@@ -1,6 +1,6 @@
 # Kubernetes Deployment
 
-This guide covers deploying Trident self-hosted on Kubernetes using the official Helm chart.
+This guide covers deploying Sentinel self-hosted on Kubernetes using the official Helm chart.
 
 ## Prerequisites
 
@@ -11,31 +11,31 @@ This guide covers deploying Trident self-hosted on Kubernetes using the official
 | PostgreSQL | 15+ | Operator-managed (e.g. CloudNativePG) or managed service |
 | Redis | 7+ | Operator-managed (e.g. Redis Operator) or managed service |
 
-Trident's Helm chart packages the four stateless services only — it does **not** bundle Postgres or Redis. Provision those separately before installing the chart.
+Sentinel's Helm chart packages the four stateless services only — it does **not** bundle Postgres or Redis. Provision those separately before installing the chart.
 
 ## Quick Start
 
 ### 1. Add the chart repository (once published)
 
 ```bash
-helm repo add trident https://telocel-labs.github.io/trident
+helm repo add sentinel https://a4-stellar.github.io/sentinel
 helm repo update
 ```
 
 For now, install directly from the cloned repo:
 
 ```bash
-git clone https://github.com/telocel-labs/trident
-cd trident
+git clone https://github.com/A4-Stellar/Sentinel
+cd sentinel
 ```
 
 ### 2. Create the secrets
 
-Trident uses the `existingSecret` pattern — sensitive values are read from a Kubernetes Secret rather than passed through Helm values.
+Sentinel uses the `existingSecret` pattern — sensitive values are read from a Kubernetes Secret rather than passed through Helm values.
 
 ```bash
-kubectl create secret generic trident-secrets \
-  --from-literal=DATABASE_URL="postgres://trident:password@postgres-host:5432/trident" \
+kubectl create secret generic sentinel-secrets \
+  --from-literal=DATABASE_URL="postgres://sentinel:password@postgres-host:5432/sentinel" \
   --from-literal=REDIS_URL="redis://redis-host:6379" \
   --from-literal=ADMIN_API_KEY="$(openssl rand -hex 32)" \
   --from-literal=API_KEY_SALT="$(openssl rand -hex 32)" \
@@ -45,8 +45,8 @@ kubectl create secret generic trident-secrets \
 ### 3. Install the chart
 
 ```bash
-helm install trident ./helm/trident \
-  --namespace trident \
+helm install sentinel ./helm/sentinel \
+  --namespace sentinel \
   --create-namespace \
   --set goApi.image.tag=v0.1.0 \
   --set indexer.image.tag=v0.1.0 \
@@ -61,26 +61,26 @@ it if migrations are managed externally.
 ### 4. Verify the deployment
 
 ```bash
-kubectl -n trident get pods
-kubectl -n trident get hpa
+kubectl -n sentinel get pods
+kubectl -n sentinel get hpa
 ```
 
 Expected output:
 
 ```
 NAME                                    READY   STATUS    RESTARTS   AGE
-trident-go-api-7d9f8c4b5-abcde         1/1     Running   0          2m
-trident-go-api-7d9f8c4b5-fghij         1/1     Running   0          2m
-trident-grpc-api-6c8b7d5f4-klmno       1/1     Running   0          2m
-trident-indexer-5b4d9c3a2-pqrst        1/1     Running   0          2m
-trident-nginx-4a3c8b7d6-uvwxy          1/1     Running   0          2m
+sentinel-go-api-7d9f8c4b5-abcde         1/1     Running   0          2m
+sentinel-go-api-7d9f8c4b5-fghij         1/1     Running   0          2m
+sentinel-grpc-api-6c8b7d5f4-klmno       1/1     Running   0          2m
+sentinel-indexer-5b4d9c3a2-pqrst        1/1     Running   0          2m
+sentinel-nginx-4a3c8b7d6-uvwxy          1/1     Running   0          2m
 ```
 
 ## Database migrations {#migrations}
 
 Before any app Deployment (go-api/grpc-api/indexer) rolls out, `helm
 install`/`helm upgrade` runs a `pre-install,pre-upgrade` Helm hook Job
-(`helm/trident/templates/migration-job.yaml`) that applies
+(`helm/sentinel/templates/migration-job.yaml`) that applies
 `database/migrations/*.sql` against `DATABASE_URL` (read from
 `global.existingSecret`, same as every other component). This guarantees a
 deterministic schema-before-app ordering (issue #308) — you never get app
@@ -119,9 +119,9 @@ Because a failed Job is left behind (`hook-succeeded`, not `hook-failed`,
 in the delete policy), you can inspect it after a failed release:
 
 ```bash
-kubectl -n trident get jobs -l app.kubernetes.io/component=migrate
-kubectl -n trident logs job/trident-migrate
-kubectl -n trident describe job/trident-migrate
+kubectl -n sentinel get jobs -l app.kubernetes.io/component=migrate
+kubectl -n sentinel logs job/sentinel-migrate
+kubectl -n sentinel describe job/sentinel-migrate
 ```
 
 Once you've fixed the underlying issue (a bad migration file, an
@@ -130,8 +130,8 @@ unreachable database, etc.), delete the failed Job and re-run
 with a fresh attempt:
 
 ```bash
-kubectl -n trident delete job trident-migrate
-helm upgrade trident ./helm/trident --reuse-values
+kubectl -n sentinel delete job sentinel-migrate
+helm upgrade sentinel ./helm/sentinel --reuse-values
 ```
 
 ### Disabling the hook for externally-managed migrations
@@ -141,7 +141,7 @@ process, or any other external mechanism, disable the chart's hook entirely
 so it doesn't also try to apply them:
 
 ```bash
-helm upgrade trident ./helm/trident --reuse-values --set migrations.enabled=false
+helm upgrade sentinel ./helm/sentinel --reuse-values --set migrations.enabled=false
 ```
 
 or in `custom-values.yaml`:
@@ -177,15 +177,15 @@ ingress:
     nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
     nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
     nginx.ingress.kubernetes.io/hsts-preload: "true"
-  host: api.trident.example.com
+  host: api.sentinel.example.com
   tls:
-    - secretName: trident-tls
+    - secretName: sentinel-tls
       hosts:
-        - api.trident.example.com
+        - api.sentinel.example.com
 ```
 
 ```bash
-helm upgrade trident ./helm/trident -f custom-values.yaml
+helm upgrade sentinel ./helm/sentinel -f custom-values.yaml
 ```
 
 ## TLS termination, HSTS, and internal mTLS {#tls}
@@ -226,7 +226,7 @@ internal-only in three independent layers:
    (constant-time compare; fails closed — an unset `INTERNAL_API_KEY` rejects
    every request, it never means "no auth required").
 2. `docker/nginx/nginx.conf` has an explicit `location /internal/ { deny all; return 403; }`.
-3. `helm/trident/templates/ingress.yaml` routes `/internal/` to a dedicated,
+3. `helm/sentinel/templates/ingress.yaml` routes `/internal/` to a dedicated,
    more-specific path rule ahead of the catch-all `/`, so a controller-level
    deny (e.g. `nginx.ingress.kubernetes.io/configuration-snippet` returning
    403, or an equivalent NetworkPolicy) can target it precisely.
@@ -234,10 +234,10 @@ internal-only in three independent layers:
 To verify in your own cluster:
 ```bash
 # Should NOT succeed from outside the cluster:
-curl -k https://api.trident.example.com/internal/status   # -> 403 (nginx/ingress deny)
+curl -k https://api.sentinel.example.com/internal/status   # -> 403 (nginx/ingress deny)
 # From inside the cluster, still requires the key:
 kubectl run -it --rm curl --image=curlimages/curl --restart=Never -- \
-  curl -s -o /dev/null -w '%{http_code}\n' http://trident-go-api:3000/internal/status  # -> 401 without X-Internal-Key
+  curl -s -o /dev/null -w '%{http_code}\n' http://sentinel-go-api:3000/internal/status  # -> 401 without X-Internal-Key
 ```
 
 ### Internal mTLS between the Go API and the Rust gRPC service (optional)
@@ -267,7 +267,7 @@ CSI driver — see [Secrets management](#secrets); never commit these to
 
 When enabled, the chart mounts these (renamed to `ca.crt`/`server.crt`/etc.)
 into both deployments at `internalMTLS.mountPath` (default
-`/etc/trident/mtls`) and sets `GRPC_MTLS_ENABLED=true` plus the matching
+`/etc/sentinel/mtls`) and sets `GRPC_MTLS_ENABLED=true` plus the matching
 `GRPC_MTLS_*` path env vars. The Rust gRPC server
 (`crates/api/src/main.rs`) requires and verifies a client certificate via
 `tonic::transport::ServerTlsConfig::client_ca_root`; the Go API
@@ -280,16 +280,16 @@ plaintext.
 **Generating certs for a first test** (self-signed CA, for non-production use):
 ```bash
 openssl req -x509 -newkey rsa:4096 -days 365 -nodes \
-  -keyout ca.key -out ca.crt -subj "/CN=trident-internal-ca"
+  -keyout ca.key -out ca.crt -subj "/CN=sentinel-internal-ca"
 
 for role in server client; do
   openssl req -newkey rsa:4096 -nodes -keyout ${role}.key -out ${role}.csr \
-    -subj "/CN=trident-${role}"
+    -subj "/CN=sentinel-${role}"
   openssl x509 -req -in ${role}.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
     -out ${role}.crt -days 365
 done
 
-kubectl create secret generic trident-secrets \
+kubectl create secret generic sentinel-secrets \
   --from-literal=DATABASE_URL=... --from-literal=REDIS_URL=... --from-literal=ADMIN_API_KEY=... \
   --from-literal=API_KEY_SALT=... --from-literal=STELLAR_RPC_URL=... \
   --from-file=INTERNAL_CA_CERT=ca.crt \
@@ -312,7 +312,7 @@ internal `ClusterIssuer`) rather than the ad hoc openssl commands above.
 - **Internal mTLS**: same rotation mechanics as any other value in
   `global.existingSecret` — see [Rotating secrets](#secrets) below. Because
   both the server and client sides re-read cert files from a mounted volume,
-  a `kubectl rollout restart` of both `trident-go-api` and `trident-grpc-api`
+  a `kubectl rollout restart` of both `sentinel-go-api` and `sentinel-grpc-api`
   deployments is required after the Secret updates (unlike `DATABASE_URL`
   etc., these are read from disk once at process TLS-config time, not on
   every request) — projected/mounted Secret volumes update automatically
@@ -360,10 +360,10 @@ the [API key lifecycle runbook](runbooks/api-key-lifecycle.md).
 Create API keys via the admin endpoint after deployment:
 
 ```bash
-ADMIN_KEY=$(kubectl get secret trident-secrets -o jsonpath='{.data.ADMIN_API_KEY}' | base64 -d)
-TRIDENT_HOST="http://$(kubectl get svc trident-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+ADMIN_KEY=$(kubectl get secret sentinel-secrets -o jsonpath='{.data.ADMIN_API_KEY}' | base64 -d)
+SENTINEL_HOST="http://$(kubectl get svc sentinel-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
 
-curl -X POST "$TRIDENT_HOST/v1/api-keys" \
+curl -X POST "$SENTINEL_HOST/v1/api-keys" \
   -H "X-Admin-Key: $ADMIN_KEY" \
   -H "Content-Type: application/json" \
   -d '{"label": "my-app", "network": "mainnet"}'
@@ -375,7 +375,7 @@ Every deployment (and the migration hook Job — see
 [Database migrations](#migrations) above) reads its sensitive configuration,
 including `DATABASE_URL`, `REDIS_URL`, `ADMIN_API_KEY`, `API_KEY_SALT`, and
 `STELLAR_RPC_URL`, from a single Kubernetes Secret named by
-`global.existingSecret` (default `trident-secrets`) via `secretKeyRef` —
+`global.existingSecret` (default `sentinel-secrets`) via `secretKeyRef` —
 never from `values.yaml`, and never `COPY`'d into an image layer (see
 [crates/api/Dockerfile](../crates/api/Dockerfile),
 [crates/indexer/Dockerfile](../crates/indexer/Dockerfile),
@@ -407,7 +407,7 @@ value is ever typed into `kubectl` or committed anywhere.
    apiVersion: external-secrets.io/v1beta1
    kind: ClusterSecretStore
    metadata:
-     name: trident-secret-store
+     name: sentinel-secret-store
    spec:
      provider:
        aws:
@@ -416,23 +416,23 @@ value is ever typed into `kubectl` or committed anywhere.
          auth:
            jwt:
              serviceAccountRef:
-               name: trident-external-secrets
+               name: sentinel-external-secrets
    ```
 
 3. Enable the chart's `ExternalSecret` and point it at that store:
 
    ```bash
-   helm upgrade trident ./helm/trident \
+   helm upgrade sentinel ./helm/sentinel \
      --set global.externalSecret.enabled=true \
-     --set global.externalSecret.secretStoreRef.name=trident-secret-store \
+     --set global.externalSecret.secretStoreRef.name=sentinel-secret-store \
      --set global.externalSecret.secretStoreRef.kind=ClusterSecretStore
    ```
 
-   By default this expects a single backend secret at `trident/prod` with
+   By default this expects a single backend secret at `sentinel/prod` with
    `DATABASE_URL`/`REDIS_URL`/`ADMIN_API_KEY`/`API_KEY_SALT`/`STELLAR_RPC_URL`
    keys — override
    `global.externalSecret.data[].remoteRef` per key if your backend layout
-   differs (see `helm/trident/values.yaml`).
+   differs (see `helm/sentinel/values.yaml`).
 
 The operator owns and continuously syncs a Secret named
 `global.existingSecret` — every other deployment keeps reading it exactly the
@@ -456,46 +456,46 @@ changes are needed either. Example `SecretProviderClass`:
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
-  name: trident-secrets-csi
+  name: sentinel-secrets-csi
 spec:
   provider: aws  # or gcp / azure — matches your installed CSI provider
   parameters:
     objects: |
-      - objectName: "trident/prod/DATABASE_URL"
+      - objectName: "sentinel/prod/DATABASE_URL"
         objectType: "secretsmanager"
-      - objectName: "trident/prod/REDIS_URL"
+      - objectName: "sentinel/prod/REDIS_URL"
         objectType: "secretsmanager"
-      - objectName: "trident/prod/ADMIN_API_KEY"
+      - objectName: "sentinel/prod/ADMIN_API_KEY"
         objectType: "secretsmanager"
-      - objectName: "trident/prod/API_KEY_SALT"
+      - objectName: "sentinel/prod/API_KEY_SALT"
         objectType: "secretsmanager"
-      - objectName: "trident/prod/STELLAR_RPC_URL"
+      - objectName: "sentinel/prod/STELLAR_RPC_URL"
         objectType: "secretsmanager"
   secretObjects:
-    - secretName: trident-secrets   # global.existingSecret
+    - secretName: sentinel-secrets   # global.existingSecret
       type: Opaque
       data:
-        - objectName: "trident/prod/DATABASE_URL"
+        - objectName: "sentinel/prod/DATABASE_URL"
           key: DATABASE_URL
-        - objectName: "trident/prod/REDIS_URL"
+        - objectName: "sentinel/prod/REDIS_URL"
           key: REDIS_URL
-        - objectName: "trident/prod/ADMIN_API_KEY"
+        - objectName: "sentinel/prod/ADMIN_API_KEY"
           key: ADMIN_API_KEY
-        - objectName: "trident/prod/API_KEY_SALT"
+        - objectName: "sentinel/prod/API_KEY_SALT"
           key: API_KEY_SALT
-        - objectName: "trident/prod/STELLAR_RPC_URL"
+        - objectName: "sentinel/prod/STELLAR_RPC_URL"
           key: STELLAR_RPC_URL
 ```
 
 Then mount the CSI volume on at least one pod referencing this
 `SecretProviderClass` (a single mount is enough to trigger the sync — the
-resulting `trident-secrets` Secret is then available cluster-wide via
+resulting `sentinel-secrets` Secret is then available cluster-wide via
 `secretKeyRef` exactly as with the other two options).
 
 ### Verifying no secret ends up in an image layer
 
 ```bash
-docker history --no-trunc ghcr.io/telocel-labs/trident-go-api:latest | grep -i -E "DATABASE_URL|REDIS_URL|ADMIN_API_KEY|secret"
+docker history --no-trunc ghcr.io/a4-stellar/sentinel-go-api:latest | grep -i -E "DATABASE_URL|REDIS_URL|ADMIN_API_KEY|secret"
 ```
 
 Should print nothing. Each Dockerfile's runtime stage only ever `COPY
@@ -513,12 +513,12 @@ any of these, redact the credential portion — don't log the raw env var value.
 ### Rotating secrets
 
 1. Update the value in your backend (Vault/Secrets Manager/etc., or `kubectl create secret --dry-run=client -o yaml | kubectl apply -f -` for the manual path).
-2. **external-secrets**: happens automatically on the next `refreshInterval` tick (default `1h` in this chart) — no manual step. To force it immediately: `kubectl annotate externalsecret trident-secrets force-sync=$(date +%s) --overwrite`.
+2. **external-secrets**: happens automatically on the next `refreshInterval` tick (default `1h` in this chart) — no manual step. To force it immediately: `kubectl annotate externalsecret sentinel-secrets force-sync=$(date +%s) --overwrite`.
 3. **CSI**: re-mount (pod restart) picks up the new value; `secretObjects` sync depends on your provider's rotation reconciler — check its docs for a reconciliation interval.
-4. **Manual `kubectl create secret`**: re-run the command with the new value, or `kubectl create secret generic trident-secrets --from-literal=... --dry-run=client -o yaml | kubectl apply -f -`.
+4. **Manual `kubectl create secret`**: re-run the command with the new value, or `kubectl create secret generic sentinel-secrets --from-literal=... --dry-run=client -o yaml | kubectl apply -f -`.
 5. **After any of the above**, roll the consuming pods so they pick up the new value — none of the three services currently hot-reload env vars:
    ```bash
-   kubectl rollout restart deployment/trident-go-api deployment/trident-grpc-api deployment/trident-indexer
+   kubectl rollout restart deployment/sentinel-go-api deployment/sentinel-grpc-api deployment/sentinel-indexer
    ```
    (A future improvement would be [Reloader](https://github.com/stakater/Reloader) to automate this step.)
 
@@ -532,7 +532,7 @@ The Go API exposes two endpoints for Kubernetes' liveness and readiness probes, 
 ## Upgrading
 
 ```bash
-helm upgrade trident ./helm/trident --reuse-values \
+helm upgrade sentinel ./helm/sentinel --reuse-values \
   --set goApi.image.tag=v0.2.0 \
   --set indexer.image.tag=v0.2.0 \
   --set grpcApi.image.tag=v0.2.0
@@ -541,8 +541,8 @@ helm upgrade trident ./helm/trident --reuse-values \
 ## Uninstalling
 
 ```bash
-helm uninstall trident --namespace trident
-kubectl delete namespace trident
+helm uninstall sentinel --namespace sentinel
+kubectl delete namespace sentinel
 # Retain the secret if you plan to reinstall:
-# kubectl -n trident delete secret trident-secrets
+# kubectl -n sentinel delete secret sentinel-secrets
 ```

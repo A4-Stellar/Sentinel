@@ -36,7 +36,7 @@ export type UnreachableReason = 'network' | 'down' | 'rate_limited' | 'unauthori
 
 /**
  * Response envelope returned by the explorer's own /api/events.json route.
- * Extends the Trident ListEventsResponse with a classification the client can
+ * Extends the Sentinel ListEventsResponse with a classification the client can
  * render without reaching into raw error strings.
  */
 export interface ExplorerEventsResponse extends ListEventsResponse {

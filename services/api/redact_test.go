@@ -21,9 +21,9 @@ func TestRedactConnErr(t *testing.T) {
 		},
 		{
 			name:    "postgres DSN with credentials",
-			err:     errors.New(`dial error: failed to connect to postgres://trident:hunter2@db-host:5432/trident: connection refused`),
+			err:     errors.New(`dial error: failed to connect to postgres://sentinel:hunter2@db-host:5432/sentinel: connection refused`),
 			mustNot: "hunter2",
-			must:    "postgres://[redacted]@db-host:5432/trident",
+			must:    "postgres://[redacted]@db-host:5432/sentinel",
 		},
 		{
 			name: "no embedded DSN — passed through unchanged",

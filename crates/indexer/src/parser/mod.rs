@@ -8,19 +8,19 @@
 //!   and the event body into a `serde_json::Value` for storage and forwarding.
 //! - Type coercion: Symbol/String → plain string, Address → strkey, I128/U128 →
 //!   decimal string, Bool → "true"/"false", Bytes → hex, Map/Vec → JSON object/array.
-//! - Returning `TridentError::ParseError` for any input that cannot be decoded so
+//! - Returning `SentinelError::ParseError` for any input that cannot be decoded so
 //!   the caller (Streamer) can decide whether to skip or halt.
 
 use serde_json::Value as Json;
 use stellar_xdr::curr::ScVal;
-use trident_common::{EventType, SorobanEvent, TridentError};
+use sentinel_common::{EventType, SorobanEvent, SentinelError};
 
 // ScVal decoding moved to the shared crate so the live parser and the
 // backfill re-ingest path can never render the same XDR differently
 // (issue #506). Re-exported here so in-crate callers and the existing test
 // suite — including the proptest fuzz pass CI runs at PROPTEST_CASES=50000 —
 // keep addressing them through `crate::parser::*`.
-pub use trident_common::scval::{
+pub use sentinel_common::scval::{
     decode_scval, scaddress_to_string, scval_to_json, scval_to_string,
 };
 
@@ -79,7 +79,7 @@ impl Parser {
     pub fn parse_event_with_projection(
         &self,
         raw: &RawEvent,
-    ) -> Result<Option<ParsedEvent>, TridentError> {
+    ) -> Result<Option<ParsedEvent>, SentinelError> {
         let event_type = parse_event_type(&raw.event_type)?;
 
         if event_type == EventType::Diagnostic && !self.index_diagnostic {
@@ -122,7 +122,7 @@ impl Parser {
         let ledger_sequence: u64 = raw
             .ledger
             .parse()
-            .map_err(|_| TridentError::parse(anyhow::anyhow!("invalid ledger: {}", raw.ledger)))?;
+            .map_err(|_| SentinelError::parse(anyhow::anyhow!("invalid ledger: {}", raw.ledger)))?;
 
         let event_index = raw_event_index(raw);
 
@@ -202,12 +202,12 @@ pub(crate) fn assign_unique_event_indexes(events: &mut [SorobanEvent]) {
     }
 }
 
-fn parse_event_type(raw: &str) -> Result<EventType, TridentError> {
+fn parse_event_type(raw: &str) -> Result<EventType, SentinelError> {
     match raw {
         "contract" => Ok(EventType::Contract),
         "system" => Ok(EventType::System),
         "diagnostic" => Ok(EventType::Diagnostic),
-        other => Err(TridentError::parse(anyhow::anyhow!(
+        other => Err(SentinelError::parse(anyhow::anyhow!(
             "unknown event type: {other}"
         ))),
     }

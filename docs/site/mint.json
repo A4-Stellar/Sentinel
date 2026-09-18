@@ -1,9 +1,9 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Trident",
+  "name": "Sentinel",
   "logo": {
-    "dark": "/logo/trident-dark.svg",
-    "light": "/logo/trident-light.svg"
+    "dark": "/logo/sentinel-dark.svg",
+    "light": "/logo/sentinel-light.svg"
   },
   "favicon": "/favicon.svg",
   "colors": {
@@ -21,12 +21,12 @@
   "topbarLinks": [
     {
       "name": "GitHub",
-      "url": "https://github.com/Telocel-Labs/Trident"
+      "url": "https://github.com/A4-Stellar/Sentinel"
     }
   ],
   "topbarCtaButton": {
     "name": "Get API Key",
-    "url": "https://trident.telocel.com/signup"
+    "url": "https://sentinel.a4stellar.com/signup"
   },
   "tabs": [
     {
@@ -55,12 +55,12 @@
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/Telocel-Labs/Trident"
+      "url": "https://github.com/A4-Stellar/Sentinel"
     },
     {
       "name": "Discussions",
       "icon": "comments",
-      "url": "https://github.com/Telocel-Labs/Trident/discussions"
+      "url": "https://github.com/A4-Stellar/Sentinel/discussions"
     }
   ],
   "navigation": [
@@ -134,11 +134,11 @@
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/Telocel-Labs/Trident"
+    "github": "https://github.com/A4-Stellar/Sentinel"
   },
   "openapi": "/api-reference/openapi.yaml",
   "api": {
-    "baseUrl": "https://api.trident.telocel.com",
+    "baseUrl": "https://api.sentinel.a4stellar.com",
     "auth": {
       "method": "key",
       "name": "X-API-Key"
@@ -149,6 +149,6 @@
     "suggestEdit": true
   },
   "search": {
-    "prompt": "Search Trident docs…"
+    "prompt": "Search Sentinel docs…"
   }
 }

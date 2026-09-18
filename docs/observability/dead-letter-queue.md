@@ -62,25 +62,25 @@ isolation, and a page of perfectly healthy events would land in
 
 | Metric | Type | Meaning |
 |---|---|---|
-| `trident_indexer_dead_lettered_total` | counter | Items written to a dead-letter table — `parse_errors` (decode failures, issue #414) or `failed_events` (persist failures, issue #208). Only incremented once the row is durably written, so it never counts an event that was actually lost. |
+| `sentinel_indexer_dead_lettered_total` | counter | Items written to a dead-letter table — `parse_errors` (decode failures, issue #414) or `failed_events` (persist failures, issue #208). Only incremented once the row is durably written, so it never counts an event that was actually lost. |
 
 ## Alerting
 
-A healthy indexer keeps `trident_indexer_dead_lettered_total` flat. Any
+A healthy indexer keeps `sentinel_indexer_dead_lettered_total` flat. Any
 increase is worth paging on — unlike lag, which recovers on its own, a
 dead-lettered event needs a human to look at `failed_events`/`parse_errors`
 and decide whether to fix and replay it:
 
 ```yaml
-- alert: TridentEventsDeadLettered
-  expr: increase(trident_indexer_dead_lettered_total[15m]) > 0
+- alert: SentinelEventsDeadLettered
+  expr: increase(sentinel_indexer_dead_lettered_total[15m]) > 0
   annotations:
     summary: "Events written to a dead-letter table — inspect parse_errors / failed_events"
 ```
 
 ## Inspecting and replaying failed_events
 
-`trident-indexer replay` (issue #574) is the supported way to inspect and
+`sentinel-indexer replay` (issue #574) is the supported way to inspect and
 replay dead-lettered events. It reads `DATABASE_URL` the same way the daemon
 does, connects, does the requested work, and exits — it never starts the
 poll loop.
@@ -89,20 +89,20 @@ List rows still awaiting replay (`replayed_at IS NULL`), oldest first — the
 same query an operator used to run by hand:
 
 ```sh
-trident-indexer replay --list
+sentinel-indexer replay --list
 ```
 
 Replay one specific row by its `failed_events.id` (from the listing above):
 
 ```sh
-trident-indexer replay --id <uuid>
+sentinel-indexer replay --id <uuid>
 ```
 
 Replay every row still pending, oldest first (bounded by `--limit`, default
 1000):
 
 ```sh
-trident-indexer replay --all
+sentinel-indexer replay --all
 ```
 
 Add `--list` to either replay form to print the full pending table before

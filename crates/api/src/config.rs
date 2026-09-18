@@ -1,4 +1,4 @@
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 #[derive(Debug)]
 pub struct Config {
@@ -11,7 +11,7 @@ pub struct Config {
 /// Off by default (`GRPC_MTLS_ENABLED` unset/false) — TLS is terminated at
 /// the edge (nginx/ingress) and this hop stays inside the cluster network.
 /// When enabled, cert/key/CA paths point at files mounted from a Kubernetes
-/// Secret (see helm/trident/templates/grpc-api-deployment.yaml and
+/// Secret (see helm/sentinel/templates/grpc-api-deployment.yaml and
 /// `internalMTLS` in values.yaml) — never baked into the image.
 #[derive(Debug)]
 pub struct MtlsConfig {
@@ -21,7 +21,7 @@ pub struct MtlsConfig {
 }
 
 impl Config {
-    pub fn from_env() -> Result<Self, TridentError> {
+    pub fn from_env() -> Result<Self, SentinelError> {
         let mut missing: Vec<&str> = Vec::new();
 
         let database_url = collect_required("DATABASE_URL", &mut missing);
@@ -49,8 +49,8 @@ impl Config {
         };
 
         if !missing.is_empty() {
-            return Err(TridentError::config(anyhow::anyhow!(
-                "[trident-api] missing required env vars:\n{}",
+            return Err(SentinelError::config(anyhow::anyhow!(
+                "[sentinel-api] missing required env vars:\n{}",
                 missing.join("\n")
             )));
         }
@@ -143,12 +143,12 @@ mod tests {
     fn all_vars_set_returns_config() {
         with_env(
             &[
-                ("DATABASE_URL", "postgres://localhost/trident"),
+                ("DATABASE_URL", "postgres://localhost/sentinel"),
                 ("GRPC_ADDR", "0.0.0.0:50051"),
             ],
             || {
                 let cfg = Config::from_env().unwrap();
-                assert_eq!(cfg.database_url, "postgres://localhost/trident");
+                assert_eq!(cfg.database_url, "postgres://localhost/sentinel");
                 assert_eq!(cfg.grpc_addr, "0.0.0.0:50051");
                 assert!(cfg.mtls.is_none());
             },
@@ -162,7 +162,7 @@ mod tests {
         env::remove_var("GRPC_MTLS_ENABLED");
         with_env(
             &[
-                ("DATABASE_URL", "postgres://localhost/trident"),
+                ("DATABASE_URL", "postgres://localhost/sentinel"),
                 ("GRPC_ADDR", "0.0.0.0:50051"),
             ],
             || {
@@ -176,7 +176,7 @@ mod tests {
     fn mtls_enabled_populates_cert_paths() {
         with_env(
             &[
-                ("DATABASE_URL", "postgres://localhost/trident"),
+                ("DATABASE_URL", "postgres://localhost/sentinel"),
                 ("GRPC_ADDR", "0.0.0.0:50051"),
                 ("GRPC_MTLS_ENABLED", "true"),
                 ("GRPC_MTLS_CA_CERT", "/certs/ca.crt"),
@@ -196,7 +196,7 @@ mod tests {
     #[test]
     fn mtls_enabled_without_cert_paths_errors() {
         let _guard = env_guard();
-        env::set_var("DATABASE_URL", "postgres://localhost/trident");
+        env::set_var("DATABASE_URL", "postgres://localhost/sentinel");
         env::set_var("GRPC_ADDR", "0.0.0.0:50051");
         env::set_var("GRPC_MTLS_ENABLED", "true");
         env::remove_var("GRPC_MTLS_CA_CERT");

@@ -1,9 +1,9 @@
 import type { Network } from './types';
 
 const TESTNET_RPC =
-  import.meta.env.TRIDENT_TESTNET_SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org';
+  import.meta.env.SENTINEL_TESTNET_SOROBAN_RPC_URL ?? 'https://soroban-testnet.stellar.org';
 const MAINNET_RPC =
-  import.meta.env.TRIDENT_MAINNET_SOROBAN_RPC_URL ?? 'https://mainnet.sorobanrpc.com';
+  import.meta.env.SENTINEL_MAINNET_SOROBAN_RPC_URL ?? 'https://mainnet.sorobanrpc.com';
 
 const PROBE_TIMEOUT_MS = 2500;
 // How many recent ledgers to scan for on-chain events when deciding whether a
@@ -95,8 +95,8 @@ async function runProbe(network: Network, contractId: string): Promise<OnChainPr
 
 /**
  * Best-effort on-chain check that tells the explorer whether a contract with
- * zero Trident events is simply quiet ("no events yet") or actually emitting
- * events on the Stellar network that Trident hasn't indexed ("not indexed").
+ * zero Sentinel events is simply quiet ("no events yet") or actually emitting
+ * events on the Stellar network that Sentinel hasn't indexed ("not indexed").
  *
  * Never throws: every failure path returns `inconclusive` so the caller can
  * render an honest fallback state.

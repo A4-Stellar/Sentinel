@@ -40,7 +40,7 @@ function decodeBase32(value: string): Uint8Array | null {
 /**
  * Full Stellar strkey validation for Soroban contract addresses.
  *
- * This is stricter than the Trident API's format check: it verifies the
+ * This is stricter than the Sentinel API's format check: it verifies the
  * base32 charset, the contract version byte, and the CRC16 checksum, so a
  * visitor who pastes a typo'd or truncated address gets an honest "that isn't
  * a real contract id" state right away instead of a silent empty result.

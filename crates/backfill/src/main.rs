@@ -74,7 +74,7 @@ async fn backfill_range(
     duplicates_skipped: &AtomicU64,
     max_consecutive_rpc_failures: Option<u32>,
     on_progress: impl Fn(u64),
-) -> Result<(), trident_common::TridentError> {
+) -> Result<(), sentinel_common::SentinelError> {
     let mut page_cursor: Option<String> = None;
     let mut seq = from_ledger;
     let mut consecutive_rpc_failures: u32 = 0;
@@ -139,7 +139,7 @@ async fn backfill_range(
                 }
             }
             Err(err) => {
-                if let trident_common::TridentError::RpcError { source, .. } = &err {
+                if let sentinel_common::SentinelError::RpcError { source, .. } = &err {
                     tracing::warn!(error = %source, "RPC error");
                 } else {
                     tracing::warn!(error = %err, "RPC error");

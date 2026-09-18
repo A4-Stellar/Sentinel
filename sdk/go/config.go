@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"errors"
@@ -6,23 +6,23 @@ import (
 	"os"
 )
 
-// Environment variable names used as fallbacks for TridentClientConfig
+// Environment variable names used as fallbacks for SentinelClientConfig
 // fields that are left unset. Explicit config values always take
 // precedence over these.
 const (
-	EnvAPIKey  = "TRIDENT_API_KEY"
-	EnvBaseURL = "TRIDENT_BASE_URL"
+	EnvAPIKey  = "SENTINEL_API_KEY"
+	EnvBaseURL = "SENTINEL_BASE_URL"
 )
 
 // ErrMissingAPIKey is returned by authenticated calls when no API key was
-// configured explicitly and none was found in the TRIDENT_API_KEY
+// configured explicitly and none was found in the SENTINEL_API_KEY
 // environment variable.
-var ErrMissingAPIKey = errors.New("trident: API key is required; set TridentClientConfig.APIKey or the TRIDENT_API_KEY environment variable")
+var ErrMissingAPIKey = errors.New("sentinel: API key is required; set SentinelClientConfig.APIKey or the SENTINEL_API_KEY environment variable")
 
 // resolve applies explicit-value-over-environment-variable precedence,
 // returning a new config with BaseURL/APIKey filled in from the
 // environment where they were left empty. It never mutates the receiver.
-func (c TridentClientConfig) resolve() TridentClientConfig {
+func (c SentinelClientConfig) resolve() SentinelClientConfig {
 	resolved := c
 	if resolved.APIKey == "" {
 		resolved.APIKey = os.Getenv(EnvAPIKey)
@@ -36,7 +36,7 @@ func (c TridentClientConfig) resolve() TridentClientConfig {
 // requireAPIKey returns ErrMissingAPIKey if no API key is configured.
 // Called before issuing authenticated requests so callers get a clear,
 // actionable error instead of an opaque 401 from the server.
-func (c TridentClientConfig) requireAPIKey() error {
+func (c SentinelClientConfig) requireAPIKey() error {
 	if c.APIKey == "" {
 		return ErrMissingAPIKey
 	}
@@ -57,12 +57,12 @@ func redactKey(key string) string {
 
 // String implements fmt.Stringer. The API key is always redacted so this
 // type is safe to include in logs.
-func (c TridentClientConfig) String() string {
-	return fmt.Sprintf("TridentClientConfig{BaseURL: %q, APIKey: %s}", c.BaseURL, redactKey(c.APIKey))
+func (c SentinelClientConfig) String() string {
+	return fmt.Sprintf("SentinelClientConfig{BaseURL: %q, APIKey: %s}", c.BaseURL, redactKey(c.APIKey))
 }
 
 // GoString implements fmt.GoStringer so that %#v formatting also redacts
 // the API key.
-func (c TridentClientConfig) GoString() string {
+func (c SentinelClientConfig) GoString() string {
 	return c.String()
 }

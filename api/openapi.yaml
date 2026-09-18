@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
-  title: Trident REST API
+  title: Sentinel REST API
   description: |
     Real-time indexing and event querying for Soroban contract events.
 
     ## API Stability & Compatibility Promise
 
-    The `/v1/` REST API surface is **frozen and stable**. For the complete backward-compatibility guarantees, deprecation lifecycle, and versioning rules, see the [API Stability Policy](https://github.com/Telocel-Labs/Trident/blob/dev/docs/API_STABILITY.md).
+    The `/v1/` REST API surface is **frozen and stable**. For the complete backward-compatibility guarantees, deprecation lifecycle, and versioning rules, see the [API Stability Policy](https://github.com/A4-Stellar/Sentinel/blob/dev/docs/API_STABILITY.md).
 
     ## Request validation
 
@@ -57,12 +57,12 @@ info:
     never construct or parse one.
   version: 1.0.0
   contact:
-    name: Trident Team
+    name: Sentinel Team
   license:
     name: Apache 2.0
 
 servers:
-  - url: https://api.trident.telocel.com
+  - url: https://api.sentinel.a4stellar.com
     description: Production
   - url: http://localhost:3000
     description: Development

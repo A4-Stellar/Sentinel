@@ -78,7 +78,7 @@ scalar in this mapping (`Timepoint`, `Duration`, `U64`, `I64`) — values above
 ## Why no variant is "unsupported"
 
 An earlier version of this decoder fell through to a Debug-format string plus
-a `trident_indexer_unhandled_scvariant_total` metric increment for any variant
+a `sentinel_indexer_unhandled_scvariant_total` metric increment for any variant
 it didn't explicitly handle. That metric identified `ContractInstance`,
 `LedgerKeyContractInstance`, and `LedgerKeyNonce` as the three unhandled
 variants (issue #209's audit); all three now have the documented shapes

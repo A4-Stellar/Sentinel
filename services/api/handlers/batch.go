@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Depo-dev/trident/services/api/gen"
-	"github.com/Depo-dev/trident/services/api/grpcclient"
-	"github.com/Depo-dev/trident/services/api/internal/httputil"
-	"github.com/Depo-dev/trident/services/api/middleware"
-	"github.com/Depo-dev/trident/services/api/validation"
+	"github.com/Depo-dev/sentinel/services/api/gen"
+	"github.com/Depo-dev/sentinel/services/api/grpcclient"
+	"github.com/Depo-dev/sentinel/services/api/internal/httputil"
+	"github.com/Depo-dev/sentinel/services/api/middleware"
+	"github.com/Depo-dev/sentinel/services/api/validation"
 )
 
 const batchEventsMaxIDs = 100

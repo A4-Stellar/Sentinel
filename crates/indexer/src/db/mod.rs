@@ -5,7 +5,7 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::PgPool;
-use trident_common::{EventType, SorobanEvent, TridentError};
+use sentinel_common::{EventType, SorobanEvent, SentinelError};
 use uuid::Uuid;
 
 use crate::parser::token_events::TokenEvent;
@@ -19,16 +19,16 @@ use crate::parser::token_events::TokenEvent;
 /// connection where that statement does not exist, which makes the query fail.
 /// See docs/deployment.md (issue #87).
 #[allow(dead_code)]
-pub async fn connect_pool(database_url: &str, pool_size: u32) -> Result<PgPool, TridentError> {
+pub async fn connect_pool(database_url: &str, pool_size: u32) -> Result<PgPool, SentinelError> {
     let connect_options = PgConnectOptions::from_str(database_url)
-        .map_err(|e| TridentError::config(anyhow::Error::new(e).context("invalid DATABASE_URL")))?
+        .map_err(|e| SentinelError::config(anyhow::Error::new(e).context("invalid DATABASE_URL")))?
         .statement_cache_capacity(0);
 
     PgPoolOptions::new()
         .max_connections(pool_size)
         .connect_with(connect_options)
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("connect_pool")))
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("connect_pool")))
 }
 
 /// Classify a storage failure as permanent (the data itself is unpersistable —
@@ -36,7 +36,7 @@ pub async fn connect_pool(database_url: &str, pool_size: u32) -> Result<PgPool, 
 /// instead) (issue #573).
 ///
 /// `commit_page` and every `insert_*_batch` helper wrap every `sqlx::Error` in
-/// `TridentError::storage`, which `TridentError::severity` classifies as
+/// `SentinelError::storage`, which `SentinelError::severity` classifies as
 /// uniformly `Retryable` — correct for the poll loop's top-level retry, but not
 /// precise enough for `commit_page_with_fallback`'s per-event isolation stage
 /// (issue #208): "an event that fails even alone is unpersistable" only holds
@@ -46,7 +46,7 @@ pub async fn connect_pool(database_url: &str, pool_size: u32) -> Result<PgPool, 
 /// instead of retried.
 ///
 /// `anyhow::Error::new(e).context(...)` (how every call site here builds the
-/// `TridentError::StorageError` source) still carries the original
+/// `SentinelError::StorageError` source) still carries the original
 /// `sqlx::Error` in its chain, so `chain().find_map` recovers it without
 /// touching any insert function's signature.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -66,12 +66,12 @@ pub enum StorageFailure {
     Permanent,
 }
 
-/// Classify a `TridentError` produced by this module's storage functions.
+/// Classify a `SentinelError` produced by this module's storage functions.
 /// Errors with no recoverable `sqlx::Error` in their chain (e.g. the
 /// timestamp-parse failure in `commit_page`) are treated as `Permanent`:
 /// retrying an identical page cannot change a parse outcome.
-pub fn classify_storage_failure(err: &TridentError) -> StorageFailure {
-    let TridentError::StorageError { source } = err else {
+pub fn classify_storage_failure(err: &SentinelError) -> StorageFailure {
+    let SentinelError::StorageError { source } = err else {
         // Non-storage errors reaching this classifier is a caller bug, but
         // failing safe here means treating it as permanent rather than
         // looping forever on something retrying can never fix.
@@ -222,7 +222,7 @@ fn event_type_str(event_type: &EventType) -> &'static str {
 }
 
 impl EventColumns {
-    fn build(events: &[SorobanEvent]) -> Result<Self, TridentError> {
+    fn build(events: &[SorobanEvent]) -> Result<Self, SentinelError> {
         let mut cols = EventColumns {
             ids: Vec::with_capacity(events.len()),
             contract_ids: Vec::with_capacity(events.len()),
@@ -237,10 +237,10 @@ impl EventColumns {
 
         for event in events {
             let ledger_ts: DateTime<Utc> = event.ledger_timestamp.parse().map_err(|e| {
-                TridentError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
+                SentinelError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
             })?;
             let topics = serde_json::to_value(&event.topics).map_err(|e| {
-                TridentError::storage(anyhow::Error::new(e).context("topics serialise"))
+                SentinelError::storage(anyhow::Error::new(e).context("topics serialise"))
             })?;
 
             cols.ids.push(event_uuid(
@@ -298,7 +298,7 @@ impl EventColumns {
 pub async fn insert_events_batch<'e, E>(
     executor: E,
     events: &[SorobanEvent],
-) -> Result<(), TridentError>
+) -> Result<(), SentinelError>
 where
     E: sqlx::PgExecutor<'e>,
 {
@@ -331,7 +331,7 @@ where
     .bind(&cols.data)
     .execute(executor)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("insert_events_batch")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("insert_events_batch")))?;
 
     Ok(())
 }
@@ -344,7 +344,7 @@ where
 pub async fn insert_token_events_batch<'e, E>(
     executor: E,
     projections: &[TokenProjection<'_>],
-) -> Result<(), TridentError>
+) -> Result<(), SentinelError>
 where
     E: sqlx::PgExecutor<'e>,
 {
@@ -372,7 +372,7 @@ where
         let event = projection.event;
         let token = projection.token;
         let ledger_ts: DateTime<Utc> = event.ledger_timestamp.parse().map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
+            SentinelError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
         })?;
 
         event_ids.push(event_uuid(
@@ -430,7 +430,7 @@ where
     .execute(executor)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("insert_token_events_batch"))
+        SentinelError::storage(anyhow::Error::new(e).context("insert_token_events_batch"))
     })?;
 
     Ok(())
@@ -445,7 +445,7 @@ where
 pub async fn insert_invocation_metrics_batch<'e, E>(
     executor: E,
     rows: &[InvocationMetricRow<'_>],
-) -> Result<(), TridentError>
+) -> Result<(), SentinelError>
 where
     E: sqlx::PgExecutor<'e>,
 {
@@ -466,7 +466,7 @@ where
 
     for row in rows {
         let ledger_ts: DateTime<Utc> = row.ledger_timestamp.parse().map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
+            SentinelError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
         })?;
 
         contract_ids.push(row.contract_id.to_string());
@@ -506,7 +506,7 @@ where
     .execute(executor)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("insert_invocation_metrics_batch"))
+        SentinelError::storage(anyhow::Error::new(e).context("insert_invocation_metrics_batch"))
     })?;
 
     Ok(())
@@ -520,7 +520,7 @@ where
 pub async fn insert_outbox_batch<'e, E>(
     executor: E,
     events: &[SorobanEvent],
-) -> Result<(), TridentError>
+) -> Result<(), SentinelError>
 where
     E: sqlx::PgExecutor<'e>,
 {
@@ -537,7 +537,7 @@ where
             event.event_index,
         ));
         payloads.push(serde_json::to_value(event).map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("outbox payload serialise"))
+            SentinelError::storage(anyhow::Error::new(e).context("outbox payload serialise"))
         })?);
     }
 
@@ -552,7 +552,7 @@ where
     .bind(&payloads)
     .execute(executor)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("insert_outbox_batch")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("insert_outbox_batch")))?;
 
     Ok(())
 }
@@ -566,12 +566,12 @@ pub async fn upsert_contract_spec(
     contract_id: &str,
     network: &str,
     spec: &crate::spec::ContractSpec,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let functions = serde_json::to_value(&spec.functions).map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("serialise spec functions"))
+        SentinelError::storage(anyhow::Error::new(e).context("serialise spec functions"))
     })?;
     let interfaces = serde_json::to_value(&spec.interfaces).map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("serialise spec interfaces"))
+        SentinelError::storage(anyhow::Error::new(e).context("serialise spec interfaces"))
     })?;
 
     sqlx::query(
@@ -597,7 +597,7 @@ pub async fn upsert_contract_spec(
     .bind(interfaces)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("upsert_contract_spec")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("upsert_contract_spec")))?;
 
     Ok(())
 }
@@ -610,7 +610,7 @@ pub async fn get_latest_storage_value(
     contract_id: &str,
     network: &str,
     storage_key: &str,
-) -> Result<Option<serde_json::Value>, TridentError> {
+) -> Result<Option<serde_json::Value>, SentinelError> {
     let row: Option<(Option<serde_json::Value>,)> = sqlx::query_as(
         r#"
         SELECT value_json FROM contract_storage_snapshots
@@ -625,7 +625,7 @@ pub async fn get_latest_storage_value(
     .fetch_optional(pool)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("get_latest_storage_value"))
+        SentinelError::storage(anyhow::Error::new(e).context("get_latest_storage_value"))
     })?;
 
     Ok(row.and_then(|(v,)| v))
@@ -648,7 +648,7 @@ pub async fn insert_storage_snapshots_batch<'e, E>(
     executor: E,
     network: &str,
     rows: &[StorageSnapshotRow<'_>],
-) -> Result<(), TridentError>
+) -> Result<(), SentinelError>
 where
     E: sqlx::PgExecutor<'e>,
 {
@@ -691,7 +691,7 @@ where
     .execute(executor)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("insert_storage_snapshots_batch"))
+        SentinelError::storage(anyhow::Error::new(e).context("insert_storage_snapshots_batch"))
     })?;
 
     Ok(())
@@ -703,13 +703,13 @@ where
 /// Events are chunked to `batch_size` so a very large page cannot produce an
 /// unbounded statement, but every chunk shares the one transaction: either the
 /// whole page and its cursor advance land, or none of it does.
-pub async fn commit_page(pool: &PgPool, commit: PageCommit<'_>) -> Result<(), TridentError> {
+pub async fn commit_page(pool: &PgPool, commit: PageCommit<'_>) -> Result<(), SentinelError> {
     let batch_size = commit.batch_size.max(1);
 
     let mut tx = pool
         .begin()
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("commit_page begin")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("commit_page begin")))?;
 
     for chunk in commit.events.chunks(batch_size) {
         insert_events_batch(&mut *tx, chunk).await?;
@@ -772,13 +772,13 @@ pub async fn commit_page(pool: &PgPool, commit: PageCommit<'_>) -> Result<(), Tr
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("commit_page set_cursor"))
+            SentinelError::storage(anyhow::Error::new(e).context("commit_page set_cursor"))
         })?;
     }
 
     if let Some(ledger) = commit.ledger {
         let ts: DateTime<Utc> = ledger.timestamp.parse().map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
+            SentinelError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
         })?;
 
         sqlx::query(
@@ -795,13 +795,13 @@ pub async fn commit_page(pool: &PgPool, commit: PageCommit<'_>) -> Result<(), Tr
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("commit_page ledger_metadata"))
+            SentinelError::storage(anyhow::Error::new(e).context("commit_page ledger_metadata"))
         })?;
     }
 
     tx.commit()
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("commit_page commit")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("commit_page commit")))?;
 
     Ok(())
 }
@@ -832,7 +832,7 @@ pub struct LedgerGap {
 pub async fn scan_ledger_gaps(
     pool: &PgPool,
     max_gaps: i64,
-) -> Result<Vec<LedgerGap>, TridentError> {
+) -> Result<Vec<LedgerGap>, SentinelError> {
     let rows: Vec<(i64, i64)> = sqlx::query_as(
         r#"
         WITH ordered AS (
@@ -852,7 +852,7 @@ pub async fn scan_ledger_gaps(
     .bind(max_gaps)
     .fetch_all(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("scan_ledger_gaps")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("scan_ledger_gaps")))?;
 
     Ok(rows
         .into_iter()
@@ -874,7 +874,7 @@ pub async fn enqueue_backfill_job(
     pool: &PgPool,
     gap: LedgerGap,
     network: &str,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     sqlx::query(
         r#"
         INSERT INTO backfill_jobs (from_ledger, to_ledger, network)
@@ -887,7 +887,7 @@ pub async fn enqueue_backfill_job(
     .bind(network)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("enqueue_backfill_job")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("enqueue_backfill_job")))?;
 
     Ok(())
 }
@@ -907,7 +907,7 @@ pub async fn close_filled_backfill_jobs(
     pool: &PgPool,
     network: &str,
     current_gaps: &[LedgerGap],
-) -> Result<u64, TridentError> {
+) -> Result<u64, SentinelError> {
     if current_gaps.is_empty() {
         // Every open job's range is, by definition, no longer a gap.
         let result = sqlx::query(
@@ -921,7 +921,7 @@ pub async fn close_filled_backfill_jobs(
         .execute(pool)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("close_filled_backfill_jobs"))
+            SentinelError::storage(anyhow::Error::new(e).context("close_filled_backfill_jobs"))
         })?;
         return Ok(result.rows_affected());
     }
@@ -948,23 +948,23 @@ pub async fn close_filled_backfill_jobs(
     .execute(pool)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("close_filled_backfill_jobs"))
+        SentinelError::storage(anyhow::Error::new(e).context("close_filled_backfill_jobs"))
     })?;
 
     Ok(result.rows_affected())
 }
 
 /// Read the latest processed ledger cursor from system_state.
-pub async fn get_cursor(pool: &PgPool) -> Result<u64, TridentError> {
+pub async fn get_cursor(pool: &PgPool) -> Result<u64, SentinelError> {
     let row: (String,) =
         sqlx::query_as("SELECT value FROM system_state WHERE key = 'latest_ledger_cursor'")
             .fetch_one(pool)
             .await
-            .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("get_cursor")))?;
+            .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("get_cursor")))?;
 
     row.0
         .parse::<u64>()
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("cursor parse")))
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("cursor parse")))
 }
 
 /// Fetch recent ledger sequences and hashes from `ledger_metadata` ordered by sequence descending.
@@ -972,7 +972,7 @@ pub async fn get_cursor(pool: &PgPool) -> Result<u64, TridentError> {
 pub async fn get_recent_ledger_metadata(
     pool: &PgPool,
     limit: i64,
-) -> Result<Vec<(u64, String)>, TridentError> {
+) -> Result<Vec<(u64, String)>, SentinelError> {
     let rows: Vec<(i64, String)> = sqlx::query_as(
         r#"
         SELECT ledger_sequence, ledger_hash
@@ -985,7 +985,7 @@ pub async fn get_recent_ledger_metadata(
     .fetch_all(pool)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("get_recent_ledger_metadata"))
+        SentinelError::storage(anyhow::Error::new(e).context("get_recent_ledger_metadata"))
     })?;
 
     Ok(rows
@@ -999,11 +999,11 @@ pub async fn handle_reorg_rollback(
     pool: &PgPool,
     from_sequence: u64,
     new_cursor: u64,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let mut tx = pool
         .begin()
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("reorg begin tx")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("reorg begin tx")))?;
 
     let seq_i64 = from_sequence as i64;
 
@@ -1013,7 +1013,7 @@ pub async fn handle_reorg_rollback(
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("reorg delete token_events"))
+            SentinelError::storage(anyhow::Error::new(e).context("reorg delete token_events"))
         })?;
 
     // Delete invocation metrics
@@ -1022,7 +1022,7 @@ pub async fn handle_reorg_rollback(
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(
+            SentinelError::storage(
                 anyhow::Error::new(e).context("reorg delete contract_invocation_metrics"),
             )
         })?;
@@ -1033,7 +1033,7 @@ pub async fn handle_reorg_rollback(
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(
+            SentinelError::storage(
                 anyhow::Error::new(e).context("reorg delete contract_storage_snapshots"),
             )
         })?;
@@ -1044,7 +1044,7 @@ pub async fn handle_reorg_rollback(
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("reorg delete soroban_events"))
+            SentinelError::storage(anyhow::Error::new(e).context("reorg delete soroban_events"))
         })?;
 
     // Delete ledger metadata
@@ -1053,7 +1053,7 @@ pub async fn handle_reorg_rollback(
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("reorg delete ledger_metadata"))
+            SentinelError::storage(anyhow::Error::new(e).context("reorg delete ledger_metadata"))
         })?;
 
     // Rewind cursor in system_state
@@ -1063,11 +1063,11 @@ pub async fn handle_reorg_rollback(
     .bind(new_cursor.to_string())
     .execute(&mut *tx)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("reorg rewind cursor")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("reorg rewind cursor")))?;
 
     tx.commit()
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("reorg commit tx")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("reorg commit tx")))?;
 
     Ok(())
 }
@@ -1082,7 +1082,7 @@ pub async fn update_health_stats(
     last_ledger: i64,
     events_in_poll: i32,
     poll_duration: Duration,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let poll_ms = poll_duration.as_millis().min(i32::MAX as u128) as i32;
 
     sqlx::query(
@@ -1103,7 +1103,7 @@ pub async fn update_health_stats(
     .bind(poll_ms)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("update_health_stats")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("update_health_stats")))?;
 
     Ok(())
 }
@@ -1123,14 +1123,14 @@ pub async fn update_health_stats(
 pub async fn load_indexed_contracts(
     pool: &PgPool,
     network: &str,
-) -> Result<HashMap<String, i64>, TridentError> {
+) -> Result<HashMap<String, i64>, SentinelError> {
     let rows: Vec<(String, i64)> = sqlx::query_as(
         "SELECT contract_id, index_from FROM indexed_contracts WHERE network = $1 OR network IS NULL",
     )
     .bind(network)
     .fetch_all(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("load_indexed_contracts")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("load_indexed_contracts")))?;
 
     Ok(rows.into_iter().collect())
 }
@@ -1155,7 +1155,7 @@ pub async fn load_indexed_contracts(
 /// max-only guard reports 60M and happily accepts a ledger at 20M, which then
 /// falls through to `soroban_events_default` — precisely the silent overflow
 /// this check exists to prevent (issue #525).
-pub async fn named_partition_ranges(pool: &PgPool) -> Result<Vec<(i64, i64)>, TridentError> {
+pub async fn named_partition_ranges(pool: &PgPool) -> Result<Vec<(i64, i64)>, SentinelError> {
     // The DEFAULT partition has no FROM/TO clause, so both captures are NULL
     // and it is filtered out below; we only want explicitly-bounded partitions.
     // pg_get_expr(relpartbound) renders the bound as
@@ -1183,7 +1183,7 @@ pub async fn named_partition_ranges(pool: &PgPool) -> Result<Vec<(i64, i64)>, Tr
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("named_partition_ranges")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("named_partition_ranges")))?;
 
     Ok(rows)
 }
@@ -1197,7 +1197,7 @@ pub async fn named_partition_ranges(pool: &PgPool) -> Result<Vec<(i64, i64)>, Tr
 /// catch-all that the operator has no tooling to manage.
 ///
 /// Returns `Ok(())` when every sequence in `batch` is covered by a named
-/// partition. Returns `Err(TridentError::ConfigError)` — which the streamer
+/// partition. Returns `Err(SentinelError::ConfigError)` — which the streamer
 /// treats as `Severity::Fatal` — when any sequence would land in DEFAULT.
 ///
 /// `last_upper` is the value returned by [`last_named_partition_upper_bound`];
@@ -1212,13 +1212,13 @@ pub async fn named_partition_ranges(pool: &PgPool) -> Result<Vec<(i64, i64)>, Tr
 pub fn assert_no_default_partition_overflow(
     batch: &[i64],
     ranges: &[(i64, i64)],
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let covered = |seq: i64| ranges.iter().any(|&(lo, hi)| seq >= lo && seq < hi);
 
     if let Some(&uncovered) = batch.iter().find(|&&seq| !covered(seq)) {
         let highest = ranges.iter().map(|&(_, hi)| hi).max().unwrap_or(0);
         let suggested_lo = uncovered - (uncovered % 2_000_000);
-        return Err(TridentError::config(anyhow::anyhow!(
+        return Err(SentinelError::config(anyhow::anyhow!(
             "partition exhaustion: ledger_sequence {} is not covered by any named              soroban_events partition (highest known upper bound {}).              Events for this ledger would land in soroban_events_default.              Run `SELECT create_soroban_partition({}, {});` to create the              covering partition before resuming the indexer (issue #525).",
             uncovered,
             highest,
@@ -1230,13 +1230,13 @@ pub fn assert_no_default_partition_overflow(
 }
 
 /// Read alert state (last_alert_at, alert_fired) from system_state (issue #75).
-pub async fn get_alert_state(pool: &PgPool) -> Result<crate::alerting::AlertState, TridentError> {
+pub async fn get_alert_state(pool: &PgPool) -> Result<crate::alerting::AlertState, SentinelError> {
     let row: (Option<chrono::DateTime<chrono::Utc>>, bool) = sqlx::query_as(
         "SELECT last_alert_at, alert_fired FROM system_state WHERE key = 'latest_ledger_cursor'",
     )
     .fetch_one(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("get_alert_state")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("get_alert_state")))?;
 
     Ok(crate::alerting::AlertState {
         last_alert_at: row.0,
@@ -1250,7 +1250,7 @@ pub async fn get_alert_state(pool: &PgPool) -> Result<crate::alerting::AlertStat
 pub async fn set_alert_state(
     pool: &PgPool,
     state: &crate::alerting::AlertState,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     sqlx::query(
         r#"
         UPDATE system_state
@@ -1264,7 +1264,7 @@ pub async fn set_alert_state(
     .bind(state.alert_fired)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("set_alert_state")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("set_alert_state")))?;
 
     Ok(())
 }
@@ -1276,7 +1276,7 @@ pub async fn insert_parse_error(
     event_index: u32,
     raw_payload: &str,
     error_message: &str,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     sqlx::query(
         r#"
         INSERT INTO parse_errors
@@ -1290,7 +1290,7 @@ pub async fn insert_parse_error(
     .bind(error_message)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("insert_parse_error")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("insert_parse_error")))?;
 
     Ok(())
 }
@@ -1318,9 +1318,9 @@ pub async fn insert_failed_event(
     event: &SorobanEvent,
     error_message: &str,
     attempts: u32,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let payload = serde_json::to_value(event).map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("failed_events serialise"))
+        SentinelError::storage(anyhow::Error::new(e).context("failed_events serialise"))
     })?;
 
     sqlx::query(
@@ -1344,7 +1344,7 @@ pub async fn insert_failed_event(
     .bind(attempts as i32)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("insert_failed_event")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("insert_failed_event")))?;
 
     Ok(())
 }
@@ -1368,7 +1368,7 @@ pub struct FailedEventRow {
 pub async fn list_pending_failed_events(
     pool: &PgPool,
     limit: i64,
-) -> Result<Vec<FailedEventRow>, TridentError> {
+) -> Result<Vec<FailedEventRow>, SentinelError> {
     let rows = sqlx::query_as::<_, (Uuid, i64, String, String, String, i32, DateTime<Utc>)>(
         r#"
         SELECT id, ledger_sequence, contract_id, transaction_hash, error_message, attempts, occurred_at
@@ -1382,7 +1382,7 @@ pub async fn list_pending_failed_events(
     .fetch_all(pool)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("list_pending_failed_events"))
+        SentinelError::storage(anyhow::Error::new(e).context("list_pending_failed_events"))
     })?;
 
     Ok(rows
@@ -1437,7 +1437,7 @@ pub enum ReplayOutcome {
 /// `WHERE replayed_at IS NULL` guard on the UPDATE below makes the second
 /// replay a no-op on `failed_events` too — replaying twice cannot
 /// double-insert or double-count.
-pub async fn replay_failed_event(pool: &PgPool, id: Uuid) -> Result<ReplayOutcome, TridentError> {
+pub async fn replay_failed_event(pool: &PgPool, id: Uuid) -> Result<ReplayOutcome, SentinelError> {
     let row: Option<(serde_json::Value,)> = sqlx::query_as(
         "SELECT event_payload FROM failed_events WHERE id = $1 AND replayed_at IS NULL",
     )
@@ -1445,7 +1445,7 @@ pub async fn replay_failed_event(pool: &PgPool, id: Uuid) -> Result<ReplayOutcom
     .fetch_optional(pool)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("replay_failed_event select"))
+        SentinelError::storage(anyhow::Error::new(e).context("replay_failed_event select"))
     })?;
 
     let Some((payload,)) = row else {
@@ -1453,13 +1453,13 @@ pub async fn replay_failed_event(pool: &PgPool, id: Uuid) -> Result<ReplayOutcom
     };
 
     let event: SorobanEvent = serde_json::from_value(payload).map_err(|e| {
-        TridentError::storage(
+        SentinelError::storage(
             anyhow::Error::new(e).context("replay_failed_event deserialise event_payload"),
         )
     })?;
 
     let mut tx = pool.begin().await.map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("replay_failed_event begin"))
+        SentinelError::storage(anyhow::Error::new(e).context("replay_failed_event begin"))
     })?;
 
     let events = std::slice::from_ref(&event);
@@ -1473,11 +1473,11 @@ pub async fn replay_failed_event(pool: &PgPool, id: Uuid) -> Result<ReplayOutcom
     .execute(&mut *tx)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("replay_failed_event mark replayed"))
+        SentinelError::storage(anyhow::Error::new(e).context("replay_failed_event mark replayed"))
     })?;
 
     tx.commit().await.map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("replay_failed_event commit"))
+        SentinelError::storage(anyhow::Error::new(e).context("replay_failed_event commit"))
     })?;
 
     if updated.rows_affected() == 0 {
@@ -1493,18 +1493,18 @@ pub async fn replay_failed_event(pool: &PgPool, id: Uuid) -> Result<ReplayOutcom
 }
 
 /// Number of dead-lettered events still awaiting replay. Published as the
-/// `trident_indexer_persist_dead_letter_backlog` gauge each active poll
+/// `sentinel_indexer_persist_dead_letter_backlog` gauge each active poll
 /// cycle (and on every dead-letter write), so the non-empty-DLQ alert has a
 /// live series to fire on — a silent queue is indistinguishable from data
 /// loss (issue #508). Counts only pending rows: a replayed row is resolved
 /// history, not backlog.
-pub async fn count_pending_failed_events(pool: &PgPool) -> Result<i64, TridentError> {
+pub async fn count_pending_failed_events(pool: &PgPool) -> Result<i64, SentinelError> {
     let row: (i64,) =
         sqlx::query_as("SELECT COUNT(*) FROM failed_events WHERE replayed_at IS NULL")
             .fetch_one(pool)
             .await
             .map_err(|e| {
-                TridentError::storage(anyhow::Error::new(e).context("count_pending_failed_events"))
+                SentinelError::storage(anyhow::Error::new(e).context("count_pending_failed_events"))
             })?;
     Ok(row.0)
 }
@@ -1518,7 +1518,7 @@ pub async fn fresh_token_metadata_contract_ids(
     contract_ids: &[String],
     network: &str,
     cutoff: DateTime<Utc>,
-) -> Result<HashSet<String>, TridentError> {
+) -> Result<HashSet<String>, SentinelError> {
     if contract_ids.is_empty() {
         return Ok(HashSet::new());
     }
@@ -1533,7 +1533,7 @@ pub async fn fresh_token_metadata_contract_ids(
     .fetch_all(pool)
     .await
     .map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("fresh_token_metadata_contract_ids"))
+        SentinelError::storage(anyhow::Error::new(e).context("fresh_token_metadata_contract_ids"))
     })?;
 
     Ok(rows.into_iter().map(|(id,)| id).collect())
@@ -1547,7 +1547,7 @@ pub async fn upsert_token_metadata(
     contract_id: &str,
     network: &str,
     resolution: &crate::token_metadata::TokenMetadataResolution,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let (name, symbol, decimals, is_token) = match resolution {
         crate::token_metadata::TokenMetadataResolution::Token(meta) => (
             Some(meta.name.as_str()),
@@ -1578,7 +1578,7 @@ pub async fn upsert_token_metadata(
     .bind(is_token)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("upsert_token_metadata")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("upsert_token_metadata")))?;
 
     Ok(())
 }
@@ -1587,7 +1587,7 @@ pub async fn upsert_token_metadata(
 mod tests {
     use super::*;
     use serde_json::json;
-    use trident_common::{EventType, SorobanEvent};
+    use sentinel_common::{EventType, SorobanEvent};
 
     fn make_event(contract_id: &str, ledger_sequence: u64, event_index: u32) -> SorobanEvent {
         SorobanEvent {
@@ -1613,21 +1613,21 @@ mod tests {
     fn connection_level_io_error_is_transient() {
         let io_err = std::io::Error::new(std::io::ErrorKind::ConnectionReset, "reset");
         let err =
-            TridentError::storage(anyhow::Error::new(sqlx::Error::Io(io_err)).context("test"));
+            SentinelError::storage(anyhow::Error::new(sqlx::Error::Io(io_err)).context("test"));
         assert_eq!(classify_storage_failure(&err), StorageFailure::Transient);
     }
 
     #[test]
     fn pool_timeout_is_transient() {
         let err =
-            TridentError::storage(anyhow::Error::new(sqlx::Error::PoolTimedOut).context("test"));
+            SentinelError::storage(anyhow::Error::new(sqlx::Error::PoolTimedOut).context("test"));
         assert_eq!(classify_storage_failure(&err), StorageFailure::Transient);
     }
 
     #[test]
     fn column_decode_error_is_permanent() {
         let decode_err = Box::<dyn std::error::Error + Send + Sync>::from("bad column");
-        let err = TridentError::storage(
+        let err = SentinelError::storage(
             anyhow::Error::new(sqlx::Error::ColumnDecode {
                 index: "0".to_string(),
                 source: decode_err,
@@ -1640,16 +1640,16 @@ mod tests {
     #[test]
     fn error_with_no_sqlx_source_is_permanent() {
         // e.g. the ledger-timestamp DateTime parse failure in commit_page:
-        // a TridentError::StorageError whose source chain never touched
+        // a SentinelError::StorageError whose source chain never touched
         // sqlx at all. Retrying an identical page cannot change a parse
         // outcome, so this must not be treated as retryable.
-        let err = TridentError::storage(anyhow::anyhow!("not a valid timestamp"));
+        let err = SentinelError::storage(anyhow::anyhow!("not a valid timestamp"));
         assert_eq!(classify_storage_failure(&err), StorageFailure::Permanent);
     }
 
     #[test]
     fn non_storage_error_is_permanent() {
-        let err = TridentError::config(anyhow::anyhow!("missing DATABASE_URL"));
+        let err = SentinelError::config(anyhow::anyhow!("missing DATABASE_URL"));
         assert_eq!(classify_storage_failure(&err), StorageFailure::Permanent);
     }
 
@@ -2524,7 +2524,7 @@ mod tests {
             .expect_err("sequence == upper_bound should trigger overflow");
         // Must be a ConfigError so the poll loop treats it as Fatal.
         assert!(
-            matches!(err, TridentError::ConfigError { .. }),
+            matches!(err, SentinelError::ConfigError { .. }),
             "overflow must produce a ConfigError (Fatal severity), got: {err}"
         );
         assert!(
@@ -2539,7 +2539,7 @@ mod tests {
         let sequences = vec![58_000_001i64, 60_000_001];
         let err = assert_no_default_partition_overflow(&sequences, &[(0, 60_000_000)])
             .expect_err("sequence > upper_bound should trigger overflow");
-        assert!(matches!(err, TridentError::ConfigError { .. }));
+        assert!(matches!(err, SentinelError::ConfigError { .. }));
         // Error message must carry the create_soroban_partition hint so on-call
         // knows exactly what SQL to run.
         let msg = err.to_string();
@@ -2601,7 +2601,7 @@ mod tests {
     /// loop halts rather than retrying.
     #[test]
     fn overflow_error_is_fatal_not_retryable() {
-        use trident_common::errors::Severity;
+        use sentinel_common::errors::Severity;
         let err = assert_no_default_partition_overflow(&[60_000_001i64], &[(0, 60_000_000)])
             .expect_err("should overflow");
         assert_eq!(
@@ -2677,7 +2677,7 @@ mod tests {
             .expect_err("overflow at boundary must be caught");
 
         assert!(
-            matches!(err, TridentError::ConfigError { .. }),
+            matches!(err, SentinelError::ConfigError { .. }),
             "boundary overflow must be a ConfigError (Fatal)"
         );
 

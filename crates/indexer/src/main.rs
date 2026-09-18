@@ -28,7 +28,7 @@ mod streamer;
 mod testnet_correctness;
 mod token_metadata;
 
-/// `trident-indexer` runs the poll-loop daemon when invoked with no
+/// `sentinel-indexer` runs the poll-loop daemon when invoked with no
 /// subcommand (every existing deployment — Docker, Helm, `cargo run`), so
 /// this and `Command` are additive: nothing about the daemon path changes.
 #[derive(Parser, Debug)]
@@ -75,7 +75,7 @@ async fn run_replay(
     limit: i64,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let database_url = std::env::var("DATABASE_URL")
-        .map_err(|_| "DATABASE_URL must be set to use `trident-indexer replay`")?;
+        .map_err(|_| "DATABASE_URL must be set to use `sentinel-indexer replay`")?;
     let db = sqlx::PgPool::connect(&database_url).await?;
 
     // Bare `replay` (no flags) behaves like `--list`: report what's
@@ -188,7 +188,7 @@ fn init_tracer() -> Option<opentelemetry_sdk::trace::Tracer> {
                     sampling_ratio,
                 ))
                 .with_resource(opentelemetry_sdk::Resource::new(vec![
-                    opentelemetry::KeyValue::new("service.name", "trident-indexer"),
+                    opentelemetry::KeyValue::new("service.name", "sentinel-indexer"),
                 ])),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
@@ -222,7 +222,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     init_tracing(init_tracer());
 
-    tracing::info!("Trident indexer starting");
+    tracing::info!("Sentinel indexer starting");
 
     let cfg = config::Config::from_env().unwrap_or_else(|e| {
         eprintln!("{e}");
@@ -368,7 +368,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     result?;
 
-    tracing::info!("Trident indexer stopped");
+    tracing::info!("Sentinel indexer stopped");
     Ok(())
 }
 
@@ -390,7 +390,7 @@ fn init_tracing(tracer: Option<opentelemetry_sdk::trace::Tracer>) {
         use tracing_subscriber::Layer;
         let console_layer = console_subscriber::spawn();
         let json_layer =
-            trident_common::logging::JsonLayer::new("trident-indexer", std::io::stdout)
+            sentinel_common::logging::JsonLayer::new("sentinel-indexer", std::io::stdout)
                 .with_filter(default_filter());
         // OTel export is intentionally omitted while attached to tokio-console —
         // this is a local debug mode, not a production tracing path.
@@ -406,8 +406,8 @@ fn init_tracing(tracer: Option<opentelemetry_sdk::trace::Tracer>) {
 
     tracing_subscriber::registry()
         .with(EnvFilter::from_default_env())
-        .with(trident_common::logging::JsonLayer::new(
-            "trident-indexer",
+        .with(sentinel_common::logging::JsonLayer::new(
+            "sentinel-indexer",
             std::io::stdout,
         ))
         .with(otel_layer)

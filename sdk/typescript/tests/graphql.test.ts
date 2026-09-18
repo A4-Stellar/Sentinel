@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { TridentClient } from "../src/index.js";
+import { SentinelClient } from "../src/index.js";
 
 const mockEvent = {
   id: "event-1",
@@ -44,7 +44,7 @@ afterAll(() => server.close());
 
 describe("GraphQLTransport", () => {
   it("should query events via GraphQL", async () => {
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "test_key",
       network: "testnet",
@@ -62,7 +62,7 @@ describe("GraphQLTransport", () => {
   });
 
   it("should include all event fields", async () => {
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "test_key",
       network: "testnet",
@@ -87,7 +87,7 @@ describe("GraphQLTransport", () => {
       }),
     );
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "test_key",
       network: "testnet",
@@ -107,7 +107,7 @@ describe("GraphQLTransport", () => {
       }),
     );
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "invalid_key",
       network: "testnet",
@@ -124,7 +124,7 @@ describe("GraphQLTransport", () => {
       }),
     );
 
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "test_key",
       network: "testnet",
@@ -136,7 +136,7 @@ describe("GraphQLTransport", () => {
 
   it("REST transport should not include GraphQL code", async () => {
     // This test ensures that REST-only bundle doesn't import GraphQL transport
-    const client = new TridentClient({
+    const client = new SentinelClient({
       apiUrl: "http://localhost:3000",
       apiKey: "test_key",
       network: "testnet",

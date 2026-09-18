@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Trident — Automated PostgreSQL Backup Script
+# Sentinel — Automated PostgreSQL Backup Script
 # =============================================================================
 # Generates a compressed, custom-format PostgreSQL dump with SHA-256 checksum.
 # Preserves table partitions, indexes, constraints, and sequences.
@@ -23,10 +23,10 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
 fi
 
 TIMESTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
-BACKUP_FILENAME="trident_db_backup_${TIMESTAMP}.dump"
+BACKUP_FILENAME="sentinel_db_backup_${TIMESTAMP}.dump"
 BACKUP_PATH="${OUTPUT_DIR}/${BACKUP_FILENAME}"
 
-echo "[+] Starting Trident PostgreSQL backup at ${TIMESTAMP}..."
+echo "[+] Starting Sentinel PostgreSQL backup at ${TIMESTAMP}..."
 echo "[+] Target output: ${BACKUP_PATH}"
 
 START_TIME=$(date +%s)

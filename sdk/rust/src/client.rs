@@ -11,8 +11,8 @@ use tokio_tungstenite::tungstenite::Message;
 use crate::retry::{compute_backoff, is_retryable_status, parse_retry_after_seconds};
 use crate::{
     ContractStatsQuery, ContractStatsResponse, EventType, HealthResponse, IndexerStatsResponse,
-    Network, PaginatedEvents, QueryParams, RetryConfig, SorobanEvent, Subscription, TridentConfig,
-    TridentError,
+    Network, PaginatedEvents, QueryParams, RetryConfig, SorobanEvent, Subscription, SentinelConfig,
+    SentinelError,
 };
 
 // ---------------------------------------------------------------------------
@@ -125,14 +125,14 @@ fn ws_url_from_api_url(api_url: &str) -> String {
 // HTTP response error mapping
 // ---------------------------------------------------------------------------
 
-async fn check_response(response: reqwest::Response) -> Result<reqwest::Response, TridentError> {
+async fn check_response(response: reqwest::Response) -> Result<reqwest::Response, SentinelError> {
     let status = response.status();
     if status.is_success() {
         return Ok(response);
     }
     match status.as_u16() {
-        401 => Err(TridentError::Unauthorized),
-        404 => Err(TridentError::NotFound),
+        401 => Err(SentinelError::Unauthorized),
+        404 => Err(SentinelError::NotFound),
         429 => {
             let retry_after_seconds = response
                 .headers()
@@ -140,13 +140,13 @@ async fn check_response(response: reqwest::Response) -> Result<reqwest::Response
                 .and_then(|v| v.to_str().ok())
                 .and_then(|s| s.parse::<u64>().ok())
                 .unwrap_or(60);
-            Err(TridentError::RateLimited {
+            Err(SentinelError::RateLimited {
                 retry_after_seconds,
             })
         }
         code => {
             let message = response.text().await.unwrap_or_default();
-            Err(TridentError::Http {
+            Err(SentinelError::Http {
                 status: code,
                 message,
             })
@@ -158,14 +158,14 @@ async fn check_response(response: reqwest::Response) -> Result<reqwest::Response
 // Client
 // ---------------------------------------------------------------------------
 
-/// Async HTTP + WebSocket client for the Trident Soroban event indexer.
+/// Async HTTP + WebSocket client for the Sentinel Soroban event indexer.
 #[derive(Clone)]
-pub struct TridentClient {
-    config: TridentConfig,
+pub struct SentinelClient {
+    config: SentinelConfig,
     http: reqwest::Client,
 }
 
-impl TridentClient {
+impl SentinelClient {
     /// Create a new client from the given configuration.
     ///
     /// Returns an error if the underlying HTTP client cannot be built (e.g.
@@ -175,25 +175,25 @@ impl TridentClient {
     ///
     /// ```no_run
     /// # tokio_test::block_on(async {
-    /// let client = trident_sdk::TridentClient::new(trident_sdk::TridentConfig {
-    ///     api_url: "https://trident-api.fly.dev".into(),
+    /// let client = sentinel_sdk::SentinelClient::new(sentinel_sdk::SentinelConfig {
+    ///     api_url: "https://sentinel-api.fly.dev".into(),
     ///     api_key: "tk_your_key".into(),
     ///     ..Default::default()
     /// })?;
-    /// # Ok::<(), trident_sdk::TridentError>(())
+    /// # Ok::<(), sentinel_sdk::SentinelError>(())
     /// # });
     /// ```
-    pub fn new(config: TridentConfig) -> Result<Self, TridentError> {
+    pub fn new(config: SentinelConfig) -> Result<Self, SentinelError> {
         let config = config.resolved();
         if config.api_key.is_empty() {
-            return Err(TridentError::MissingApiKey);
+            return Err(SentinelError::MissingApiKey);
         }
 
         let http = reqwest::Client::builder()
             .timeout(config.timeout)
             .build()
-            .map_err(TridentError::Network)?;
-        Ok(TridentClient { config, http })
+            .map_err(SentinelError::Network)?;
+        Ok(SentinelClient { config, http })
     }
 
     fn headers(&self) -> reqwest::header::HeaderMap {
@@ -208,12 +208,12 @@ impl TridentClient {
     /// retries — a single attempt). Honours `Retry-After` on 429/503,
     /// falling back to exponential backoff with jitter otherwise. Once
     /// retries are exhausted, wraps the last error in
-    /// [`TridentError::RetryExhausted`].
+    /// [`SentinelError::RetryExhausted`].
     async fn send_get(
         &self,
         url: url::Url,
         retry: Option<RetryConfig>,
-    ) -> Result<reqwest::Response, TridentError> {
+    ) -> Result<reqwest::Response, SentinelError> {
         let mut attempt: u32 = 1;
         let mut total_waited = Duration::from_millis(0);
 
@@ -228,7 +228,7 @@ impl TridentClient {
             let response = match send_result {
                 Ok(r) => r,
                 Err(e) => {
-                    let network_err = TridentError::Network(e);
+                    let network_err = SentinelError::Network(e);
                     if let Some(cfg) = &retry {
                         if attempt < cfg.max_attempts {
                             let wait = compute_backoff(attempt, cfg);
@@ -241,7 +241,7 @@ impl TridentClient {
                         }
                     }
                     return Err(if attempt > 1 {
-                        TridentError::RetryExhausted {
+                        SentinelError::RetryExhausted {
                             attempts: attempt,
                             last_error: Box::new(network_err),
                         }
@@ -273,7 +273,7 @@ impl TridentClient {
             // always returns Err here.
             let err = check_response(response).await.unwrap_err();
             return Err(if attempt > 1 {
-                TridentError::RetryExhausted {
+                SentinelError::RetryExhausted {
                     attempts: attempt,
                     last_error: Box::new(err),
                 }
@@ -292,35 +292,35 @@ impl TridentClient {
     ///
     /// ```no_run
     /// # tokio_test::block_on(async {
-    /// # let client = trident_sdk::TridentClient::new(trident_sdk::TridentConfig {
-    /// #     api_url: "https://trident-api.fly.dev".into(),
+    /// # let client = sentinel_sdk::SentinelClient::new(sentinel_sdk::SentinelConfig {
+    /// #     api_url: "https://sentinel-api.fly.dev".into(),
     /// #     api_key: "tk_your_key".into(),
     /// #     ..Default::default()
     /// # })?;
-    /// let page = client.query_events(trident_sdk::QueryParams {
+    /// let page = client.query_events(sentinel_sdk::QueryParams {
     ///     contract_id: Some("CAAAA...".into()),
     ///     first: Some(50),
     ///     ..Default::default()
     /// }).await?;
     /// println!("Found {} events", page.events.len());
-    /// # Ok::<(), trident_sdk::TridentError>(())
+    /// # Ok::<(), sentinel_sdk::SentinelError>(())
     /// # });
     /// ```
-    pub async fn query_events(&self, params: QueryParams) -> Result<PaginatedEvents, TridentError> {
+    pub async fn query_events(&self, params: QueryParams) -> Result<PaginatedEvents, SentinelError> {
         self.query_events_with_retry(params, self.config.retry.clone())
             .await
     }
 
     /// Same as [`query_events`](Self::query_events), overriding the
     /// client-level retry policy for this call only. Pass `None` to disable
-    /// retries regardless of [`TridentConfig::retry`].
+    /// retries regardless of [`SentinelConfig::retry`].
     pub async fn query_events_with_retry(
         &self,
         params: QueryParams,
         retry: Option<RetryConfig>,
-    ) -> Result<PaginatedEvents, TridentError> {
+    ) -> Result<PaginatedEvents, SentinelError> {
         let mut url = url::Url::parse(&format!("{}/v1/events", self.config.api_url))
-            .map_err(|e| TridentError::WebSocket(e.to_string()))?;
+            .map_err(|e| SentinelError::WebSocket(e.to_string()))?;
 
         {
             let mut qs = url.query_pairs_mut();
@@ -367,8 +367,8 @@ impl TridentClient {
     ///
     /// ```no_run
     /// # tokio_test::block_on(async {
-    /// # let client = trident_sdk::TridentClient::new(trident_sdk::TridentConfig {
-    /// #     api_url: "https://trident-api.fly.dev".into(),
+    /// # let client = sentinel_sdk::SentinelClient::new(sentinel_sdk::SentinelConfig {
+    /// #     api_url: "https://sentinel-api.fly.dev".into(),
     /// #     api_key: "tk_your_key".into(),
     /// #     ..Default::default()
     /// # })?;
@@ -376,13 +376,13 @@ impl TridentClient {
     ///     .query_events_page(Default::default())
     ///     .await?;
     /// println!("Got {} events, cursor: {:?}", events.len(), cursor);
-    /// # Ok::<(), trident_sdk::TridentError>(())
+    /// # Ok::<(), sentinel_sdk::SentinelError>(())
     /// # });
     /// ```
     pub async fn query_events_page(
         &self,
         params: QueryParams,
-    ) -> Result<(Vec<SorobanEvent>, Option<String>), TridentError> {
+    ) -> Result<(Vec<SorobanEvent>, Option<String>), SentinelError> {
         let page = self.query_events(params).await?;
         Ok((page.events, page.next_cursor))
     }
@@ -394,10 +394,10 @@ impl TridentClient {
     pub fn iter_events(
         &self,
         params: QueryParams,
-    ) -> Pin<Box<dyn Stream<Item = Result<SorobanEvent, TridentError>> + Send>> {
+    ) -> Pin<Box<dyn Stream<Item = Result<SorobanEvent, SentinelError>> + Send>> {
         #[derive(Clone)]
         struct IterState {
-            client: TridentClient,
+            client: SentinelClient,
             params: QueryParams,
             buffer: VecDeque<SorobanEvent>,
             exhausted: bool,
@@ -441,41 +441,41 @@ impl TridentClient {
 
     /// Fetch a single event by its UUID.
     ///
-    /// Returns `Err(TridentError::NotFound)` if no event with that ID exists.
+    /// Returns `Err(SentinelError::NotFound)` if no event with that ID exists.
     ///
     /// # Example
     ///
     /// ```no_run
     /// # tokio_test::block_on(async {
-    /// # let client = trident_sdk::TridentClient::new(trident_sdk::TridentConfig {
-    /// #     api_url: "https://trident-api.fly.dev".into(),
+    /// # let client = sentinel_sdk::SentinelClient::new(sentinel_sdk::SentinelConfig {
+    /// #     api_url: "https://sentinel-api.fly.dev".into(),
     /// #     api_key: "tk_your_key".into(),
     /// #     ..Default::default()
     /// # })?;
     /// let event = client.get_event_by_id("550e8400-e29b-41d4-a716-446655440000").await?;
     /// println!("Event: {:?}", event);
-    /// # Ok::<(), trident_sdk::TridentError>(())
+    /// # Ok::<(), sentinel_sdk::SentinelError>(())
     /// # });
     /// ```
-    pub async fn get_event_by_id(&self, id: &str) -> Result<SorobanEvent, TridentError> {
+    pub async fn get_event_by_id(&self, id: &str) -> Result<SorobanEvent, SentinelError> {
         self.get_event_by_id_with_retry(id, self.config.retry.clone())
             .await
     }
 
     /// Same as [`get_event_by_id`](Self::get_event_by_id), overriding the
     /// client-level retry policy for this call only. Pass `None` to disable
-    /// retries regardless of [`TridentConfig::retry`].
+    /// retries regardless of [`SentinelConfig::retry`].
     pub async fn get_event_by_id_with_retry(
         &self,
         id: &str,
         retry: Option<RetryConfig>,
-    ) -> Result<SorobanEvent, TridentError> {
+    ) -> Result<SorobanEvent, SentinelError> {
         let url = format!(
             "{}/v1/events/{}",
             self.config.api_url,
             url::form_urlencoded::byte_serialize(id.as_bytes()).collect::<String>()
         );
-        let url = url::Url::parse(&url).map_err(|e| TridentError::WebSocket(e.to_string()))?;
+        let url = url::Url::parse(&url).map_err(|e| SentinelError::WebSocket(e.to_string()))?;
 
         let response = self.send_get(url, retry).await?;
         let body: ApiGetResponse = response.json().await?;
@@ -483,7 +483,7 @@ impl TridentClient {
     }
 
     /// Fetch the service-wide health status.
-    pub async fn get_health(&self) -> Result<HealthResponse, TridentError> {
+    pub async fn get_health(&self) -> Result<HealthResponse, SentinelError> {
         let url = format!("{}/v1/health", self.config.api_url);
         let response = self.http.get(&url).send().await?;
         let response = check_response(response).await?;
@@ -491,7 +491,7 @@ impl TridentClient {
     }
 
     /// Fetch indexer health and throughput statistics.
-    pub async fn get_indexer_stats(&self) -> Result<IndexerStatsResponse, TridentError> {
+    pub async fn get_indexer_stats(&self) -> Result<IndexerStatsResponse, SentinelError> {
         let url = format!("{}/v1/stats/indexer", self.config.api_url);
         let response = self.http.get(&url).headers(self.headers()).send().await?;
         let response = check_response(response).await?;
@@ -502,9 +502,9 @@ impl TridentClient {
     pub async fn get_contract_stats(
         &self,
         params: ContractStatsQuery,
-    ) -> Result<ContractStatsResponse, TridentError> {
+    ) -> Result<ContractStatsResponse, SentinelError> {
         let mut url = url::Url::parse(&format!("{}/v1/stats/contracts", self.config.api_url))
-            .map_err(|e| TridentError::WebSocket(e.to_string()))?;
+            .map_err(|e| SentinelError::WebSocket(e.to_string()))?;
 
         {
             let mut qs = url.query_pairs_mut();
@@ -542,8 +542,8 @@ impl TridentClient {
     /// ```no_run
     /// # tokio_test::block_on(async {
     /// use futures::StreamExt;
-    /// # let client = trident_sdk::TridentClient::new(trident_sdk::TridentConfig {
-    /// #     api_url: "https://trident-api.fly.dev".into(),
+    /// # let client = sentinel_sdk::SentinelClient::new(sentinel_sdk::SentinelConfig {
+    /// #     api_url: "https://sentinel-api.fly.dev".into(),
     /// #     api_key: "tk_your_key".into(),
     /// #     ..Default::default()
     /// # })?;
@@ -553,18 +553,18 @@ impl TridentClient {
     /// while let Some(event) = sub.next().await {
     ///     println!("{:?}", event?);
     /// }
-    /// # Ok::<(), trident_sdk::TridentError>(())
+    /// # Ok::<(), sentinel_sdk::SentinelError>(())
     /// # });
     /// ```
     pub async fn subscribe_to_contract(
         &self,
         contract_id: &str,
         topic_0: Option<&str>,
-    ) -> Result<Subscription, TridentError> {
+    ) -> Result<Subscription, SentinelError> {
         let ws_base = ws_url_from_api_url(&self.config.api_url);
 
         let mut ws_url = url::Url::parse(&format!("{}/ws", ws_base))
-            .map_err(|e| TridentError::WebSocket(e.to_string()))?;
+            .map_err(|e| SentinelError::WebSocket(e.to_string()))?;
         {
             let mut qs = ws_url.query_pairs_mut();
             qs.append_pair("contractId", contract_id);
@@ -576,7 +576,7 @@ impl TridentClient {
         let mut request = ws_url
             .as_str()
             .into_client_request()
-            .map_err(|e| TridentError::WebSocket(e.to_string()))?;
+            .map_err(|e| SentinelError::WebSocket(e.to_string()))?;
 
         if let Ok(v) = HeaderValue::from_str(&self.config.api_key) {
             request.headers_mut().insert("X-API-Key", v);
@@ -584,18 +584,18 @@ impl TridentClient {
 
         let (ws_stream, _) = tokio_tungstenite::connect_async(request)
             .await
-            .map_err(|e| TridentError::WebSocket(e.to_string()))?;
+            .map_err(|e| SentinelError::WebSocket(e.to_string()))?;
 
         let event_stream = ws_stream.filter_map(|msg| async move {
             match msg {
                 Ok(Message::Text(text)) => {
                     let result = serde_json::from_str::<WsEvent>(&text)
                         .map(ws_event_to_soroban)
-                        .map_err(TridentError::Deserialize);
+                        .map_err(SentinelError::Deserialize);
                     Some(result)
                 }
                 Ok(Message::Close(_)) | Ok(_) => None,
-                Err(e) => Some(Err(TridentError::WebSocket(e.to_string()))),
+                Err(e) => Some(Err(SentinelError::WebSocket(e.to_string()))),
             }
         });
 
@@ -613,8 +613,8 @@ mod tests {
     use futures::StreamExt;
     use mockito::Server;
 
-    fn make_client(base_url: &str) -> TridentClient {
-        TridentClient::new(TridentConfig {
+    fn make_client(base_url: &str) -> SentinelClient {
+        SentinelClient::new(SentinelConfig {
             api_url: base_url.to_string(),
             api_key: "test-key".to_string(),
             ..Default::default()
@@ -720,7 +720,7 @@ mod tests {
         let client = make_client(&server.url());
         let result = client.query_events(QueryParams::default()).await;
 
-        assert!(matches!(result, Err(TridentError::Unauthorized)));
+        assert!(matches!(result, Err(SentinelError::Unauthorized)));
         mock.assert_async().await;
     }
 
@@ -741,7 +741,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(TridentError::RateLimited {
+            Err(SentinelError::RateLimited {
                 retry_after_seconds: 30
             })
         ));
@@ -787,7 +787,7 @@ mod tests {
         let client = make_client(&server.url());
         let result = client.get_event_by_id("nonexistent-id").await;
 
-        assert!(matches!(result, Err(TridentError::NotFound)));
+        assert!(matches!(result, Err(SentinelError::NotFound)));
         mock.assert_async().await;
     }
 
@@ -905,14 +905,14 @@ mod tests {
             .await;
 
         match result {
-            Err(TridentError::RetryExhausted {
+            Err(SentinelError::RetryExhausted {
                 attempts,
                 last_error,
             }) => {
                 assert_eq!(attempts, 3);
                 assert!(matches!(
                     *last_error,
-                    TridentError::Http { status: 503, .. }
+                    SentinelError::Http { status: 503, .. }
                 ));
             }
             other => panic!("expected RetryExhausted, got {:?}", other),
@@ -937,7 +937,7 @@ mod tests {
             .query_events_with_retry(QueryParams::default(), Some(fast_retry_config(5)))
             .await;
 
-        assert!(matches!(result, Err(TridentError::Unauthorized)));
+        assert!(matches!(result, Err(SentinelError::Unauthorized)));
         mock.assert_async().await;
     }
 
@@ -953,13 +953,13 @@ mod tests {
             .create_async()
             .await;
 
-        // Default TridentConfig::retry is None — a single attempt, no retry.
+        // Default SentinelConfig::retry is None — a single attempt, no retry.
         let client = make_client(&server.url());
         let result = client.query_events(QueryParams::default()).await;
 
         assert!(matches!(
             result,
-            Err(TridentError::Http { status: 503, .. })
+            Err(SentinelError::Http { status: 503, .. })
         ));
         mock.assert_async().await;
     }
@@ -976,13 +976,13 @@ mod tests {
             .create_async()
             .await;
 
-        let mut config = TridentConfig {
+        let mut config = SentinelConfig {
             api_url: server.url(),
             api_key: "test-key".to_string(),
             ..Default::default()
         };
         config.retry = Some(fast_retry_config(5));
-        let client = TridentClient::new(config).unwrap();
+        let client = SentinelClient::new(config).unwrap();
 
         // Explicitly disable retries for this call only.
         let result = client
@@ -991,7 +991,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(TridentError::Http { status: 503, .. })
+            Err(SentinelError::Http { status: 503, .. })
         ));
         mock.assert_async().await;
     }
@@ -1234,17 +1234,17 @@ mod tests {
     #[tokio::test]
     async fn subscription_terminates_on_drop() {
         use futures::stream;
-        let sub = Subscription::new(stream::empty::<Result<SorobanEvent, TridentError>>());
+        let sub = Subscription::new(stream::empty::<Result<SorobanEvent, SentinelError>>());
         drop(sub);
     }
 
     #[test]
     fn new_returns_missing_api_key_error_when_unset() {
-        let result = TridentClient::new(TridentConfig {
+        let result = SentinelClient::new(SentinelConfig {
             api_key: String::new(),
             ..Default::default()
         });
-        assert!(matches!(result, Err(TridentError::MissingApiKey)));
+        assert!(matches!(result, Err(SentinelError::MissingApiKey)));
     }
 
     #[tokio::test]

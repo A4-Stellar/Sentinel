@@ -1,5 +1,5 @@
 use sqlx::PgPool;
-use trident_common::{SorobanEvent, TridentError};
+use sentinel_common::{SorobanEvent, SentinelError};
 use uuid::Uuid;
 
 const EVENT_NS: Uuid = Uuid::NAMESPACE_DNS;
@@ -24,9 +24,9 @@ pub struct BackfillJob {
 /// (issue #216). `FOR UPDATE SKIP LOCKED` lets multiple `--from-queue`
 /// workers run concurrently against the same table without two workers
 /// claiming the same job or blocking on each other's row lock.
-pub async fn claim_next_job(pool: &PgPool) -> Result<Option<BackfillJob>, TridentError> {
+pub async fn claim_next_job(pool: &PgPool) -> Result<Option<BackfillJob>, SentinelError> {
     let mut tx = pool.begin().await.map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("claim_next_job begin"))
+        SentinelError::storage(anyhow::Error::new(e).context("claim_next_job begin"))
     })?;
 
     let row: Option<(Uuid, i64, i64, String)> = sqlx::query_as(
@@ -41,7 +41,7 @@ pub async fn claim_next_job(pool: &PgPool) -> Result<Option<BackfillJob>, Triden
     )
     .fetch_optional(&mut *tx)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("claim_next_job select")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("claim_next_job select")))?;
 
     let Some((id, from_ledger, to_ledger, network)) = row else {
         tx.rollback().await.ok();
@@ -53,11 +53,11 @@ pub async fn claim_next_job(pool: &PgPool) -> Result<Option<BackfillJob>, Triden
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("claim_next_job update"))
+            SentinelError::storage(anyhow::Error::new(e).context("claim_next_job update"))
         })?;
 
     tx.commit().await.map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("claim_next_job commit"))
+        SentinelError::storage(anyhow::Error::new(e).context("claim_next_job commit"))
     })?;
 
     Ok(Some(BackfillJob {
@@ -69,12 +69,12 @@ pub async fn claim_next_job(pool: &PgPool) -> Result<Option<BackfillJob>, Triden
 }
 
 /// Mark a claimed job `done` (issue #216).
-pub async fn complete_job(pool: &PgPool, id: Uuid) -> Result<(), TridentError> {
+pub async fn complete_job(pool: &PgPool, id: Uuid) -> Result<(), SentinelError> {
     sqlx::query("UPDATE backfill_jobs SET status = 'done', completed_at = NOW() WHERE id = $1")
         .bind(id)
         .execute(pool)
         .await
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("complete_job")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("complete_job")))?;
     Ok(())
 }
 
@@ -82,7 +82,7 @@ pub async fn complete_job(pool: &PgPool, id: Uuid) -> Result<(), TridentError> {
 /// operator to inspect and re-enqueue rather than auto-retried: a partially
 /// applied range is not necessarily safe to blindly re-run (see the
 /// `idx_backfill_jobs_stale` comment in migration 0032).
-pub async fn fail_job(pool: &PgPool, id: Uuid, error: &str) -> Result<(), TridentError> {
+pub async fn fail_job(pool: &PgPool, id: Uuid, error: &str) -> Result<(), SentinelError> {
     sqlx::query(
         "UPDATE backfill_jobs SET status = 'failed', completed_at = NOW(), error = $2 WHERE id = $1",
     )
@@ -90,7 +90,7 @@ pub async fn fail_job(pool: &PgPool, id: Uuid, error: &str) -> Result<(), Triden
     .bind(error)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("fail_job")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("fail_job")))?;
     Ok(())
 }
 
@@ -114,17 +114,17 @@ pub async fn insert_event(
     pool: &PgPool,
     event: &SorobanEvent,
     network: &str,
-) -> Result<(), TridentError> {
+) -> Result<(), SentinelError> {
     let id = event_uuid(&event.contract_id, event.ledger_sequence, event.event_index);
     let event_type = match event.event_type {
-        trident_common::EventType::Contract => "contract",
-        trident_common::EventType::System => "system",
-        trident_common::EventType::Diagnostic => "diagnostic",
+        sentinel_common::EventType::Contract => "contract",
+        sentinel_common::EventType::System => "system",
+        sentinel_common::EventType::Diagnostic => "diagnostic",
     };
     let topics = serde_json::to_value(&event.topics)
-        .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("topics serialise")))?;
+        .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("topics serialise")))?;
     let ledger_ts: chrono::DateTime<chrono::Utc> = event.ledger_timestamp.parse().map_err(|e| {
-        TridentError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
+        SentinelError::storage(anyhow::Error::new(e).context("ledger timestamp parse"))
     })?;
 
     sqlx::query(
@@ -148,7 +148,7 @@ pub async fn insert_event(
     .bind(network)
     .execute(pool)
     .await
-    .map_err(|e| TridentError::storage(anyhow::Error::new(e).context("insert_event")))?;
+    .map_err(|e| SentinelError::storage(anyhow::Error::new(e).context("insert_event")))?;
 
     Ok(())
 }

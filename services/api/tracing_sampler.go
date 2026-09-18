@@ -36,7 +36,7 @@ func (s *recordOnlySampler) ShouldSample(p sdktrace.SamplingParameters) sdktrace
 }
 
 func (s *recordOnlySampler) Description() string {
-	return "TridentAlwaysRecordSampler{" + s.ratio.Description() + "}"
+	return "SentinelAlwaysRecordSampler{" + s.ratio.Description() + "}"
 }
 
 // alwaysKeepExporter wraps the real OTLP exporter and only forwards spans

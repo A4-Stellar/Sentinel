@@ -1,4 +1,4 @@
-// Package validation provides request parameter validation for the Trident
+// Package validation provides request parameter validation for the Sentinel
 // REST API before parameters are forwarded to the gRPC backend.
 package validation
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/cursor"
+	"github.com/Depo-dev/sentinel/services/api/cursor"
 )
 
 func TestRoundTrip(t *testing.T) {

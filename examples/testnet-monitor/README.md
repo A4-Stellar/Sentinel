@@ -1,6 +1,6 @@
-# 🔱 Trident Testnet Event Monitor Example
+# 🔱 Sentinel Testnet Event Monitor Example
 
-This is a working, production-grade example application that connects to **Trident Indexer** on **Stellar Testnet** using the official `@trident/sdk` TypeScript client.
+This is a working, production-grade example application that connects to **Sentinel Indexer** on **Stellar Testnet** using the official `@sentinel/sdk` TypeScript client.
 
 ---
 
@@ -32,8 +32,8 @@ npm install
 Create a `.env` file (optional; sensible defaults point to public testnet):
 
 ```ini
-TRIDENT_API_URL=https://api.testnet.trident.telocel.com
-TRIDENT_API_KEY=your-api-key
+SENTINEL_API_URL=https://api.testnet.sentinel.a4stellar.com
+SENTINEL_API_KEY=your-api-key
 CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 ```
 

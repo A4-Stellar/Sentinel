@@ -1,14 +1,14 @@
 # Service Level Objectives (SLOs)
 
-Defines what "healthy" means for Trident's MVP, in measurable terms, so
+Defines what "healthy" means for Sentinel's MVP, in measurable terms, so
 alerting has principled thresholds instead of guessed ones (issue #296).
 
 ## Status of the underlying metrics
 
 | SLO | Metrics it needs | Status |
 |---|---|---|
-| Ingest freshness | `trident_indexer_ledger_lag`, `trident_indexer_last_poll_timestamp_seconds` | **Live today** — see `crates/indexer/src/metrics.rs` |
-| API latency | RED metrics (`trident_api_http_requests_total`, `trident_api_http_request_duration_seconds`) on `services/api` | **Live today** — see `services/api/middleware/metrics.go` |
+| Ingest freshness | `sentinel_indexer_ledger_lag`, `sentinel_indexer_last_poll_timestamp_seconds` | **Live today** — see `crates/indexer/src/metrics.rs` |
+| API latency | RED metrics (`sentinel_api_http_requests_total`, `sentinel_api_http_request_duration_seconds`) on `services/api` | **Live today** — see `services/api/middleware/metrics.go` |
 | API availability | Same RED metrics as above | **Live today** — see `services/api/middleware/metrics.go` |
 
 The API latency/availability PromQL below uses the actual metric names and
@@ -23,13 +23,13 @@ burn-rate alert thresholds can be confidently set (see the stub comment in
 **Target:** p95 ledger lag (chain tip minus last-indexed ledger) stays under
 30 seconds, measured over a rolling 28-day window.
 
-**Why 30s:** the indexer polls on a fixed interval (`trident_indexer_effective_poll_interval_ms`,
+**Why 30s:** the indexer polls on a fixed interval (`sentinel_indexer_effective_poll_interval_ms`,
 typically single-digit seconds) — 30s gives headroom for a handful of
-consecutive slow/retried polls (RPC failover, `trident_indexer_rpc_retries_total`)
+consecutive slow/retried polls (RPC failover, `sentinel_indexer_rpc_retries_total`)
 without immediately breaching, while still catching a genuinely stalled
 indexer quickly.
 
-**Measuring query:** `trident_indexer_ledger_lag` (see
+**Measuring query:** `sentinel_indexer_ledger_lag` (see
 `crates/indexer/src/metrics.rs`) is recorded as a gauge, not a histogram, and
 the indexer runs as a single replica (`values.yaml`: "Distributed cursor
 management is not yet supported") — so there's no per-request distribution
@@ -37,7 +37,7 @@ to take a quantile *of*; the SLI is "fraction of time the gauge was within
 target," using the standard good-ratio idiom for a single time series:
 
 ```promql
-avg_over_time((trident_indexer_ledger_lag <= bool 30)[28d:1m])
+avg_over_time((sentinel_indexer_ledger_lag <= bool 30)[28d:1m])
 ```
 
 (`<= bool 30` yields `1`/`0` per sample; averaging that over the 28-day
@@ -46,18 +46,18 @@ the 95% target.) For a live, right-now check instead of the rolling
 28-day ratio:
 
 ```promql
-trident_indexer_ledger_lag
+sentinel_indexer_ledger_lag
 ```
 
 **Error budget:** 30 days × (1 − 0.95) allowed-breach-time = 36 hours/month
 where p95 lag may exceed 30s before the budget is exhausted.
 
 **Public API contract:** the same lag figure (plus an estimated-seconds
-conversion, `trident_indexer_ledger_lag_seconds_estimated`) is exposed
+conversion, `sentinel_indexer_ledger_lag_seconds_estimated`) is exposed
 outside Prometheus too, as `lag_ledgers` / `lag_seconds_estimated` on
 `GET /v1/stats/indexer` — see `docs/observability/data-freshness.md` for the
 full public freshness contract (issue #294) and
-`TridentIngestLagSustainedHigh` in `observability/burn-rate-alerts.yml` for a
+`SentinelIngestLagSustainedHigh` in `observability/burn-rate-alerts.yml` for a
 direct threshold alert on sustained high lag, independent of the burn-rate
 math below (issue #293).
 
@@ -66,7 +66,7 @@ indexer, which a lag metric alone can miss if the indexer stops updating its
 own gauge:
 
 ```promql
-time() - trident_indexer_last_poll_timestamp_seconds > 120
+time() - sentinel_indexer_last_poll_timestamp_seconds > 120
 ```
 
 ## SLO 2 — API p95 latency (per route class)
@@ -89,13 +89,13 @@ HTTP method until one is added):
 
 ```promql
 histogram_quantile(0.95,
-  sum(rate(trident_api_http_request_duration_seconds_bucket{method="GET"}[5m])) by (le)
+  sum(rate(sentinel_api_http_request_duration_seconds_bucket{method="GET"}[5m])) by (le)
 )
 ```
 
 ```promql
 histogram_quantile(0.95,
-  sum(rate(trident_api_http_request_duration_seconds_bucket{method!="GET"}[5m])) by (le)
+  sum(rate(sentinel_api_http_request_duration_seconds_bucket{method!="GET"}[5m])) by (le)
 )
 ```
 
@@ -120,9 +120,9 @@ Revisit once managed HA Postgres/Redis is the documented default.
 `services/api/middleware/metrics.go`):
 
 ```promql
-sum(rate(trident_api_http_requests_total{status!~"5.."}[5m]))
+sum(rate(sentinel_api_http_requests_total{status!~"5.."}[5m]))
 /
-sum(rate(trident_api_http_requests_total[5m]))
+sum(rate(sentinel_api_http_requests_total[5m]))
 ```
 
 **Error budget:** 28 days × (1 − 0.995) = 3.36 hours of unavailability

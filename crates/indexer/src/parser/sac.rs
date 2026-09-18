@@ -14,7 +14,7 @@ use stellar_xdr::curr::{
     AlphaNum12, AlphaNum4, Asset, AssetCode12, AssetCode4, ContractIdPreimage, Hash,
     HashIdPreimage, HashIdPreimageContractId, Limited, Limits, WriteXdr,
 };
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 /// One tracked classic asset the operator wants SAC events resolved for.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,20 +31,20 @@ pub struct TrackedAsset {
 /// meaningful issuer; codes of 1-4 characters use `AlphaNum4`, 5-12 use
 /// `AlphaNum12` — the standard Stellar asset encoding, padded with trailing
 /// zero bytes to the fixed-width array.
-fn build_asset(code: &str, issuer: &str) -> Result<Asset, TridentError> {
+fn build_asset(code: &str, issuer: &str) -> Result<Asset, SentinelError> {
     if code.eq_ignore_ascii_case("native") {
         return Ok(Asset::Native);
     }
 
     if code.is_empty() || code.len() > 12 {
-        return Err(TridentError::config(anyhow::anyhow!(
+        return Err(SentinelError::config(anyhow::anyhow!(
             "SAC asset code {code:?} must be 1-12 characters"
         )));
     }
 
     let issuer_id = stellar_strkey::ed25519::PublicKey::from_string(issuer)
         .map_err(|e| {
-            TridentError::config(anyhow::anyhow!("SAC asset issuer {issuer:?} invalid: {e}"))
+            SentinelError::config(anyhow::anyhow!("SAC asset issuer {issuer:?} invalid: {e}"))
         })?
         .0;
     let account_id = stellar_xdr::curr::AccountId(
@@ -78,7 +78,7 @@ pub fn derive_sac_contract_id(
     asset_code: &str,
     issuer: &str,
     network_passphrase: &str,
-) -> Result<String, TridentError> {
+) -> Result<String, SentinelError> {
     let asset = build_asset(asset_code, issuer)?;
 
     let network_id: [u8; 32] = Sha256::digest(network_passphrase.as_bytes()).into();
@@ -92,7 +92,7 @@ pub fn derive_sac_contract_id(
     preimage
         .write_xdr(&mut Limited::new(&mut buf, Limits::none()))
         .map_err(|e| {
-            TridentError::parse(anyhow::Error::new(e).context("SAC preimage XDR encode"))
+            SentinelError::parse(anyhow::Error::new(e).context("SAC preimage XDR encode"))
         })?;
 
     let contract_hash: [u8; 32] = Sha256::digest(&buf).into();
@@ -111,7 +111,7 @@ impl SacRegistry {
     ///
     /// A single malformed entry is a hard config error: silently dropping it
     /// would leave that asset's events unattributed with no operator signal.
-    pub fn build(assets: &[TrackedAsset], network_passphrase: &str) -> Result<Self, TridentError> {
+    pub fn build(assets: &[TrackedAsset], network_passphrase: &str) -> Result<Self, SentinelError> {
         let mut by_contract_id = std::collections::HashMap::with_capacity(assets.len());
         for asset in assets {
             let contract_id =

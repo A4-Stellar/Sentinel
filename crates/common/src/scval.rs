@@ -2,7 +2,7 @@
 //!
 //! The one place Soroban `ScVal`s are rendered into strings (topics) and JSON
 //! (event bodies), used by every component that writes decoded values —
-//! `trident-indexer`'s live parser and `trident-backfill`'s re-ingest path
+//! `sentinel-indexer`'s live parser and `sentinel-backfill`'s re-ingest path
 //! (issue #506).
 //!
 //! Before this module existed the backfill crate carried a stale copy of the
@@ -36,18 +36,18 @@ use stellar_xdr::curr::{
     ReadXdr, ScAddress, ScContractInstance, ScVal,
 };
 
-use crate::TridentError;
+use crate::SentinelError;
 
 /// Counter bumped whenever a structurally valid but anomalous-in-context
 /// variant (`ContractInstance` / `LedgerKeyContractInstance` /
 /// `LedgerKeyNonce`) is decoded from an event payload. Described and seeded
 /// by the indexer's metrics installer; alerted on by
-/// `TridentIndexerUnexpectedScValVariant` (monitoring/alerts.yml).
+/// `SentinelIndexerUnexpectedScValVariant` (monitoring/alerts.yml).
 ///
 /// Emitted through the global `metrics` recorder: in binaries that install
 /// one (the indexer) it lands in Prometheus; in binaries that do not (the
 /// backfill CLI) it is a no-op and the `tracing::warn!` still fires.
-pub const UNEXPECTED_SCVAL_VARIANT_TOTAL: &str = "trident_scval_unexpected_variant_total";
+pub const UNEXPECTED_SCVAL_VARIANT_TOTAL: &str = "sentinel_scval_unexpected_variant_total";
 
 fn record_unexpected_variant(context: &str, variant: &str) {
     tracing::warn!(
@@ -98,18 +98,18 @@ const MAX_SCVAL_B64_LEN: usize = MAX_SCVAL_BYTES.div_ceil(3) * 4 + 4;
 /// bytes behind is malformed, and accepting it here while the
 /// testnet-correctness reference path (`ScVal::from_xdr`) rejects it would
 /// let production and verification disagree about the same wire bytes.
-pub fn decode_scval(b64: &str) -> Result<ScVal, TridentError> {
+pub fn decode_scval(b64: &str) -> Result<ScVal, SentinelError> {
     if b64.len() > MAX_SCVAL_B64_LEN {
-        return Err(TridentError::parse(anyhow::anyhow!(
+        return Err(SentinelError::parse(anyhow::anyhow!(
             "event XDR too large: {} base64 chars (limit {MAX_SCVAL_B64_LEN})",
             b64.len()
         )));
     }
     let bytes = STANDARD
         .decode(b64)
-        .map_err(|e| TridentError::parse(anyhow::Error::new(e).context("base64 decode")))?;
+        .map_err(|e| SentinelError::parse(anyhow::Error::new(e).context("base64 decode")))?;
     if bytes.len() > MAX_SCVAL_BYTES {
-        return Err(TridentError::parse(anyhow::anyhow!(
+        return Err(SentinelError::parse(anyhow::anyhow!(
             "event XDR too large: {} bytes (limit {MAX_SCVAL_BYTES})",
             bytes.len()
         )));
@@ -123,10 +123,10 @@ pub fn decode_scval(b64: &str) -> Result<ScVal, TridentError> {
             len,
         },
     ))
-    .map_err(|e| TridentError::parse(anyhow::Error::new(e).context("XDR decode ScVal")))?;
+    .map_err(|e| SentinelError::parse(anyhow::Error::new(e).context("XDR decode ScVal")))?;
     let consumed = cursor.position() as usize;
     if consumed != len {
-        return Err(TridentError::parse(anyhow::anyhow!(
+        return Err(SentinelError::parse(anyhow::anyhow!(
             "trailing bytes after ScVal: consumed {consumed} of {len}"
         )));
     }
@@ -553,7 +553,7 @@ mod tests {
         out
     }
 
-    fn decode_wire(wire: &[u8]) -> Result<ScVal, TridentError> {
+    fn decode_wire(wire: &[u8]) -> Result<ScVal, SentinelError> {
         decode_scval(&base64::engine::general_purpose::STANDARD.encode(wire))
     }
 

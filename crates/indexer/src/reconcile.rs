@@ -1,6 +1,6 @@
 //! # Ledger-range reconciliation against the RPC source (issue #511)
 //!
-//! Nothing else proves that what Trident indexed matches what the chain
+//! Nothing else proves that what Sentinel indexed matches what the chain
 //! actually emitted: the streamer trusts its own poll loop, and without an
 //! independent check, silent under-indexing is invisible — the API returns a
 //! confident, incomplete answer.
@@ -16,8 +16,8 @@
 //!
 //! Discrepancies are reported as **specific ledger ranges** (contiguous
 //! discrepant ledgers coalesced), logged with both counts, and surfaced via
-//! the `trident_indexer_reconcile_*` metrics that the
-//! `TridentIndexerReconciliationMismatch` alert fires on.
+//! the `sentinel_indexer_reconcile_*` metrics that the
+//! `SentinelIndexerReconciliationMismatch` alert fires on.
 //!
 //! ## Continuous, not on-demand — and why
 //!
@@ -27,14 +27,14 @@
 //! under-indexing visible in minutes rather than at the next incident, and
 //! at this cadence the extra RPC load is a rounding error next to the poll
 //! loop. For arbitrary historical ranges there is already an on-demand path:
-//! `trident-backfill --dry-run` walks any window and reports counts without
+//! `sentinel-backfill --dry-run` walks any window and reports counts without
 //! writing. Both choices are documented in the alert runbook.
 
 use std::collections::HashMap;
 
 use tokio_util::sync::CancellationToken;
 
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 use crate::config::Config;
 use crate::db;
@@ -206,14 +206,14 @@ impl Reconciler {
     }
 
     /// One reconciliation pass over the most recent settled window.
-    pub async fn run_pass(&self) -> Result<ReconcileReport, TridentError> {
+    pub async fn run_pass(&self) -> Result<ReconcileReport, SentinelError> {
         let tip = self.rpc.get_latest_ledger().await?;
         let window_end = tip.saturating_sub(self.tip_margin);
         let window_start = window_end
             .saturating_sub(self.ledger_span.saturating_sub(1))
             .max(1);
         if window_end == 0 || window_start > window_end {
-            return Err(TridentError::rpc(anyhow::anyhow!(
+            return Err(SentinelError::rpc(anyhow::anyhow!(
                 "chain tip {tip} leaves no settled window behind a margin of {}",
                 self.tip_margin
             )));
@@ -225,7 +225,7 @@ impl Reconciler {
         let cursor = db::get_cursor(&self.db).await?;
         let window_end = window_end.min(cursor);
         if window_end < window_start {
-            return Err(TridentError::rpc(anyhow::anyhow!(
+            return Err(SentinelError::rpc(anyhow::anyhow!(
                 "indexer cursor {cursor} has not reached the settled window starting at {window_start}; nothing to reconcile yet"
             )));
         }
@@ -261,7 +261,7 @@ impl Reconciler {
         if rpc_counts.truncated {
             let comparable_end = rpc_counts.last_seen_ledger.saturating_sub(1);
             if comparable_end < window_start {
-                return Err(TridentError::rpc(anyhow::anyhow!(
+                return Err(SentinelError::rpc(anyhow::anyhow!(
                     "reconciliation walk hit the page cap before completing a single ledger;                      lower RECONCILE_LEDGER_SPAN (window [{window_start}, {window_end}])"
                 )));
             }
@@ -293,7 +293,7 @@ impl Reconciler {
         window_end: u64,
         filters: &[EventFilter],
         allowlist: Option<&HashMap<String, i64>>,
-    ) -> Result<RpcCounts, TridentError> {
+    ) -> Result<RpcCounts, SentinelError> {
         let mut per_ledger: HashMap<u64, u64> = HashMap::new();
         let mut cursor: Option<String> = None;
         let mut start: Option<u64> = Some(window_start);
@@ -317,7 +317,7 @@ impl Reconciler {
 
             for event in page.events {
                 let ledger: u64 = event.ledger.parse().map_err(|_| {
-                    TridentError::parse(anyhow::anyhow!(
+                    SentinelError::parse(anyhow::anyhow!(
                         "event {} reported an unparseable ledger {:?}",
                         event.id,
                         event.ledger
@@ -380,7 +380,7 @@ impl Reconciler {
         &self,
         window_start: u64,
         window_end: u64,
-    ) -> Result<HashMap<u64, u64>, TridentError> {
+    ) -> Result<HashMap<u64, u64>, SentinelError> {
         let mut per_ledger: HashMap<u64, u64> = HashMap::new();
 
         let indexed: Vec<(i64, i64)> = sqlx::query_as(
@@ -393,7 +393,7 @@ impl Reconciler {
         .fetch_all(&self.db)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("reconcile count events"))
+            SentinelError::storage(anyhow::Error::new(e).context("reconcile count events"))
         })?;
         for (ledger, count) in indexed {
             *per_ledger.entry(ledger as u64).or_insert(0) += count as u64;
@@ -409,7 +409,7 @@ impl Reconciler {
         .fetch_all(&self.db)
         .await
         .map_err(|e| {
-            TridentError::storage(anyhow::Error::new(e).context("reconcile count parse errors"))
+            SentinelError::storage(anyhow::Error::new(e).context("reconcile count parse errors"))
         })?;
         for (ledger, count) in parse_errors {
             *per_ledger.entry(ledger as u64).or_insert(0) += count as u64;

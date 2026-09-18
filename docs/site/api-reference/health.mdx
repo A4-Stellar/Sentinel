@@ -1,6 +1,6 @@
 ---
 title: "GET /v1/health"
-description: "Check the health of the Trident API, indexer, database, and Redis connections."
+description: "Check the health of the Sentinel API, indexer, database, and Redis connections."
 ---
 
 ## Endpoint
@@ -9,14 +9,14 @@ description: "Check the health of the Trident API, indexer, database, and Redis 
 GET /v1/health
 ```
 
-Returns the current health status of the Trident stack. This endpoint does **not** require authentication and is suitable for load balancer health checks and uptime monitors.
+Returns the current health status of the Sentinel stack. This endpoint does **not** require authentication and is suitable for load balancer health checks and uptime monitors.
 
 ---
 
 ## Example request
 
 ```bash
-curl https://api.trident.telocel.com/v1/health
+curl https://api.sentinel.a4stellar.com/v1/health
 ```
 
 ---
@@ -90,7 +90,7 @@ Configure your load balancer to poll `GET /v1/health` and expect a `2xx` respons
 
 ```nginx
 # nginx upstream health check example
-upstream trident_api {
+upstream sentinel_api {
   server api:3000;
   check interval=5000 rise=2 fall=3 timeout=1000 type=http;
   check_http_send "GET /v1/health HTTP/1.0\r\n\r\n";

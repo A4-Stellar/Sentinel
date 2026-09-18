@@ -16,7 +16,7 @@ use stellar_xdr::curr::{
     FeeBumpTransactionInnerTx, Limited, Limits, ReadXdr, TransactionEnvelope, TransactionExt,
     TransactionResult, TransactionResultResult,
 };
-use trident_common::TridentError;
+use sentinel_common::SentinelError;
 
 /// The only provenance value emitted today: resource fields reflect the
 /// transaction's declared/simulated budget, not host-measured usage.
@@ -46,7 +46,7 @@ pub struct InvocationMetrics {
 pub fn decode_invocation_metrics(
     envelope_xdr_b64: &str,
     result_xdr_b64: &str,
-) -> Result<InvocationMetrics, TridentError> {
+) -> Result<InvocationMetrics, SentinelError> {
     let result: TransactionResult = decode_xdr(result_xdr_b64, "resultXdr")?;
 
     let succeeded = matches!(
@@ -95,13 +95,13 @@ pub fn decode_invocation_metrics(
     })
 }
 
-fn decode_xdr<T: ReadXdr>(b64: &str, context: &'static str) -> Result<T, TridentError> {
+fn decode_xdr<T: ReadXdr>(b64: &str, context: &'static str) -> Result<T, SentinelError> {
     let bytes = STANDARD.decode(b64).map_err(|e| {
-        TridentError::parse(anyhow::Error::new(e).context(format!("{context} base64 decode")))
+        SentinelError::parse(anyhow::Error::new(e).context(format!("{context} base64 decode")))
     })?;
     let mut cursor = std::io::Cursor::new(bytes);
     T::read_xdr(&mut Limited::new(&mut cursor, Limits::none())).map_err(|e| {
-        TridentError::parse(anyhow::Error::new(e).context(format!("{context} XDR decode")))
+        SentinelError::parse(anyhow::Error::new(e).context(format!("{context} XDR decode")))
     })
 }
 
@@ -232,7 +232,7 @@ mod tests {
     #[test]
     fn malformed_result_xdr_is_a_parse_error() {
         let err = decode_invocation_metrics("AAAA", "not-valid-base64-xdr!!").unwrap_err();
-        assert_eq!(err.severity(), trident_common::Severity::Skip);
+        assert_eq!(err.severity(), sentinel_common::Severity::Skip);
     }
 
     // -----------------------------------------------------------------------

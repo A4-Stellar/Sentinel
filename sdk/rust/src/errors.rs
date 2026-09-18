@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum TridentError {
+pub enum SentinelError {
     #[error("HTTP error: {status} {message}")]
     Http { status: u16, message: String },
 
@@ -9,7 +9,7 @@ pub enum TridentError {
     Unauthorized,
 
     #[error(
-        "API key is required; set TridentConfig.api_key or the TRIDENT_API_KEY environment variable"
+        "API key is required; set SentinelConfig.api_key or the SENTINEL_API_KEY environment variable"
     )]
     MissingApiKey,
 
@@ -32,6 +32,6 @@ pub enum TridentError {
     RetryExhausted {
         attempts: u32,
         #[source]
-        last_error: Box<TridentError>,
+        last_error: Box<SentinelError>,
     },
 }

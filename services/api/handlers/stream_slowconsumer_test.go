@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/handlers"
+	"github.com/Depo-dev/sentinel/services/api/handlers"
 	"github.com/redis/go-redis/v9"
 )
 
 // parsePrometheusCounter extracts the value of a single-labelless counter
-// line (e.g. "trident_sse_slow_consumer_disconnects_total 3") from a
+// line (e.g. "sentinel_sse_slow_consumer_disconnects_total 3") from a
 // Prometheus text-exposition body. Returns 0 if the metric is absent.
 func parsePrometheusCounter(body, metric string) int64 {
 	for _, line := range strings.Split(body, "\n") {
@@ -58,7 +58,7 @@ func (r *slowConsumerRedis) XRead(ctx context.Context, a *redis.XReadArgs) *redi
 	}
 	cmd.SetVal([]redis.XStream{
 		{
-			Stream: "trident:events",
+			Stream: "sentinel:events",
 			Messages: []redis.XMessage{
 				{
 					ID: "1-1",
@@ -139,5 +139,5 @@ func testReadSSEDisconnectMetric() int64 {
 	rec := httptest.NewRecorder()
 	handlers.MetricsHandler(nil, nil).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/metrics", nil))
 	body := rec.Body.String()
-	return parsePrometheusCounter(body, "trident_sse_slow_consumer_disconnects_total")
+	return parsePrometheusCounter(body, "sentinel_sse_slow_consumer_disconnects_total")
 }

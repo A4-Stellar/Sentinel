@@ -32,8 +32,8 @@ The `id` must be a valid UUID v4 (e.g. `550e8400-e29b-41d4-a716-446655440000`). 
 ## Example request
 
 ```bash
-curl "https://api.trident.telocel.com/v1/events/550e8400-e29b-41d4-a716-446655440000" \
-  -H "X-API-Key: $TRIDENT_API_KEY"
+curl "https://api.sentinel.a4stellar.com/v1/events/550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-API-Key: $SENTINEL_API_KEY"
 ```
 
 ---
@@ -90,12 +90,12 @@ curl "https://api.trident.telocel.com/v1/events/550e8400-e29b-41d4-a716-44665544
 ## SDK equivalent
 
 ```typescript
-import { TridentClient, TridentError } from "@trident-indexer/sdk";
-import type { SorobanEvent } from "@trident-indexer/sdk";
+import { SentinelClient, SentinelError } from "@sentinel-indexer/sdk";
+import type { SorobanEvent } from "@sentinel-indexer/sdk";
 
-const client = new TridentClient({
-  apiUrl: "https://api.trident.telocel.com",
-  apiKey: process.env.TRIDENT_API_KEY!,
+const client = new SentinelClient({
+  apiUrl: "https://api.sentinel.a4stellar.com",
+  apiKey: process.env.SENTINEL_API_KEY!,
   network: "testnet",
 });
 
@@ -106,7 +106,7 @@ try {
   console.log("Ledger:", event.ledgerSequence);
   console.log("Transaction:", event.transactionHash);
 } catch (err) {
-  if (err instanceof TridentError && err.code === "NOT_FOUND") {
+  if (err instanceof SentinelError && err.code === "NOT_FOUND") {
     console.error("Event does not exist in the index");
   } else {
     throw err;

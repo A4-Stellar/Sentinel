@@ -1,4 +1,4 @@
-"""Asynchronous Trident client (asyncio)."""
+"""Asynchronous Sentinel client (asyncio)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import aiohttp
 import websockets
 
 from ._config import redact_key, resolve_api_key, resolve_api_url
-from .errors import TridentApiError
+from .errors import SentinelApiError
 from .retry import (
     RetryOverride,
     compute_backoff_seconds,
@@ -22,24 +22,24 @@ from .retry import (
 from .types import Network, PaginatedEvents, SorobanEvent
 
 
-class AsyncTridentClient:
-    """Async HTTP + WebSocket client for the Trident Soroban event indexer.
+class AsyncSentinelClient:
+    """Async HTTP + WebSocket client for the Sentinel Soroban event indexer.
 
     Use as an async context manager to share a single ``aiohttp.ClientSession``
     across calls, or construct directly and call :meth:`close` when done.
 
     Args:
-        api_url: Base URL of the Trident REST API. Falls back to the
-            ``TRIDENT_BASE_URL`` environment variable when omitted.
+        api_url: Base URL of the Sentinel REST API. Falls back to the
+            ``SENTINEL_BASE_URL`` environment variable when omitted.
         api_key: API key passed as ``X-API-Key`` on every request. Falls back
-            to the ``TRIDENT_API_KEY`` environment variable when omitted.
+            to the ``SENTINEL_API_KEY`` environment variable when omitted.
         network: One of ``"mainnet"``, ``"testnet"``, or ``"futurenet"``.
         retry: Retry policy applied to idempotent (GET) requests. Honours
             ``Retry-After`` on 429/503 responses, falling back to exponential
             backoff with jitter otherwise. Pass ``False`` to disable retries
-            for this client, or a :class:`~trident_indexer.retry.RetryConfig`
+            for this client, or a :class:`~sentinel_indexer.retry.RetryConfig`
             to customize the policy. Defaults to
-            :data:`~trident_indexer.retry.DEFAULT_RETRY_CONFIG`.
+            :data:`~sentinel_indexer.retry.DEFAULT_RETRY_CONFIG`.
     """
 
     def __init__(
@@ -57,11 +57,11 @@ class AsyncTridentClient:
 
     def __repr__(self) -> str:  # pragma: no cover
         return (
-            f"AsyncTridentClient(api_url={self._api_url!r}, "
+            f"AsyncSentinelClient(api_url={self._api_url!r}, "
             f"api_key={redact_key(self._api_key)}, network={self._network!r})"
         )
 
-    async def __aenter__(self) -> "AsyncTridentClient":
+    async def __aenter__(self) -> "AsyncSentinelClient":
         self._session = aiohttp.ClientSession(
             headers={"X-API-Key": self._api_key}
         )
@@ -129,7 +129,7 @@ class AsyncTridentClient:
             retry: Overrides the client-level retry policy for this call only.
 
         Raises:
-            TridentApiError: with ``code="NOT_FOUND"`` if the event does not exist.
+            SentinelApiError: with ``code="NOT_FOUND"`` if the event does not exist.
         """
         data = await self._get(f"/v1/events/{event_id}", retry=retry)
         return SorobanEvent.from_api(data["event"])
@@ -223,11 +223,11 @@ class AsyncTridentClient:
                                     total_waited += wait
                                     await asyncio.sleep(wait)
                                     continue
-                            raise TridentApiError.from_response(
+                            raise SentinelApiError.from_response(
                                 resp.status, body, attempts=attempt
                             )
                         return await resp.json(content_type=None)
-                except TridentApiError:
+                except SentinelApiError:
                     raise
                 except aiohttp.ClientError as exc:
                     if retry_cfg and attempt < max_attempts:
@@ -237,7 +237,7 @@ class AsyncTridentClient:
                             await asyncio.sleep(wait)
                             continue
                     code = "RETRY_EXHAUSTED" if attempt > 1 else "INTERNAL"
-                    raise TridentApiError(
+                    raise SentinelApiError(
                         0, code, f"Network error: {exc}", attempts=attempt
                     ) from exc
         finally:

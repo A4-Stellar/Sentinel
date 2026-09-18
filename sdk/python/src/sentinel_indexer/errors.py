@@ -1,4 +1,4 @@
-"""Exceptions raised by the Trident SDK."""
+"""Exceptions raised by the Sentinel SDK."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import json
 from typing import Optional
 
 
-class TridentApiError(Exception):
-    """Raised on all non-2xx responses from the Trident API."""
+class SentinelApiError(Exception):
+    """Raised on all non-2xx responses from the Sentinel API."""
 
     def __init__(
         self,
@@ -25,13 +25,13 @@ class TridentApiError(Exception):
         self.attempts = attempts
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"TridentApiError(status={self.status}, code={self.code!r}, message={str(self)!r})"
+        return f"SentinelApiError(status={self.status}, code={self.code!r}, message={str(self)!r})"
 
     @classmethod
     def from_response(
         cls, status: int, body: str, attempts: int = 1
-    ) -> "TridentApiError":
-        """Parse a non-2xx response body into a TridentApiError."""
+    ) -> "SentinelApiError":
+        """Parse a non-2xx response body into a SentinelApiError."""
         try:
             parsed = json.loads(body)
             err = parsed.get("error", {})

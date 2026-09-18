@@ -5,7 +5,7 @@ name: Staging Deploy
 # full write-up, including what is fully automated here vs. best-effort.
 #
 # Database migrations run as a Helm pre-upgrade hook Job
-# (helm/trident/templates/migration-job.yaml, implemented in issue #308).
+# (helm/sentinel/templates/migration-job.yaml, implemented in issue #308).
 # The Job is wired with helm.sh/hook: pre-install,pre-upgrade and
 # helm.sh/hook-weight: "-5" to ensure schema changes are applied before any
 # app Deployment (indexer/grpc-api/go-api) rolls out. This workflow's
@@ -26,7 +26,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  ORG: telocel-labs
+  ORG: a4-stellar
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -74,8 +74,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-indexer:staging
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-indexer:staging-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-indexer:staging
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-indexer:staging-${{ steps.sha.outputs.short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -87,8 +87,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-grpc-api:staging
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-grpc-api:staging-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-grpc-api:staging
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-grpc-api:staging-${{ steps.sha.outputs.short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -100,8 +100,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-go-api:staging
-            ${{ env.REGISTRY }}/${{ env.ORG }}/trident-go-api:staging-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-go-api:staging
+            ${{ env.REGISTRY }}/${{ env.ORG }}/sentinel-go-api:staging-${{ steps.sha.outputs.short }}
           build-args: |
             VERSION=staging-${{ steps.sha.outputs.short }}
             COMMIT_SHA=${{ github.sha }}
@@ -197,10 +197,10 @@ jobs:
 
       - name: Helm upgrade --install
         run: |
-          helm upgrade --install trident-staging helm/trident \
-            -f helm/trident/values.yaml \
-            -f helm/trident/values-staging.yaml \
-            --namespace "${{ vars.STAGING_NAMESPACE || 'trident-staging' }}" \
+          helm upgrade --install sentinel-staging helm/sentinel \
+            -f helm/sentinel/values.yaml \
+            -f helm/sentinel/values-staging.yaml \
+            --namespace "${{ vars.STAGING_NAMESPACE || 'sentinel-staging' }}" \
             --create-namespace \
             --set indexer.image.tag=staging-${{ needs.build-and-push.outputs.sha }} \
             --set grpcApi.image.tag=staging-${{ needs.build-and-push.outputs.sha }} \
@@ -337,5 +337,5 @@ jobs:
           fi
           curl --silent --fail --max-time 10 -X POST \
             -H "Content-Type: application/json" \
-            -d "{\"text\":\"Trident staging deploy/smoke test failed for ${{ github.sha }} — promotion to main blocked.\"}" \
+            -d "{\"text\":\"Sentinel staging deploy/smoke test failed for ${{ github.sha }} — promotion to main blocked.\"}" \
             "$STAGING_ALERT_WEBHOOK_URL"

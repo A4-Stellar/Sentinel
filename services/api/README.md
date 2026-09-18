@@ -2,7 +2,7 @@
 
 ## Signature verification
 
-Subscribers should verify the `X-Trident-Signature` header with a constant-time comparison:
+Subscribers should verify the `X-Sentinel-Signature` header with a constant-time comparison:
 
 ```ts
 import { createHmac, timingSafeEqual } from 'crypto';

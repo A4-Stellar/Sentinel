@@ -1,6 +1,6 @@
 # Load & Soak Tests
 
-Load, soak, and validation scripts for the Trident API and ingest pipeline
+Load, soak, and validation scripts for the Sentinel API and ingest pipeline
 (issue #322). SLO thresholds used throughout are taken directly from
 [`docs/slo.md`](../docs/slo.md) — if that doc's numbers change, update these
 scripts to match rather than the other way around.

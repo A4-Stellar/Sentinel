@@ -1,10 +1,10 @@
-"""Tests for trident_indexer.webhook (issue #452)."""
+"""Tests for sentinel_indexer.webhook (issue #452)."""
 
 import time
 
 import pytest
 
-from trident_indexer.webhook import (
+from sentinel_indexer.webhook import (
     DEFAULT_TOLERANCE_SECONDS,
     WebhookVerificationError,
     compute_signature,

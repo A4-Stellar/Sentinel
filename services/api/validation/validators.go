@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/cursor"
+	"github.com/Depo-dev/sentinel/services/api/cursor"
 )
 
 // This file holds the reusable, per-parameter validators shared by every

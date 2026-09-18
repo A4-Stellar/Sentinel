@@ -1,10 +1,10 @@
-"""Tests for the synchronous TridentClient."""
+"""Tests for the synchronous SentinelClient."""
 
 import json
 import pytest
 from unittest.mock import MagicMock, patch
 
-from trident_indexer import TridentClient, TridentApiError, SorobanEvent, PaginatedEvents
+from sentinel_indexer import SentinelClient, SentinelApiError, SorobanEvent, PaginatedEvents
 from tests.conftest import API_URL, API_KEY, RAW_EVENT, LIST_RESPONSE
 
 
@@ -17,8 +17,8 @@ def make_response(status_code: int, json_body: dict) -> MagicMock:
     return resp
 
 
-def make_client() -> TridentClient:
-    return TridentClient(api_url=API_URL, api_key=API_KEY)
+def make_client() -> SentinelClient:
+    return SentinelClient(api_url=API_URL, api_key=API_KEY)
 
 
 class TestQueryEvents:
@@ -70,11 +70,11 @@ class TestQueryEvents:
         assert params["ledgerTo"] == 20
         assert params["limit"] == 100
 
-    def test_raises_trident_api_error_on_401(self):
+    def test_raises_sentinel_api_error_on_401(self):
         client = make_client()
         error_body = {"error": {"code": "UNAUTHORIZED", "message": "bad key"}}
         with patch.object(client._session, "get", return_value=make_response(401, error_body)):
-            with pytest.raises(TridentApiError) as exc_info:
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.query_events()
 
         err = exc_info.value
@@ -88,7 +88,7 @@ class TestQueryEvents:
         resp.status_code = 503
         resp.text = "Service Unavailable"
         with patch.object(client._session, "get", return_value=resp):
-            with pytest.raises(TridentApiError) as exc_info:
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.query_events()
 
         assert exc_info.value.status == 503
@@ -108,7 +108,7 @@ class TestGetEventById:
         client = make_client()
         error_body = {"error": {"code": "NOT_FOUND", "message": "event not found"}}
         with patch.object(client._session, "get", return_value=make_response(404, error_body)):
-            with pytest.raises(TridentApiError) as exc_info:
+            with pytest.raises(SentinelApiError) as exc_info:
                 client.get_event_by_id("missing-id")
 
         assert exc_info.value.status == 404

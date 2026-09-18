@@ -42,7 +42,7 @@ try {
         state: 'not_found',
         title: 'This event is not in the index',
         message:
-          "Trident could not find this event. It may have been indexed after this ID was collected, or it has rotated out of the index's retention window. Go back to the contract and check its recent events.",
+          "Sentinel could not find this event. It may have been indexed after this ID was collected, or it has rotated out of the index's retention window. Go back to the contract and check its recent events.",
       };
     } else if (err.status === 400) {
       errorState = {
@@ -70,7 +70,7 @@ try {
         state: 'api_unreachable',
         title: 'The indexer is unavailable right now',
         message:
-          'We could not load this event from the Trident indexer. This is temporary — reload in a moment.',
+          'We could not load this event from the Sentinel indexer. This is temporary — reload in a moment.',
       };
     }
   } else {
@@ -78,7 +78,7 @@ try {
       state: 'api_unreachable',
       title: 'Could not reach the indexer',
       message:
-        'We could not reach the Trident indexer from the explorer. Check your connection, then reload.',
+        'We could not reach the Sentinel indexer from the explorer. Check your connection, then reload.',
     };
   }
 }

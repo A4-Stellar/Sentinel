@@ -1,5 +1,5 @@
 /**
- * Webhook signature verification helpers for Trident (issue #452).
+ * Webhook signature verification helpers for Sentinel (issue #452).
  *
  * Receivers call {@link verifySignature} on every incoming webhook request to
  * confirm the delivery is authentic and within the replay-protection window.
@@ -11,7 +11,7 @@
  * const expected = `sha256=${mac}`;
  * ```
  *
- * The `X-Trident-Signature` header may contain two space-separated signatures
+ * The `X-Sentinel-Signature` header may contain two space-separated signatures
  * during a secret rotation overlap window.  Pass your current active secret —
  * the function checks all tokens and succeeds if any one matches.
  */
@@ -76,11 +76,11 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 /**
- * Verify an incoming Trident webhook delivery.
+ * Verify an incoming Sentinel webhook delivery.
  *
  * @param body            Raw request body — read it **before** parsing JSON.
- * @param signature       Value of the `X-Trident-Signature` header.
- * @param timestamp       Value of the `X-Trident-Timestamp` header (Unix seconds, string).
+ * @param signature       Value of the `X-Sentinel-Signature` header.
+ * @param timestamp       Value of the `X-Sentinel-Timestamp` header (Unix seconds, string).
  * @param secret          Your webhook subscription secret (starts with `whsec_`).
  * @param toleranceSecs   Maximum delivery age in seconds.  Pass `0` to disable
  *                        the timestamp check (not recommended in production).
@@ -99,7 +99,7 @@ export async function verifySignature(
   const ts = parseInt(timestamp, 10);
   if (!Number.isFinite(ts) || ts <= 0) {
     throw new WebhookVerificationError(
-      "X-Trident-Timestamp is missing or not a valid Unix second",
+      "X-Sentinel-Timestamp is missing or not a valid Unix second",
     );
   }
   if (toleranceSecs > 0) {

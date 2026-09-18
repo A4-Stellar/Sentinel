@@ -1,4 +1,4 @@
-package trident
+package sentinel
 
 import (
 	"bytes"
@@ -13,18 +13,18 @@ import (
 	"time"
 )
 
-// Client is the Trident Go Client.
+// Client is the Sentinel Go Client.
 type Client struct {
-	config TridentClientConfig
+	config SentinelClientConfig
 	client *http.Client
 }
 
-// NewClient creates a new Trident Go Client.
+// NewClient creates a new Sentinel Go Client.
 //
 // Config precedence: an explicit config.APIKey/config.BaseURL always wins;
-// when either is left empty it falls back to the TRIDENT_API_KEY /
-// TRIDENT_BASE_URL environment variables respectively.
-func NewClient(config TridentClientConfig) *Client {
+// when either is left empty it falls back to the SENTINEL_API_KEY /
+// SENTINEL_BASE_URL environment variables respectively.
+func NewClient(config SentinelClientConfig) *Client {
 	return &Client{
 		config: config.resolve(),
 		client: &http.Client{
@@ -162,7 +162,7 @@ func (c *Client) BatchGetEvents(ctx context.Context, ids []string, opts ...Reque
 		return &BatchEventsResult{Events: []*SorobanEvent{}, Missing: []string{}}, nil
 	}
 	if len(ids) > batchEventsMaxIDs {
-		return nil, fmt.Errorf("trident: batch get supports at most %d ids, got %d", batchEventsMaxIDs, len(ids))
+		return nil, fmt.Errorf("sentinel: batch get supports at most %d ids, got %d", batchEventsMaxIDs, len(ids))
 	}
 
 	reqURL, err := url.Parse(c.config.BaseURL)
@@ -215,7 +215,7 @@ func (c *Client) GetIndexerStats(ctx context.Context, opts ...RequestOption) (*I
 // policy (client-level config merged with any per-call opts). Retries apply
 // uniformly regardless of method here because every endpoint wrapped by this
 // client is a read (batch-get included), so retrying is always safe. Returns
-// the response body on a 200 OK, or a typed error (*TridentApiError /
+// the response body on a 200 OK, or a typed error (*SentinelApiError /
 // *RequestError) once retries are exhausted or the status is non-retryable.
 //
 // Cancellation: every attempt is issued via http.NewRequestWithContext, so a

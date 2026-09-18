@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Depo-dev/trident/services/api/internal/contracttest"
+	"github.com/Depo-dev/sentinel/services/api/internal/contracttest"
 )
 
 // validEventListBody is a minimal EventListResponse-shaped body (issue
